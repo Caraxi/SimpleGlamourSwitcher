@@ -1,0 +1,18 @@
+[submodule "ECommons"]
+	path = ECommons
+	url = https://github.com/NightmareXIV/ECommons.git
+[submodule "Penumbra.GameData"]
+	path = Penumbra.GameData
+	url = https://github.com/ottermandias/Penumbra.GameData.git
+[submodule "Penumbra.Api"]
+	path = Penumbra.Api
+	url = https://github.com/ottermandias/Penumbra.Api.git
+[submodule "Penumbra.String"]
+	path = Penumbra.String
+	url = https://github.com/ottermandias/Penumbra.String.git
+[submodule "OtterGui"]
+	path = OtterGui
+	url = https://github.com/ottermandias/OtterGui.git
+[submodule "Glamourer.Api"]
+	path = Glamourer.Api
+	url = https://github.com/ottermandias/Glamourer.Api.git

@@ -1,0 +1,50 @@
+name: Build Plugin
+on:
+  push:
+    branches: 'main'
+jobs:
+  build:
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
+    runs-on: [windows-2022]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+      
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.3.1
+        with:
+          vs-prerelease: true
+        
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.2.0
+
+      - name: Restore NuGet Cache
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+
+      - name: Restore NuGet Packages
+        run: nuget restore SimpleGlamourSwitcher.sln
+
+      - name: Download Dalamud
+        run: |
+          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/stg/latest.zip -OutFile latest.zip
+          Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev"
+
+      - name: Build
+        run: msbuild SimpleGlamourSwitcher.sln /p:Configuration=Release
+          
+      - name: Extract Artifact
+        run: |
+          Expand-Archive -Force ./SimpleGlamourSwitcher/bin/Release/SimpleGlamourSwitcher/latest.zip ./Artifact
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./Artifact/*

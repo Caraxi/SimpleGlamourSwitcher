@@ -14,8 +14,9 @@ public class Plugin : IDalamudPlugin {
     private static readonly WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
     public static readonly MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
     public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
+#if DEBUG
     public static readonly DebugWindow DebugWindow = new DebugWindow { IsOpen = true }.Enroll(WindowSystem);
-
+#endif
     public Plugin(IDalamudPluginInterface pluginInterface) {
         (pluginInterface.Create<PluginService>() ?? throw new Exception("Failed to initialize PluginService")).Initialize();
 #if DEBUG

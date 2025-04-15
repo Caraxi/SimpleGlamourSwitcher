@@ -1,4 +1,5 @@
 ﻿using Dalamud.Interface;
+using Dalamud.Interface.ManagedFontAtlas;
 using ImGuiNET;
 using UiBuilder = Dalamud.Interface.UiBuilder;
 
@@ -16,13 +17,13 @@ public class ButtonInfo {
     public ButtonInfo(FontAwesomeIcon icon, Action onClick) {
         Text = icon.ToIconString();
         Action = onClick;
-        Font = UiBuilder.IconFont;
+        Font = () => PluginInterface.UiBuilder.IconFontHandle;
     }
 
     public string Text { get; init; } = string.Empty;
     public string Tooltip { get; init; } = string.Empty;
     public Action Action { get; init; } = () => { };
-    public ImFontPtr Font { get; init; } = UiBuilder.DefaultFont;
+    public Func<IFontHandle> Font { get; init; } = () => PluginInterface.UiBuilder.DefaultFontHandle;
     public string Id { get; init; } = Guid.NewGuid().ToString();
     
     public int DisplayPriority { get; init; } = 0;

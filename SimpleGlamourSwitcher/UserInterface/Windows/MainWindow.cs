@@ -75,10 +75,11 @@ public class MainWindow : Window {
             PositionCondition = ImGuiCond.Once;
 
             Size = PluginConfig.WindowSize;
-            SizeCondition = ImGuiCond.Always;
+            SizeCondition = ImGuiCond.Once;
             
             SizeConstraints = new WindowSizeConstraints() {
                 MinimumSize = new Vector2(1024, 600),
+                MaximumSize = new Vector2(4096, 2000)
             };
             
             

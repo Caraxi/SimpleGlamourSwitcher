@@ -66,7 +66,7 @@ public abstract class Page {
             }
             using (ImRaii.Disabled(btn.IsDisabled()))
             using (ImRaii.PushId(btn.Id))
-            using (ImRaii.PushFont(btn.Font, btn.Font.IsLoaded())) {
+            using (btn.Font().Push()) {
                 if (ImGui.Button(btn.Text, new Vector2(buttonWidth))) {
                     btn.Action();
                 }

@@ -46,17 +46,20 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
         await Task.Run(() => {
             var loadedCharacters = new Dictionary<Guid, CharacterConfigFile>();
-            foreach (var f in GetDirectory().GetDirectories()) {
-                try {
-                    if (!Guid.TryParse(f.Name, out var guid)) continue;
-                    var charCfg = Load(guid);
-                    if (charCfg != null && filter(charCfg)) {
-                        loadedCharacters.Add(guid, charCfg);
+            var dir = GetDirectory();
+            if (dir.Exists) {
+                foreach (var f in GetDirectory().GetDirectories()) {
+                    try {
+                        if (!Guid.TryParse(f.Name, out var guid)) continue;
+                        var charCfg = Load(guid);
+                        if (charCfg != null && filter(charCfg)) {
+                            loadedCharacters.Add(guid, charCfg);
+                        }
+                    } catch (Exception ex) {
+                        PluginLog.Error(ex, $"Error loading character file - {f.FullName}");
                     }
-                } catch (Exception ex) {
-                    PluginLog.Error(ex, $"Error loading character file - {f.FullName}");
-                }
 
+                }
             }
 
             dict = loadedCharacters;

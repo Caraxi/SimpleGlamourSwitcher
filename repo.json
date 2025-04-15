@@ -6,15 +6,15 @@
         "Description": "...",
         "Punchline": "...",
         "RepoUrl": "https://github.com/Caraxi/SimpleGlamourSwitcher",
-        "AssemblyVersion": "1.0.0.0",
+        "AssemblyVersion": "1.0.0.1",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 12,
         "IsHide": "False",
         "IsTestingExclusive": "False",
         "DownloadCount": 0,
         "LastUpdate": "0",
-        "DownloadLinkInstall": "https://raw.githubusercontent.com/Caraxi/SimpleGlamourSwitcher/refs/heads/main/release/1.0.0.0.zip",
-        "DownloadLinkTesting": "https://raw.githubusercontent.com/Caraxi/SimpleGlamourSwitcher/refs/heads/main/release/1.0.0.0.zip",
-        "DownloadLinkUpdate": "https://raw.githubusercontent.com/Caraxi/SimpleGlamourSwitcher/refs/heads/main/release/1.0.0.0.zip"
+        "DownloadLinkInstall": "https://raw.githubusercontent.com/Caraxi/SimpleGlamourSwitcher/refs/heads/main/release/1.0.0.1.zip",
+        "DownloadLinkTesting": "https://raw.githubusercontent.com/Caraxi/SimpleGlamourSwitcher/refs/heads/main/release/1.0.0.1.zip",
+        "DownloadLinkUpdate": "https://raw.githubusercontent.com/Caraxi/SimpleGlamourSwitcher/refs/heads/main/release/1.0.0.1.zip"
     }
 ]

@@ -1,4 +1,5 @@
-﻿using Dalamud.Interface;
+﻿using System.Numerics;
+using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
@@ -103,6 +104,11 @@ public class CharacterListPage : Page {
         
         if (characters.Count == 0) {
             ImGuiExt.CenterText("No Characters Available", centerHorizontally: true, centerVertically: true, shadowed: true);
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X / 2 - ImGui.GetItemRectSize().X / 2);
+            if (ImGui.Button("Create Character", ImGui.GetItemRectSize() * Vector2.UnitX + ImGui.GetTextLineHeightWithSpacing() * 2 * Vector2.UnitY)) {
+                MainWindow.OpenPage(new EditCharacterPage(null));
+            }
+            
             return;
         }
 

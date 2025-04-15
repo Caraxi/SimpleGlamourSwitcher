@@ -33,9 +33,17 @@ public static class Config {
       _activeCharacter = null;
       
       if (guid == null || guid == Guid.Empty) {
-         if (setSaved) _pluginConfig.SelectedCharacter.Remove(ClientState.LocalContentId);
+         if (setSaved) {
+            _pluginConfig.SelectedCharacter.Remove(ClientState.LocalContentId);
+            _pluginConfig.Dirty = true;
+            _pluginConfig.Save();
+         }
       } else {
-         if (setSaved) _pluginConfig.SelectedCharacter[ClientState.LocalContentId] = guid.Value;
+         if (setSaved) {
+            _pluginConfig.SelectedCharacter[ClientState.LocalContentId] = guid.Value;
+            _pluginConfig.Dirty = true;
+            _pluginConfig.Save();
+         }
          _activeCharacter = CharacterConfigFile.Load(guid.Value, _pluginConfig);
       }
       

@@ -3,6 +3,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
@@ -28,6 +29,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
     private HashSet<CustomizeIndex>? defaultAppearanceToggles = editFolder?.CustomDefaultEnabledCustomizeIndexes.Clone();
     private HashSet<HumanSlot>? defaultEquipmentToggles = editFolder?.CustomDefaultDisabledEquipmentSlots.Clone();
+    private HashSet<AppearanceParameterKind>? defaultParameterToggles = editFolder?.CustomDefaultEnabledParameterKinds.Clone();
+    private HashSet<ToggleType>? defaultToggleTypes = editFolder?.CustomDefaultEnabledToggles.Clone();
     
 
     private bool hidden = editFolder?.Hidden ?? false;
@@ -68,6 +71,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             var useCustomFolderPolaroid = folderStyle != null;
             var useCustomDefaultAppearanceToggles = defaultAppearanceToggles != null;
             var useCustomDefaultEquipmentToggles = defaultEquipmentToggles != null;
+            var useCustomDefaultParameterToggles = defaultParameterToggles != null;
+            var useCustomDefaultToggles = defaultToggleTypes != null;
 
             if (ImGui.Checkbox(useCustomOutfitPolaroid ? "##useCustomOutfitPolaroid" : "Use custom outfit style", ref useCustomOutfitPolaroid)) {
                 if (useCustomOutfitPolaroid) {
@@ -131,6 +136,34 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 }
             }
             
+            if (ImGui.Checkbox(useCustomDefaultParameterToggles ? "##useCustomDefaultParameterToggles" : "Use Custom Default Advanced Appearance Toggles", ref useCustomDefaultParameterToggles)) {
+                if (useCustomDefaultParameterToggles) {
+                    defaultParameterToggles = ActiveCharacter.DefaultEnabledParameterKinds.Clone();
+                } else {
+                    defaultParameterToggles = null;
+                }
+            }
+            
+            if (useCustomDefaultParameterToggles && defaultParameterToggles != null) {
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Custom Default Advanced Apperance Toggles")) {
+                    ImGui.Columns(3, "defaultParameterToggles", false);
+                    foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
+                        var v = defaultParameterToggles.Contains(ci);
+                        if (ImGui.Checkbox($"{ci}##defaultEnabledParameter", ref v)) {
+                            if (v) {
+                                defaultParameterToggles.Add(ci);
+                            } else {
+                                defaultParameterToggles.Remove(ci);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+                
+                    ImGui.Columns(1);
+                }
+            }
+            
             if (ImGui.Checkbox(useCustomDefaultEquipmentToggles ? "##useCustomDefaultEquipToggles" : "Use Custom Default Equipment Toggles", ref useCustomDefaultEquipmentToggles)) {
                 if (useCustomDefaultEquipmentToggles) {
                     defaultEquipmentToggles = ActiveCharacter.DefaultDisabledEquipmentSlots.Clone();
@@ -155,6 +188,34 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                         ImGui.NextColumn();
                     }
                     
+                    ImGui.Columns(1);
+                }
+            }
+            
+            if (ImGui.Checkbox(useCustomDefaultToggles ? "##useCustomDefaultToggles" : "Use Custom Defaults for Other Toggles", ref useCustomDefaultToggles)) {
+                if (useCustomDefaultToggles) {
+                    defaultToggleTypes = ActiveCharacter.DefaultEnabledToggles.Clone();
+                } else {
+                    defaultToggleTypes = null;
+                }
+            }
+            
+            if (useCustomDefaultToggles && defaultToggleTypes != null) {
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Custom Defaults for Other Toggles")) {
+                    ImGui.Columns(3, "defaultParameterToggles", false);
+                    foreach (var ci in Enum.GetValues<ToggleType>()) {
+                        var v = defaultToggleTypes.Contains(ci);
+                        if (ImGui.Checkbox($"{ci}##defaultEnabledToggle", ref v)) {
+                            if (v) {
+                                defaultToggleTypes.Add(ci);
+                            } else {
+                                defaultToggleTypes.Remove(ci);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+                
                     ImGui.Columns(1);
                 }
             }
@@ -213,6 +274,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.OutfitPolaroidStyle = outfitStyle;
         folder.CustomDefaultDisabledEquipmentSlots = defaultEquipmentToggles;
         folder.CustomDefaultEnabledCustomizeIndexes = defaultAppearanceToggles;
+        folder.CustomDefaultEnabledParameterKinds = defaultParameterToggles;
+        folder.CustomDefaultEnabledToggles = defaultToggleTypes;
 
         if (ActiveCharacter == null) return;
         ActiveCharacter.Dirty = true;

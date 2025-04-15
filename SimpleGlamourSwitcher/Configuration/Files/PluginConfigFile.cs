@@ -10,18 +10,18 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     
     public HashSet<VirtualKey> Hotkey = [];
     public ConditionFlag[]? IgnoreInCondition = [];
-    public Vector4 BackgroundColour = new Vector4(0, 0, 0, 0.5f);
-    public Vector2 CharacterListImageSize = new Vector2(128, 128);
+    public Vector4 BackgroundColour = new(0, 0, 0, 0.5f);
+    public Vector2 CharacterListImageSize = new(128, 128);
     public float SidebarSize = 280f;
     public bool ShowActiveCharacterInCharacterList = false;
     public Dictionary<ulong, Guid> SelectedCharacter = new();
     public string ImageFilePickerLastPath = string.Empty;
     public bool AutoCloseAfterApplying = true;
-    public bool FullScreenMode = true;
-    public Vector2 WindowPosition = new Vector2(50, 50);
-    public Vector2 WindowSize = new Vector2(800, 600);
-    public Vector2 FullscreenOffset = new Vector2(0, 0);
-    public Vector2 FullscreenPadding = new Vector2(0, 0);
+    public bool FullScreenMode = false;
+    public Vector2 WindowPosition = new(50, 50);
+    public Vector2 WindowSize = new(800, 600);
+    public Vector2 FullscreenOffset = new(0, 0);
+    public Vector2 FullscreenPadding = new(0, 0);
     
     
     public Style? CustomStyle;

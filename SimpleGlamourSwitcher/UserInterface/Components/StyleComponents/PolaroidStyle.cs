@@ -22,7 +22,7 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
     public float FrameRounding = 0f;
     public Vector2 ImageSize = new(240, 240);
     public Vector2 FramePadding = ImGui.GetStyle().FramePadding;
-    public Vector2 LabelShadowOffset = new Vector2(1, 1);
+    public Vector2 LabelShadowOffset = new(1, 1);
     public int LabelShadowSize = 2;
 
 

@@ -16,8 +16,8 @@ public static class PluginState {
         Plugin.MainWindow.IsOpen = false;
     }
     
-    public static void LoadActiveCharacter(bool isLogin) {
-        PluginLog.Verbose($"LoadActiveCharacter(isLogin: {isLogin})");
+    public static void LoadActiveCharacter(bool isLogin, bool isPluginStartup = false) {
+        PluginLog.Verbose($"LoadActiveCharacter(isLogin: {isLogin}, isPluginStartup: {isPluginStartup})");
         if (TryGetActiveCharacterGuid(out var guid)) {
             PluginLog.Verbose($"Loading character with guid: {guid}");
 
@@ -31,6 +31,8 @@ public static class PluginState {
             PluginLog.Verbose($"Loaded character: {ActiveCharacter.Name}");
 
             if (isLogin && ActiveCharacter.ApplyOnLogin) {
+                GlamourSystem.ApplyCharacter().ConfigureAwait(false);
+            } else if (isPluginStartup && ActiveCharacter.ApplyOnPluginReload) {
                 GlamourSystem.ApplyCharacter().ConfigureAwait(false);
             }
         }

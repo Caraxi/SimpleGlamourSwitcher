@@ -4,6 +4,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
@@ -44,13 +45,22 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     
     public HashSet<CustomizeIndex>? CustomDefaultEnabledCustomizeIndexes;
     public HashSet<HumanSlot>? CustomDefaultDisabledEquipmentSlots;
-
+    public HashSet<AppearanceParameterKind>? CustomDefaultEnabledParameterKinds;
+    public HashSet<ToggleType>? CustomDefaultEnabledToggles;
+    
     [JsonIgnore]
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes => CustomDefaultEnabledCustomizeIndexes ?? ConfigFile?.DefaultEnabledCustomizeIndexes ?? [];
     
     [JsonIgnore]
     public HashSet<HumanSlot> DefaultDisabledEquipmentSlots => CustomDefaultDisabledEquipmentSlots ?? ConfigFile?.DefaultDisabledEquipmentSlots ?? [];
 
+    [JsonIgnore]
+    public HashSet<AppearanceParameterKind> DefaultEnabledParameterKinds => CustomDefaultEnabledParameterKinds ?? ConfigFile?.DefaultEnabledParameterKinds ?? [];
+    
+    [JsonIgnore]
+    public HashSet<ToggleType> DefaultEnabledToggles => CustomDefaultEnabledToggles ?? ConfigFile?.DefaultEnabledToggles ?? [];
+    
+    
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid) => GetImage(characterConfig, folderGuid, out _);
     
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid, out bool isDefault) {

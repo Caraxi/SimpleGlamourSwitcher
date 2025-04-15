@@ -11,12 +11,11 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher;
 
 public class Plugin : IDalamudPlugin {
+    private static readonly WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
+    public static readonly MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
+    public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
+    public static readonly DebugWindow DebugWindow = new DebugWindow { IsOpen = true }.Enroll(WindowSystem);
 
-    private readonly WindowSystem windowSystem = new(nameof(SimpleGlamourSwitcher));
-    public static readonly MainWindow MainWindow = new();
-    public static readonly ConfigWindow ConfigWindow = new();
-    
-    
     public Plugin(IDalamudPluginInterface pluginInterface) {
         (pluginInterface.Create<PluginService>() ?? throw new Exception("Failed to initialize PluginService")).Initialize();
 #if DEBUG
@@ -35,18 +34,16 @@ public class Plugin : IDalamudPlugin {
         } catch (Exception ex) {
             PluginLog.Error(ex, "Failed to delete temp dir");
         }
-        
+
         ECommonsMain.Init(pluginInterface, this);
         HotkeyHelper.Initialize();
         PluginState.Initialize();
         ActionQueue.Initialize();
-        
+
         UiBuilder.OpenMainUi += MainWindow.Toggle;
         UiBuilder.OpenConfigUi += ConfigWindow.Toggle;
 
-        UiBuilder.Draw += windowSystem.Draw;
-        windowSystem.AddWindow(MainWindow);
-        windowSystem.AddWindow(ConfigWindow);
+        UiBuilder.Draw += WindowSystem.Draw;
 
         Commands.AddHandler("/sgs", new CommandInfo((_, args) => {
             switch (args.ToLowerInvariant()) {
@@ -58,9 +55,10 @@ public class Plugin : IDalamudPlugin {
                     MainWindow.IsOpen = true;
                     break;
             }
-        }) { ShowInHelp = true, HelpMessage = "Open the Simple Glamour Switcher window."});
-    }
+        }) { ShowInHelp = true, HelpMessage = "Open the Simple Glamour Switcher window." });
 
+        Framework.RunOnTick(() => { PluginState.LoadActiveCharacter(false, true); }, delayTicks: 3);
+    }
 
     public void Dispose() {
         Commands.RemoveHandler("/sgs");
@@ -70,15 +68,9 @@ public class Plugin : IDalamudPlugin {
         PluginState.Dispose();
         ActionQueue.Dispose();
         Config.Shutdown();
-        
+
         ModManager.Dispose();
-        
+
         PenumbraIpc.Dispose();
-
-
     }
-
-
-    
-    
 }

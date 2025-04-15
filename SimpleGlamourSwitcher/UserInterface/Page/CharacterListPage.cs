@@ -43,11 +43,6 @@ public class CharacterListPage : Page {
         LoadCharacters();
         base.Refresh();
     }
-
-    [Flags]
-    public enum CharacterPolaroidDisplayOptions {
-        
-    }
     
     
     public static void DrawCharacter(Guid guid, CharacterConfigFile characterConfigFile, PolaroidStyle? polaroidStyle = null, Action? contextMenuAdditions = null) {
@@ -74,12 +69,6 @@ public class CharacterListPage : Page {
             if (ImGui.MenuItem("Edit Character")) {
                 Plugin.MainWindow?.OpenPage(new EditCharacterPage(characterConfig));
             }
-            
-
-            if (ImGui.MenuItem("Edit Image")) {
-                Plugin.MainWindow?.OpenPage(new ImageEditorPage(characterConfig, polaroidStyle));
-            }
-            
             
             if (ImGui.MenuItem(characterConfig.Hidden ? "Un-Hide" : "Hide", ImGui.GetIO().KeyShift)) {
                 characterConfig.Hidden = !characterConfig.Hidden;

@@ -1,4 +1,6 @@
-﻿using Penumbra.GameData.Enums;
+﻿using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
+using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
@@ -47,6 +49,20 @@ public record OutfitAppearance : Applicable {
     public ApplicableCustomize FacePaintReversed = new();
     public ApplicableCustomize FacePaintColor = new();
 
+    public ApplicableParameterFloat FacePaintUvMultiplier = new();
+    public ApplicableParameterFloat FacePaintUvOffset = new();
+    public ApplicableParameterPercent MuscleTone = new();
+    public ApplicableParameterPercent LeftLimbalIntensity = new();
+    public ApplicableParameterPercent RightLimbalIntensity = new();
+    public ApplicableParameterColor SkinDiffuse = new();
+    public ApplicableParameterColor HairDiffuse = new();
+    public ApplicableParameterColor HairHighlight = new();
+    public ApplicableParameterColor LeftEye = new();
+    public ApplicableParameterColor RightEye = new();
+    public ApplicableParameterColor FeatureColor = new();
+    public ApplicableParameterColorAlpha LipDiffuse = new();
+    public ApplicableParameterColorAlpha DecalColor = new();
+
     public ApplicableCustomize this[CustomizeIndex index] {
         get {
             return index switch {
@@ -90,6 +106,27 @@ public record OutfitAppearance : Applicable {
             };
         }
     }
+
+    public ApplicableParameter this[AppearanceParameterKind kind] {
+        get {
+            return kind switch {
+                AppearanceParameterKind.FacePaintUvMultiplier => FacePaintUvMultiplier,
+                AppearanceParameterKind.FacePaintUvOffset => FacePaintUvOffset,
+                AppearanceParameterKind.MuscleTone => MuscleTone,
+                AppearanceParameterKind.LeftLimbalIntensity => LeftLimbalIntensity,
+                AppearanceParameterKind.RightLimbalIntensity => RightLimbalIntensity,
+                AppearanceParameterKind.SkinDiffuse => SkinDiffuse,
+                AppearanceParameterKind.HairDiffuse => HairDiffuse,
+                AppearanceParameterKind.HairHighlight => HairHighlight,
+                AppearanceParameterKind.LeftEye => LeftEye,
+                AppearanceParameterKind.RightEye => RightEye,
+                AppearanceParameterKind.FeatureColor => FeatureColor,
+                AppearanceParameterKind.LipDiffuse => LipDiffuse,
+                AppearanceParameterKind.DecalColor => DecalColor,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid parameter")
+            };
+        }
+    }
     
     
     public override void ApplyToCharacter(ref bool requestRedraw) {
@@ -103,12 +140,11 @@ public record OutfitAppearance : Applicable {
                 acm.ApplyToCharacter(v, ref requestRedraw);
             }
         }
-        
-        GlamourerIpc.ApplyCustomization.Invoke(this);
     }
 
     public static OutfitAppearance FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, GlamourerState glamourerState, Guid penumbraCollectionId) {
         var customize = glamourerState.Customize;
+        var parameter = glamourerState.Parameters;
 
         return new OutfitAppearance {
             Apply = defaultOptionsProvider.DefaultEnabledCustomizeIndexes.Count > 0,
@@ -148,6 +184,20 @@ public record OutfitAppearance : Applicable {
             FacePaint = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaint, customize.FacePaint),
             FacePaintReversed = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaintReversed, customize.FacePaintReversed),
             FacePaintColor = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaintColor, customize.FacePaintColor),
+            
+            FacePaintUvMultiplier = ApplicableParameterFloat.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.FacePaintUvMultiplier, parameter.FacePaintUvMultiplier),
+            FacePaintUvOffset = ApplicableParameterFloat.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.FacePaintUvOffset, parameter.FacePaintUvOffset),
+            MuscleTone = ApplicableParameterPercent.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.MuscleTone, parameter.MuscleTone),
+            LeftLimbalIntensity = ApplicableParameterPercent.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.LeftLimbalIntensity, parameter.LeftLimbalIntensity),
+            RightLimbalIntensity = ApplicableParameterPercent.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.RightLimbalIntensity, parameter.RightLimbalIntensity),
+            SkinDiffuse = ApplicableParameterColor.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.SkinDiffuse, parameter.SkinDiffuse),
+            HairDiffuse = ApplicableParameterColor.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.HairDiffuse, parameter.HairDiffuse),
+            HairHighlight = ApplicableParameterColor.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.HairHighlight, parameter.HairHighlight),
+            LeftEye = ApplicableParameterColor.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.LeftEye, parameter.LeftEye),
+            RightEye = ApplicableParameterColor.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.RightEye, parameter.RightEye),
+            FeatureColor = ApplicableParameterColor.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.FeatureColor, parameter.FeatureColor),
+            LipDiffuse = ApplicableParameterColorAlpha.FromExistingStateAlpha(defaultOptionsProvider, AppearanceParameterKind.LipDiffuse, parameter.LipDiffuse),
+            DecalColor = ApplicableParameterColorAlpha.FromExistingStateAlpha(defaultOptionsProvider, AppearanceParameterKind.DecalColor, parameter.DecalColor),
         };
     }
     

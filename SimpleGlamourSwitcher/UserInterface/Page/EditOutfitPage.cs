@@ -7,6 +7,7 @@ using ImGuiNET;
 using Lumina.Excel.Sheets;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
@@ -66,11 +67,20 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
             ImGui.Checkbox("##applyAppearance", ref Outfit.Appearance.Apply);
             ImGui.SameLine();
-            if (ImGui.CollapsingHeader("Apperance")) {
-                using (ImRaii.PushIndent()) {
-                    DrawAppearance();
+            using (ImRaii.Group()) {
+                if (ImGui.CollapsingHeader("Appearance")) {
+                    using (ImRaii.PushIndent()) {
+                        DrawAppearance();
+                    }
+                }
+            
+                if (ImGui.CollapsingHeader("Advanced Appearance")) {
+                    using (ImRaii.PushIndent()) {
+                        DrawParameters();
+                    }
                 }
             }
+           
             
             ImGui.Checkbox("##applyEquipment", ref Outfit.Equipment.Apply);
             ImGui.SameLine();
@@ -128,6 +138,21 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         CustomizeEditor.ShowReadOnly($"{customizeIndex}##customizeEditor_{customizeIndex}", customizeIndex, customize);
     }
 
+    private void DrawParameters() {
+        foreach (var v in System.Enum.GetValues<AppearanceParameterKind>()) {
+            DrawParameter(v);
+        }
+    }
+
+    private void DrawParameter(AppearanceParameterKind kind) {
+        var param = Outfit.Appearance[kind];
+        
+        ImGui.Checkbox($"##enableParameter_{kind}", ref param.Apply);
+        ImGui.SameLine();
+
+        param.ShowEditor($"{kind}##paramEditor_{kind}", kind, true);
+    }
+
     private void DrawEquipment() {
         foreach (var s in Common.GetGearSlots()) {
             ShowSlot(s);
@@ -137,16 +162,33 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     public void ShowSlot(HumanSlot slot) {
         var equip = Outfit.Equipment[slot];
 
-
         using (ImRaii.Group()) {
-            ImGui.Dummy(new Vector2(ImGui.GetTextLineHeightWithSpacing() / 2f));
-            ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
+            using (ImRaii.Group()) {
+                ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));
+                ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
+            }
+
+            ImGui.SameLine();
+            using (ImRaii.Group()) {
+                ShowSlot($"{slot}", slot, equip);
+            }
         }
 
-        ImGui.SameLine();
-        using (ImRaii.Group()) {
-            ShowSlot($"{slot}", slot, equip);
+        if (slot == HumanSlot.Head) {
+            ImGui.SameLine();
+
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
+            using (ImRaii.Group()) {
+                Outfit.Equipment.HatVisible.ShowToggleEditor("Headwear Visible");
+                Outfit.Equipment.VisorToggle.ShowToggleEditor("Visor Toggle");
+            }
+            
+
+
         }
+        
+
+        
         
         
     }
@@ -163,7 +205,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private void ShowSlot(string slotName, string itemName, uint iconId, ApplicableItem equipment, ApplicableStain? stains = null, Dictionary<MaterialValueIndex, GlamourerMaterial>? materials = null, bool showLinks = true) {
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slotName}")) {
-            ImGui.Dummy(new Vector2(4) * ImGui.GetIO().FontGlobalScale);
+           
             var tex = TextureProvider.GetFromGameIcon(iconId).GetWrapOrEmpty();
             ImGui.Image(tex.ImGuiHandle, new Vector2(ImGui.GetTextLineHeight() * 2 + ImGui.GetStyle().FramePadding.Y * 4 + ImGui.GetStyle().ItemSpacing.Y));
             ImGui.SameLine();

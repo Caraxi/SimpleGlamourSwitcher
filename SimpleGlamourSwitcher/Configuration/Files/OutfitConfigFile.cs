@@ -39,9 +39,10 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         var redraw = false;
 
         Framework.RunOnTick(() => {
+
+            GlamourerIpc.ApplyOutfit(this);
             
             Appearance.ApplyToCharacter(ref redraw);
-
             Framework.RunOnTick(() => {
                 Equipment.ApplyToCharacter(ref redraw);
 

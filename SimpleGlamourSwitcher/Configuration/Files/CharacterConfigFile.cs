@@ -3,6 +3,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
@@ -179,6 +180,8 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes { get; set; } = new();
     public HashSet<HumanSlot> DefaultDisabledEquipmentSlots { get; set; } = new();
+    public HashSet<AppearanceParameterKind> DefaultEnabledParameterKinds { get; set; } = new();
+    public HashSet<ToggleType> DefaultEnabledToggles { get; set; } = new();
 
     public IDefaultOutfitOptionsProvider GetOptionsProvider(Guid folderGuid) {
         if (folderGuid == Guid.Empty) return this;

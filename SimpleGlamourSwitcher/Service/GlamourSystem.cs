@@ -7,9 +7,14 @@ public static class GlamourSystem {
 
     public static async Task ApplyCharacter() {
         if (ActiveCharacter == null) return;
-        ModManager.RemoveAllMods();
+        
         Notice.Show($"Applying Character: {ActiveCharacter.Name}");
+        
+        ModManager.RemoveAllMods();
+        GlamourerIpc.RevertState.Invoke(0);
 
+        await Task.Delay(250);
+        
         if (ActiveCharacter.PenumbraCollection != null) {
             PluginLog.Debug($"Set Penumbra Collection: {ActiveCharacter.PenumbraCollection}");
             PenumbraIpc.SetCollection.Invoke(ApiCollectionType.Current, ActiveCharacter.PenumbraCollection);
@@ -23,10 +28,10 @@ public static class GlamourSystem {
             }
         }
 
-        PluginLog.Warning("Redrawing Character");
+
 
         await Task.Delay(1000);
-        
+        PluginLog.Warning("Redrawing Character");
         await Framework.RunOnFrameworkThread(() => {
             PenumbraIpc.RedrawObject.Invoke(0);
         });

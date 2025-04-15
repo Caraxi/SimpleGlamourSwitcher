@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
+using Dalamud.Interface.Windowing;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 
@@ -64,6 +65,12 @@ public static class Extensions {
             _ => slot.ToString()
         };
     }
+
+    public static T Enroll<T>(this T window, WindowSystem windowSystem) where T : Window {
+        windowSystem.AddWindow(window);
+        return window;
+    }
+    
     
 }
 

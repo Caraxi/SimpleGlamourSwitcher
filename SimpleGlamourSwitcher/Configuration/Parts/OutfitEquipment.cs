@@ -1,4 +1,5 @@
 ﻿using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
@@ -21,6 +22,9 @@ public record OutfitEquipment : Applicable {
     public ApplicableEquipment LFinger = new();
     public ApplicableBonus Face = new();
 
+    public ApplicableToggle HatVisible = new();
+    public ApplicableToggle VisorToggle = new();
+    
     public ApplicableItem this[HumanSlot slot] {
         get {
             switch (slot) {
@@ -41,6 +45,17 @@ public record OutfitEquipment : Applicable {
             }
         }
     }
+
+    public ApplicableToggle this[ToggleType toggleType] {
+        get {
+            switch (toggleType) {
+                case ToggleType.HatVisible: return HatVisible;
+                case ToggleType.VisorToggle: return VisorToggle;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(toggleType), toggleType, "Unsupported toggle type.");
+            }
+        }
+    }
     
     
     
@@ -52,6 +67,12 @@ public record OutfitEquipment : Applicable {
             PluginLog.Verbose($"ApplyToCharacter {slot}");
             this[slot].ApplyToCharacter(slot, ref requestRedraw);
         }
+
+        foreach (var toggle in System.Enum.GetValues<ToggleType>()) {
+            PluginLog.Verbose($"ApplyToCharacter: {toggle}");
+            this[toggle].ApplyToCharacter(toggle, ref requestRedraw);
+        }
+        
     }
 
     public static OutfitEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, GlamourerState glamourerState, Guid effectiveCollectionId) {
@@ -69,6 +90,9 @@ public record OutfitEquipment : Applicable {
             RFinger = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.RFinger, glamourerEquipment.RFinger, effectiveCollectionId),
             LFinger = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.LFinger, glamourerEquipment.LFinger, effectiveCollectionId),
             Face = ApplicableBonus.FromExistingState(defaultOptionsProvider, HumanSlot.Face, glamourerState.Bonus, effectiveCollectionId),
+            
+            HatVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.HatVisible, glamourerEquipment.Hat.Apply, glamourerEquipment.Hat.Show),
+            VisorToggle = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.VisorToggle, glamourerEquipment.Visor.Apply, glamourerEquipment.Visor.IsToggled),
         };
     }
 }

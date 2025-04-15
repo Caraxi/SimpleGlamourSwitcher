@@ -12,7 +12,6 @@ namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 public record ApplicableEquipment : ApplicableItem {
     public Penumbra.GameData.Structs.ItemId ItemId;
     public ApplicableStain Stain = new();
-
     
     public override void ApplyToCharacter(HumanSlot slot, ref bool requestRedraw) {
         if (!Apply) return;
@@ -32,11 +31,6 @@ public record ApplicableEquipment : ApplicableItem {
         } else {
             PluginLog.Error($"Failed to apply item: {ec}");
         }
-        
-        
-        
-        
-        
     }
 
     public static ApplicableEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerItem item, Guid penumbraCollection) {

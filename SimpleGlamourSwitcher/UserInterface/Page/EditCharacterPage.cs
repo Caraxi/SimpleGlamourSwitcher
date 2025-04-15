@@ -4,6 +4,7 @@ using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using ImGuiNET;
 using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -22,12 +23,18 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private bool dirty;
     private string characterName = character?.Name ?? string.Empty;
+
+    private bool applyOnLogin = character?.ApplyOnLogin ?? true;
+    private bool applyOnPluginReload = character?.ApplyOnPluginReload ?? false;
+    
     private Guid? penumbraCollection = character?.PenumbraCollection;
     
-    private HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
-    private HashSet<HumanSlot> defaultDisableEquipSlots = character?.DefaultDisabledEquipmentSlots.Clone() ?? [];
+    private readonly HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
+    private readonly HashSet<HumanSlot> defaultDisableEquipSlots = character?.DefaultDisabledEquipmentSlots.Clone() ?? [];
+    private readonly HashSet<AppearanceParameterKind> defaultEnabledParameterKinds = character?.DefaultEnabledParameterKinds.Clone() ?? [];
+    private readonly HashSet<ToggleType> defaultEnabledToggles = character?.DefaultEnabledToggles.Clone() ?? [];
     
-    private Dictionary<Guid, string> penumbraCollections = PenumbraIpc.GetCollections.Invoke();
+    private readonly Dictionary<Guid, string> penumbraCollections = PenumbraIpc.GetCollections.Invoke();
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -79,16 +86,40 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 
             }
 
+            if (ImGui.CollapsingHeader("Automatic Applications")) {
+                dirty |= ImGui.Checkbox("Apply Default Outfit on Login", ref applyOnLogin);
+                dirty |= ImGui.Checkbox("Apply Default Outfit when Simple Glamour Switcher reloads", ref applyOnPluginReload);
+            }
+            
+
             if (ImGui.CollapsingHeader("Default Appearance Toggles")) {
                 ImGui.Columns(3, "defaultAppearanceToggles", false);
                 foreach (var ci in Enum.GetValues<CustomizeIndex>()) {
                     var v = defaultEnabledCustomizeIndexes.Contains(ci);
                     if (ImGui.Checkbox($"{ci}##defaultEnabledCustomize", ref v)) {
-                        dirty = true;
+                        dirty = true; 
                         if (v) {
                             defaultEnabledCustomizeIndexes.Add(ci);
                         } else {
                             defaultEnabledCustomizeIndexes.Remove(ci);
+                        }
+                    }
+                    ImGui.NextColumn();
+                }
+                
+                ImGui.Columns(1);
+            }
+            
+            if (ImGui.CollapsingHeader("Default Advanced Appearance Toggles")) {
+                ImGui.Columns(3, "defaultAdvancedAppearanceToggles", false);
+                foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
+                    var v = defaultEnabledParameterKinds.Contains(ci);
+                    if (ImGui.Checkbox($"{ci}##defaultEnabledParameters", ref v)) {
+                        dirty = true;
+                        if (v) {
+                            defaultEnabledParameterKinds.Add(ci);
+                        } else {
+                            defaultEnabledParameterKinds.Remove(ci);
                         }
                     }
                     ImGui.NextColumn();
@@ -114,7 +145,26 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 
                 ImGui.Columns(1);
             }
-            
+
+            if (ImGui.CollapsingHeader("Other Default Toggles")) {
+                ImGui.Columns(2, "defaultToggles", false);
+                foreach (var hs in Enum.GetValues<ToggleType>()) {
+                    var v = defaultEnabledToggles.Contains(hs);
+                    if (ImGui.Checkbox($"{hs}##defaultEnabledToggle", ref v)) {
+                        dirty = true;
+                        if (v) {
+                            defaultEnabledToggles.Add(hs);
+                        } else {
+                            defaultEnabledToggles.Remove(hs);
+                        }
+                    }
+                    ImGui.NextColumn();
+                }
+                
+                ImGui.Columns(1);
+            }
+
+
             if (ImGui.CollapsingHeader("Image")) {
                 var style = (PluginConfig.CustomStyle ?? Style.Default).CharacterPolaroid;
                 ImageEditor.Draw(Character, style, characterName, ref controlFlags);
@@ -129,6 +179,12 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.PenumbraCollection = penumbraCollection;
                     Character.DefaultEnabledCustomizeIndexes = defaultEnabledCustomizeIndexes;
                     Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
+                    Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;
+                    Character.DefaultEnabledToggles = defaultEnabledToggles;
+
+                    Character.ApplyOnLogin = applyOnLogin;
+                    Character.ApplyOnPluginReload = applyOnPluginReload;
+                    
                     Character.Dirty = true;
                     Character.Save(true);
                     MainWindow?.PopPage();
@@ -147,17 +203,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     ImGui.SetTooltip("Hold SHIFT to confirm");
                 }
             }
-
-
-            
-            
-            
-            
         }
         
         ImGui.EndChild();
-        
-        
-       
     }
 }

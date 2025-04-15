@@ -28,7 +28,7 @@ public static class Config {
    }
    
    
-   public static bool SwitchCharacter(Guid? guid, bool setSaved = true) {
+   public static bool SwitchCharacter(Guid? guid, bool setSaved = true, bool resetState = false) {
       _activeCharacter?.Save();
       _activeCharacter = null;
       

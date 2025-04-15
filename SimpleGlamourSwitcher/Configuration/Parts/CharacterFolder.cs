@@ -117,6 +117,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
         if (ConfigFile == null || FolderGuid == null) return;
         
         var dir = ConfigFile.ImagesDirectory;
+        if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
         var fileName = Path.Join(dir.FullName, $"{FolderGuid}");
         
         foreach (var type in IImageProvider.SupportedImageFileTypes) {

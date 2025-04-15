@@ -168,6 +168,9 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     
     public void SetImage(FileInfo fileInfo) {
         if ( Guid == Guid.Empty) return;
+
+        var dir = new DirectoryInfo(Path.Join(GetDirectory().FullName, Guid.ToString()));
+        if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
         
         var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
         foreach (var type in IImageProvider.SupportedImageFileTypes) {

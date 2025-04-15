@@ -4,9 +4,11 @@ using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using ImGuiNET;
 using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.IPC;
+using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
@@ -27,7 +29,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     private bool applyOnLogin = character?.ApplyOnLogin ?? true;
     private bool applyOnPluginReload = character?.ApplyOnPluginReload ?? false;
     
-    private Guid? penumbraCollection = character?.PenumbraCollection;
+    private Guid? penumbraCollection = character?.PenumbraCollection ?? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id;
     
     private readonly HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
     private readonly HashSet<HumanSlot> defaultDisableEquipSlots = character?.DefaultDisabledEquipmentSlots.Clone() ?? [];
@@ -197,7 +199,40 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     
                     Character.Dirty = true;
                     Character.Save(true);
-                    MainWindow?.PopPage();
+                    
+                    if (IsNewCharacter) {
+                        
+
+                        var defaultOutfit = OutfitConfigFile.CreateFromLocalPlayer(Character, Guid.Empty, Character.GetOptionsProvider(Guid.Empty));
+
+                        defaultOutfit.Name = Character.Name;
+
+                        Character.TryGetImage(out _, out var path);
+
+                        if (path.Exists) {
+                            defaultOutfit.SetImage(path);
+                            defaultOutfit.SetImageDetail(Character.ImageDetail);
+                        }
+                        
+                        defaultOutfit.Save(true);
+
+                        Character.DefaultOutfit = defaultOutfit.Guid;
+                        
+                        Character.Dirty = true;
+                        Character.Save(true);
+                        
+                        Config.SwitchCharacter(Character.Guid);
+
+                        MainWindow.OpenPage(new GlamourListPage(), true);
+                    } else {
+                        
+                        Character.Dirty = true;
+                        Character.Save(true);
+                        MainWindow.PopPage();
+                    }
+                    
+
+                    
                 }
             }
 

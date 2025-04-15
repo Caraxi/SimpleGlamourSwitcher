@@ -5,15 +5,16 @@ namespace SimpleGlamourSwitcher.Service;
 
 public static class GlamourSystem {
 
-    public static async Task ApplyCharacter() {
+    public static async Task ApplyCharacter(bool revert = true) {
         if (ActiveCharacter == null) return;
         
         Notice.Show($"Applying Character: {ActiveCharacter.Name}");
-        
-        ModManager.RemoveAllMods();
-        GlamourerIpc.RevertState.Invoke(0);
 
-        await Task.Delay(250);
+        if (revert) {
+            ModManager.RemoveAllMods();
+            GlamourerIpc.RevertState.Invoke(0);
+            await Task.Delay(250);
+        }
         
         if (ActiveCharacter.PenumbraCollection != null) {
             PluginLog.Debug($"Set Penumbra Collection: {ActiveCharacter.PenumbraCollection}");
@@ -27,9 +28,7 @@ public static class GlamourSystem {
                 defaultOutfit.Apply();
             }
         }
-
-
-
+        
         await Task.Delay(1000);
         PluginLog.Warning("Redrawing Character");
         await Framework.RunOnFrameworkThread(() => {

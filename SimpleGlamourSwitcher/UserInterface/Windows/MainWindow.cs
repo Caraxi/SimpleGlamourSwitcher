@@ -161,7 +161,7 @@ public class MainWindow : Window {
         
         using(ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, ImGui.GetStyle().ItemSpacing)) {
             
-            if (ImGui.BeginChild("top", ImGui.GetContentRegionAvail() / new Vector2(1, 20), true, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
+            if (ImGui.BeginChild("top", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 3 + ImGui.GetStyle().WindowPadding.Y * 2), true, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
                 page.DrawTop(ref controlFlags);
             }
             ImGui.EndChild();

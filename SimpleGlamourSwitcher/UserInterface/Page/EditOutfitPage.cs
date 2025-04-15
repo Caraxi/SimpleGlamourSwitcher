@@ -176,33 +176,24 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
         if (slot == HumanSlot.Head) {
             ImGui.SameLine();
-
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
             using (ImRaii.Group()) {
                 Outfit.Equipment.HatVisible.ShowToggleEditor("Headwear Visible");
                 Outfit.Equipment.VisorToggle.ShowToggleEditor("Visor Toggle");
             }
-            
-
-
         }
-        
-
-        
-        
-        
     }
     
     private void ShowSlot(string slotName, HumanSlot equipSlot, ApplicableItem equipment) {
         try {
             var equipItem = equipment.GetEquipItem(equipSlot);
-            ShowSlot(slotName, equipItem.Name, equipItem.IconId.Id, equipment, equipment is ApplicableEquipment ae ? ae.Stain : null, null, showLinks: ImGui.GetIO().KeyShift);
+            ShowSlot(slotName, equipItem.Name, equipItem.IconId.Id, equipment, equipment is ApplicableEquipment ae ? ae.Stain : null, equipment.Materials, showLinks: ImGui.GetIO().KeyShift);
         } catch (Exception ex) {
             ImGui.TextWrapped($"{ex}");
         }
     }
     
-    private void ShowSlot(string slotName, string itemName, uint iconId, ApplicableItem equipment, ApplicableStain? stains = null, Dictionary<MaterialValueIndex, GlamourerMaterial>? materials = null, bool showLinks = true) {
+    private void ShowSlot(string slotName, string itemName, uint iconId, ApplicableItem equipment, ApplicableStain? stains = null, List<ApplicableMaterial>? materials = null, bool showLinks = true) {
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slotName}")) {
            
@@ -233,9 +224,9 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                         using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
                         using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(3, ImGui.GetStyle().CellPadding.Y))) {
                             if (ImGui.BeginTable("materialsTable", 4)) {
-                                foreach (var (materialSlot, material) in materials) {
+                                foreach (var material in materials) {
                                     ImGui.TableNextColumn();
-                                    var t = $"{materialSlot.MaterialString()} {materialSlot.RowString()}";
+                                    var t = $"{material.MaterialValueIndex.MaterialString()} {material.MaterialValueIndex.RowString()}";
                                     ImGui.SetNextItemWidth(ImGui.CalcTextSize(t).X + ImGui.GetStyle().FramePadding.X * 2);
                                     ImGui.InputText("##material", ref t, 128, ImGuiInputTextFlags.ReadOnly);
                                     ImGui.TableNextColumn();

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.ObjectModel;
+using System.Reflection;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 
@@ -12,6 +13,20 @@ public abstract class ConfigFile {
     
     protected virtual void Setup() {
         Version = 1;
+    }
+    
+    private static Dictionary<(Type, Guid), Dictionary<Guid, Exception>> BadFiles { get; } = new();
+    
+    protected static void AddBadFile<T>(Guid parent, Guid guid, Exception ex) where T : ConfigFile {
+        if (!BadFiles.TryGetValue((typeof(T), parent), out var list)) {
+            list = new Dictionary<Guid, Exception>();
+            BadFiles.Add((typeof(T), parent), list);
+        }
+        list[guid] = ex;
+    }
+
+    public static Dictionary<Guid, Exception> GetBadFiles<T>(Guid parent) where T : ConfigFile {
+        return BadFiles.TryGetValue((typeof(T), parent), out var list) ? list : new Dictionary<Guid, Exception>();
     }
 }
 
@@ -51,29 +66,35 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
     
     
     public static T? Load(Guid guid, TParent? parent = null) {
-        VerifyParent(ref parent);
-        
-        PluginLog.Debug($"Load {typeof(T).Name} - {guid} - File: {GetConfigPath(parent, guid)}");
+        try {
+            VerifyParent(ref parent);
 
-        var configFile = GetConfigPath(parent, guid);
-        if (!configFile.FullName.StartsWith(PluginInterface.GetPluginConfigDirectory())) throw new FileLoadException("Config file cannot load from outside the plugin config directory. Something went wrong");
-        
-        
-        if (!configFile.Exists) return null;
+            PluginLog.Debug($"Load {typeof(T).Name} - {guid} - File: {GetConfigPath(parent, guid)}");
 
-        var json = File.ReadAllText(configFile.FullName);
-        var instance = JsonConvert.DeserializeObject<T>(json);
-        if (instance == null) return null;
-        instance.Initialize(parent, guid);
-        PluginLog.Debug($"Loaded {typeof(T).Name} - {guid}");
+            var configFile = GetConfigPath(parent, guid);
+            if (!configFile.FullName.StartsWith(PluginInterface.GetPluginConfigDirectory())) throw new FileLoadException("Config file cannot load from outside the plugin config directory. Something went wrong");
 
-        return instance;
-        
+
+            if (!configFile.Exists) return null;
+
+            var json = File.ReadAllText(configFile.FullName);
+            var instance = JsonConvert.DeserializeObject<T>(json);
+            if (instance == null) return null;
+            instance.Initialize(parent, guid);
+            PluginLog.Debug($"Loaded {typeof(T).Name} - {guid}");
+            
+            
+            return instance;
+        } catch (Exception ex) {
+            PluginLog.Error(ex, $"Failed to load {typeof(T).Name} - {guid}");
+            AddBadFile<ConfigFile<T, TParent>>(parent?.Guid ?? Guid.Empty, guid, ex);
+            return null;
+        }
     }
-    
-    
 
 
+    
+  
     public void Initialize(TParent? parent, Guid guid) {
         VerifyParent(ref parent);
         Setup();

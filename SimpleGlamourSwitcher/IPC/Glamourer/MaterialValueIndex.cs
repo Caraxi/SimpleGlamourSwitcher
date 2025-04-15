@@ -54,6 +54,8 @@ public readonly record struct MaterialValueIndex(MaterialValueIndex.DrawObjectTy
         };
     }
 
+    public HumanSlot ToHumanSlot() => ToEquipSlot().ToHumanSlot();
+
     public unsafe bool TryGetModel(Actor actor, out Model model) {
         if (!actor.Valid) {
             model = Model.Null;

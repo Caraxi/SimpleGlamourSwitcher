@@ -29,7 +29,7 @@ public record ApplicableBonus : ApplicableItem {
         }
     }
 
-    public static ApplicableBonus FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerBonuses glamourerStateBonus, Guid penumbraCollection) {
+    public static ApplicableBonus FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerBonuses glamourerStateBonus, Dictionary<MaterialValueIndex, GlamourerMaterial> materials, Guid penumbraCollection) {
 
         switch (slot) {
             case HumanSlot.Face: {
@@ -45,10 +45,8 @@ public record ApplicableBonus : ApplicableItem {
                     return new ApplicableBonus {
                         Apply = defaultOptionsProvider.DefaultDisabledEquipmentSlots.Contains(HumanSlot.Face),
                         BonusItemId = glamourerStateBonus.Glasses?.BonusId ?? 0,
-                        
-                        
-                        
-                        ModConfigs = OutfitModConfig.GetModListFromEquipment(HumanSlot.Face, bonusItem, penumbraCollection)
+                        ModConfigs = OutfitModConfig.GetModListFromEquipment(HumanSlot.Face, bonusItem, penumbraCollection),
+                        Materials = ApplicableMaterial.FilterForSlot(materials, slot),
                     };
                     
                 }

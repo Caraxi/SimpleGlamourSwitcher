@@ -1,6 +1,8 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
+using ECommons;
 using ImGuiNET;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
@@ -99,6 +101,66 @@ public class GlamourListPage : Page {
     
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
+
+        var errors = ConfigFile.GetBadFiles<ConfigFile<OutfitConfigFile, CharacterConfigFile>>(ActiveCharacter?.Guid ?? Guid.Empty);
+
+        if (errors.Count > 0) {
+
+            var errListOpen = false;
+            using (ImRaii.PushColor(ImGuiCol.Header, 0xAA3333AA)) 
+            using (ImRaii.PushColor(ImGuiCol.HeaderActive, 0xBB3333BB)) 
+            using (ImRaii.PushColor(ImGuiCol.HeaderHovered, 0xCC3333CC)) {
+                errListOpen = ImGui.CollapsingHeader($"{errors.Count} Outfits failed to load###outfitLoadErrorHeader");
+            }
+
+            if (errListOpen) {
+                using (ImRaii.PushIndent()) {
+                    foreach (var (errGuid, ex) in errors.ToArray()) {
+
+                        var file = OutfitConfigFile.GetConfigPath(ActiveCharacter, errGuid);
+                        if (!File.Exists(file.FullName)) continue;
+                        
+                        if (ImGuiComponents.IconButton($"{errGuid}_trashButton", FontAwesomeIcon.Trash) && ImGui.GetIO().KeyShift) {
+                            File.Delete(file.FullName);
+                            errors.Remove(errGuid);
+                        }
+
+                        if (ImGui.IsItemHovered()) {
+                            ImGui.BeginTooltip();
+                            ImGui.TextUnformatted("Delete Errored File");
+                            if (!ImGui.GetIO().KeyShift) {
+                                ImGui.TextUnformatted("Hold SHIFT to confirm");
+                            }
+                            ImGui.EndTooltip();
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.CollapsingHeader($"{errGuid}###outfitLoadErrorHeader_{errGuid}")) {
+                            
+                            using (ImRaii.PushIndent()) {
+                                var fullText = ex.ToStringFull();
+
+                                var size = ImGui.CalcTextSize(fullText);
+
+                                if (ImGui.BeginChild($"stackTrace_{errGuid}_child", new Vector2(ImGui.GetContentRegionAvail().X, size.Y + ImGui.GetStyle().FramePadding.Y * 4 + ImGui.GetStyle().WindowPadding.Y * 2 + ImGui.GetStyle().ScrollbarSize), true, ImGuiWindowFlags.HorizontalScrollbar)) {
+                                    ImGui.InputTextMultiline($"##stackTrace_{errGuid}", ref fullText, (uint)fullText.Length, size + ImGui.GetStyle().FramePadding * 2, ImGuiInputTextFlags.ReadOnly);
+                                }
+                                ImGui.EndChild();
+                                
+                            }
+                        }
+                    }
+                }
+               
+            }
+            
+        }
+        
+        
+        
+        
+        
+        
+        
         using var child = ImRaii.Child("glamourListScroll", ImGui.GetContentRegionAvail());
 
         if (scrollTop) {

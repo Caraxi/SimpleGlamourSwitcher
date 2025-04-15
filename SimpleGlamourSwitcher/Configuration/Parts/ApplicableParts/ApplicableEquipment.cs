@@ -12,6 +12,7 @@ namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 public record ApplicableEquipment : ApplicableItem {
     public Penumbra.GameData.Structs.ItemId ItemId;
     public ApplicableStain Stain = new();
+
     
     public override void ApplyToCharacter(HumanSlot slot, ref bool requestRedraw) {
         if (!Apply) return;
@@ -33,14 +34,15 @@ public record ApplicableEquipment : ApplicableItem {
         }
     }
 
-    public static ApplicableEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerItem item, Guid penumbraCollection) {
+    public static ApplicableEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerItem item, Dictionary<MaterialValueIndex, GlamourerMaterial> materials, Guid penumbraCollection) {
         var equipItem = PluginService.ItemManager.Resolve(slot.ToEquipSlot(), item.ItemId.Id);
         
         return new ApplicableEquipment {
             Apply = item.Apply && !defaultOptionsProvider.DefaultDisabledEquipmentSlots.Contains(slot),
             ItemId = item.ItemId,
             Stain = new ApplicableStain { Apply = item.ApplyStain, Stain = item.Stain, Stain2 = item.Stain2 },
-            ModConfigs = OutfitModConfig.GetModListFromEquipment(slot, equipItem, penumbraCollection)
+            ModConfigs = OutfitModConfig.GetModListFromEquipment(slot, equipItem, penumbraCollection),
+            Materials = ApplicableMaterial.FilterForSlot(materials, slot)
         };
     }
 

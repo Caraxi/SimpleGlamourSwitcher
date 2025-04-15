@@ -6,6 +6,7 @@ using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.IPC.Glamourer;
+using SimpleGlamourSwitcher.Utility;
 using API = Glamourer.Api.IpcSubscribers;
 
 namespace SimpleGlamourSwitcher.IPC;
@@ -26,12 +27,15 @@ public static class GlamourerIpc {
         var state = GetState(0);
         if (state == null) return null;
 
+        var stateMaterials = state.Materials ?? new Dictionary<MaterialValueIndex, GlamourerMaterial>();
+        
         var appearance = config.Appearance;
 
         var obj = new JObject();
         var customize = new JObject();
         var parameters = new JObject();
         var equipment = new JObject();
+        var materials = new JObject();
         
         if (appearance.Apply) {
             if (appearance.Clan.Apply) {
@@ -98,11 +102,43 @@ public static class GlamourerIpc {
             if (config.Equipment.VisorToggle.Apply) {
                 equipment["Visor"] = new JObject { { "Apply", true }, { "IsToggled", config.Equipment.VisorToggle.Toggle } };
             }
+            
+            var revertMaterial = new JObject {
+                { "Revert", true },
+                { "Enabled", true }
+            };
+            
+            foreach (var slot in Common.GetGearSlots()) {
+                if (config.Equipment[slot].Apply) {
+                    foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToHumanSlot() == slot)) {
+                        materials[mIndex.Key.ToString("X16")] = revertMaterial;
+                    }
+
+                    foreach (var material in config.Equipment[slot].Materials) {
+                        materials[material.Index] = new JObject {
+                            ["DiffuseR"] = material.DiffuseR,
+                            ["DiffuseG"] = material.DiffuseG,
+                            ["DiffuseB"] = material.DiffuseB,
+                            ["SpecularR"] = material.SpecularR,
+                            ["SpecularG"] = material.SpecularG,
+                            ["SpecularB"] = material.SpecularB,
+                            ["SpecularA"] = material.SpecularA,
+                            ["EmissiveR"] = material.EmissiveR,
+                            ["EmissiveG"] = material.EmissiveG,
+                            ["EmissiveB"] = material.EmissiveB,
+                            ["Gloss"] = material.Gloss,
+                            ["Enabled"] = material.Apply,
+                            ["Revert"] = false
+                        };
+                    }
+                }
+            }
         }
         
         obj.Add("Customize", customize);
         obj.Add("Equipment", equipment);
         obj.Add("Parameters", parameters);
+        obj.Add("Materials", materials);
         obj.Add("FileVersion", 1);
 
         return obj;

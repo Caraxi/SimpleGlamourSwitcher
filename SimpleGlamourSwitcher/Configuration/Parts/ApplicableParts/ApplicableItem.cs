@@ -5,6 +5,7 @@ namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
 public abstract record ApplicableItem : Applicable<HumanSlot>, IHasModConfigs {
     public List<OutfitModConfig> ModConfigs { get; set; } = new();
+    public List<ApplicableMaterial> Materials = new();
 
 
     public abstract EquipItem GetEquipItem(HumanSlot slot);

@@ -86,10 +86,6 @@ public class GlamourListPage : Page {
                 MainWindow?.OpenPage(new EditCharacterPage(ActiveCharacter));
             }
             
-            if (ImGui.Button("Edit Image", buttonSize)) {
-                MainWindow?.OpenPage(new ImageEditorPage(ActiveCharacter,  PluginConfig.CustomStyle?.CharacterPolaroid ?? Style.Default.CharacterPolaroid));
-            }
-            
             if (ImGui.Button("Open in Explorer", buttonSize)) {
                 CharacterConfigFile.GetFile(ActiveCharacter.Guid).Directory?.OpenInExplorer();
             }
@@ -266,10 +262,6 @@ public class GlamourListPage : Page {
                                 MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, characterFolder));
                             }
                             
-                            if (characterFolder is not PreviousCharacterFolder && ImGui.MenuItem("Edit Image")) {
-                                MainWindow?.OpenPage(new ImageEditorPage(characterFolder, folderStyle));
-                            }
-                            
                             if (ImGui.BeginMenu($"Delete")) {
                                 
                                 ImGui.Text("All contents of the folder will be moved out\nof the folder before it is deleted.\nHold SHIFT and ALT to confirm.");
@@ -402,10 +394,6 @@ public class GlamourListPage : Page {
 
                         if (ImGui.MenuItem("Edit Outfit")) {
                             MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, outfit));
-                        }
-
-                        if (ImGui.MenuItem("Edit Image")) {
-                            MainWindow?.OpenPage(new ImageEditorPage(outfit, outfitStyle));
                         }
 
                         if (ImGui.MenuItem("Open File")) {

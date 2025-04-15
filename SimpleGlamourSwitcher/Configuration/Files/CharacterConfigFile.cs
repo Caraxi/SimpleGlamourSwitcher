@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Dalamud.Interface.Textures.TextureWraps;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
@@ -79,7 +80,14 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     }
 
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap, out FileInfo filePath) {
-        filePath = new FileInfo(Path.Join(GetDirectory().FullName, Guid.ToString(), "character.png"));
+        var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
+        filePath = new FileInfo(fileName + ".png");
+        foreach (var type in IImageProvider.SupportedImageFileTypes) {
+            if (File.Exists($"{fileName}.{type}")) {
+                filePath = new FileInfo($"{fileName}.{type}");
+            }
+        }
+        
         if (!filePath.Exists) {
             wrap = null;
             return false;
@@ -90,8 +98,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     }
     
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) => TryGetImage(out wrap, out _);
-
-    
     
     public bool Delete() {
         Notice.Show($"Deleting Character Config: {Name} / {Guid}");
@@ -158,8 +164,20 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
     }
 
+    private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
+    
     public void SetImage(FileInfo fileInfo) {
-        return;
+        if ( Guid == Guid.Empty) return;
+        
+        var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
+        foreach (var type in IImageProvider.SupportedImageFileTypes) {
+            if (File.Exists($"{fileName}.{type}")) {
+                File.Delete($"{fileName}.{type}");
+            }
+        }
+
+        TempImagePath[Guid] = (fileInfo.FullName, Stopwatch.StartNew());
+        fileInfo.CopyTo(fileName + Path.GetExtension(fileInfo.FullName));
     }
 
     public void SetImageDetail(ImageDetail imageDetail) {

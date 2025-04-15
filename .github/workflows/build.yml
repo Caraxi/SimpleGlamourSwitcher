@@ -2,6 +2,16 @@ name: Build Plugin
 on:
   push:
     branches: 'main'
+    paths-ignore:
+      - .editorconfig
+      - .gitattributes
+      - .github/**
+      - .gitignore
+      - release/**
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - repo.json
 jobs:
   build:
     if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"

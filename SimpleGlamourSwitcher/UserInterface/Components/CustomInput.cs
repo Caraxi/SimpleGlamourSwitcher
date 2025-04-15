@@ -12,6 +12,7 @@ public static class CustomInput {
     public static bool InputText(string label, ref string text, uint maxLength, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None, string errorMessage = "", TextInputStyle? style = null) {
         style ??= Style.Default.TextInput;
         
+        using (ImRaii.Group())
         using (ImRaii.PushId(label))
         using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, 3))
         using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(32, 16))) {
@@ -45,6 +46,7 @@ public static class CustomInput {
     public static bool Combo(string label, string preview, Func<string, bool> drawContents, ImGuiComboFlags comboFlags = ImGuiComboFlags.HeightLargest, string? errorMessage = "", ComboStyle? style = null, bool showSearchBar = true) {
         style ??= Style.Default.Combo;
         var ret = false;
+        using (ImRaii.Group())
         using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, 3))
         using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(32, 16))) 
         using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 3))

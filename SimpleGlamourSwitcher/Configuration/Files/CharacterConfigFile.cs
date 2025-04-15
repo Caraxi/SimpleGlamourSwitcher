@@ -9,7 +9,6 @@ using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
-using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
@@ -23,6 +22,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
     public Guid? PenumbraCollection;
     public Guid? DefaultOutfit;
+    public (string Name, uint World) HonorificIdentity = (string.Empty, 0);
     
     public bool Deleted;
     public Style? CustomStyle;

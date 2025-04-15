@@ -3,6 +3,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using ImGuiNET;
+using Lumina.Excel.Sheets;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.Enum;
@@ -13,6 +14,7 @@ using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
 using UiBuilder = Dalamud.Interface.UiBuilder;
+using World = Lumina.Excel.Sheets.World;
 
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
@@ -28,6 +30,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private bool applyOnLogin = character?.ApplyOnLogin ?? true;
     private bool applyOnPluginReload = character?.ApplyOnPluginReload ?? false;
+    
+    private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
     
     private Guid? penumbraCollection = character?.PenumbraCollection ?? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id;
     
@@ -85,7 +89,43 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
                     return r;
                 });
-                
+
+                using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2)) {
+                    dirty |= CustomInput.InputText("Honorific Identity:", ref honorificIdentity.Name, 100);
+                    ImGui.SameLine();
+                    var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(honorificIdentity.World);
+                    dirty |= CustomInput.Combo("##HonorificIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{honorificIdentity.World}", () => {
+                        var m = false;
+                        var appearing = ImGui.IsWindowAppearing();
+                        var lastDc = uint.MaxValue;
+
+                        void World(string name, uint worldId, WorldDCGroupType? dc = null) {
+                            
+                            if (dc != null) {
+                                if (lastDc != dc.Value.RowId) {
+                                    lastDc = dc.Value.RowId;
+                                    ImGui.TextDisabled($"{dc.Value.Name.ExtractText()}");
+                                }
+                            }
+
+                            if (ImGui.Selectable($"    {name}", honorificIdentity.World == worldId)) {
+                                honorificIdentity.World = worldId;
+                                m = true;
+                                ImGui.CloseCurrentPopup();
+                            }
+
+                            if (appearing && honorificIdentity.World == worldId) {
+                                ImGui.SetScrollHereY();
+                            }
+                        }
+
+                        foreach (var w in DataManager.GetExcelSheet<World>()!.Where(w => w.IsPlayerWorld()).OrderBy(w => w.DataCenter.Value.Name.ExtractText()).ThenBy(w => w.Name.ExtractText())) {
+                            World(w.Name.ExtractText(), w.RowId, w.DataCenter.Value);
+                        }
+
+                        return m;
+                    });
+                }
             }
 
             if (ImGui.CollapsingHeader("Automatic Applications")) {
@@ -189,6 +229,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     controlFlags |= WindowControlFlags.PreventClose;
                     Character.Name = characterName;
                     Character.PenumbraCollection = penumbraCollection;
+                    Character.HonorificIdentity = honorificIdentity;
                     Character.DefaultEnabledCustomizeIndexes = defaultEnabledCustomizeIndexes;
                     Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
                     Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;

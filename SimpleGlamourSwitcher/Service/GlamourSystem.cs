@@ -29,6 +29,8 @@ public static class GlamourSystem {
             }
         }
         
+        HonorificIpc.SetLocalPlayerIdentity?.Invoke(ActiveCharacter.HonorificIdentity.Name, ActiveCharacter.HonorificIdentity.World);
+        
         await Task.Delay(1000);
         PluginLog.Warning("Redrawing Character");
         await Framework.RunOnFrameworkThread(() => {

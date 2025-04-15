@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
+using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 
@@ -71,6 +72,11 @@ public static class Extensions {
         return window;
     }
     
-    
+    public static bool IsPlayerWorld(this World world) {
+        if (world.Name.Data.IsEmpty) return false;
+        if (world.DataCenter.RowId == 0) return false;
+        if (world.IsPublic) return true;
+        return char.IsUpper((char)world.Name.Data.Span[0]);
+    }
 }
 

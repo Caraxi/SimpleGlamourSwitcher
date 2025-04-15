@@ -93,6 +93,10 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             
 
             if (ImGui.CollapsingHeader("Default Appearance Toggles")) {
+                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                    ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                }
+                
                 ImGui.Columns(3, "defaultAppearanceToggles", false);
                 foreach (var ci in Enum.GetValues<CustomizeIndex>()) {
                     var v = defaultEnabledCustomizeIndexes.Contains(ci);
@@ -111,6 +115,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             }
             
             if (ImGui.CollapsingHeader("Default Advanced Appearance Toggles")) {
+                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                    ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                }
                 ImGui.Columns(3, "defaultAdvancedAppearanceToggles", false);
                 foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
                     var v = defaultEnabledParameterKinds.Contains(ci);
@@ -129,6 +136,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             }
             
             if (ImGui.CollapsingHeader("Default Equipment Toggles")) {
+                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                    ImGui.TextWrapped("Set to have outfits created for this character apply their equipment. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                }
                 ImGui.Columns(2, "defaultEquipmentToggles", false);
                 foreach (var hs in Common.GetGearSlots()) {
                     var v = !defaultDisableEquipSlots.Contains(hs);

@@ -35,6 +35,12 @@ public static class GlamourSystem {
             PluginLog.Warning(ex, "Failed to set honorific identity.");
         }
         
+        try {
+            HeelsIpc.SetLocalPlayerIdentity?.Invoke(ActiveCharacter.HeelsIdentity.Name, ActiveCharacter.HeelsIdentity.World);
+        } catch (Exception ex) {
+            PluginLog.Warning(ex, "Failed to set heels identity.");
+        }
+        
         await Task.Delay(1000);
         PluginLog.Warning("Redrawing Character");
         await Framework.RunOnFrameworkThread(() => {

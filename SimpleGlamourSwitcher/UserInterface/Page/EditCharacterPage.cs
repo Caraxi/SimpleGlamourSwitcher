@@ -35,6 +35,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     private bool applyOnPluginReload = character?.ApplyOnPluginReload ?? false;
     
     private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
+    private (string Name, uint World) heelsIdentity = character?.HeelsIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
     
     private Guid? penumbraCollection = character?.PenumbraCollection ?? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id;
     
@@ -94,6 +95,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 });
 
                 var honorificReady = HonorificIpc.IsReady();
+                
                 using (ImRaii.Disabled(!honorificReady))
                 using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (honorificReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
                     dirty |= CustomInput.InputText("Honorific Identity:", ref honorificIdentity.Name, 100);
@@ -136,6 +138,50 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     ImGui.SameLine();
                     ImGuiComponents.HelpMarker("A supported version of Honorific is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
                 }
+                
+                var heelsReady = HeelsIpc.IsReady();
+                using (ImRaii.Disabled(!heelsReady))
+                using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (heelsReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
+                    dirty |= CustomInput.InputText("Simple Heels Identity:", ref heelsIdentity.Name, 100);
+                    ImGui.SameLine();
+                    var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(heelsIdentity.World);
+                    dirty |= CustomInput.Combo("##heelsIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{heelsIdentity.World}", () => {
+                        var m = false;
+                        var appearing = ImGui.IsWindowAppearing();
+                        var lastDc = uint.MaxValue;
+
+                        void World(string name, uint worldId, WorldDCGroupType? dc = null) {
+                            
+                            if (dc != null) {
+                                if (lastDc != dc.Value.RowId) {
+                                    lastDc = dc.Value.RowId;
+                                    ImGui.TextDisabled($"{dc.Value.Name.ExtractText()}");
+                                }
+                            }
+
+                            if (ImGui.Selectable($"    {name}", heelsIdentity.World == worldId)) {
+                                heelsIdentity.World = worldId;
+                                m = true;
+                                ImGui.CloseCurrentPopup();
+                            }
+
+                            if (appearing && heelsIdentity.World == worldId) {
+                                ImGui.SetScrollHereY();
+                            }
+                        }
+
+                        foreach (var w in DataManager.GetExcelSheet<World>()!.Where(w => w.IsPlayerWorld()).OrderBy(w => w.DataCenter.Value.Name.ExtractText()).ThenBy(w => w.Name.ExtractText())) {
+                            World(w.Name.ExtractText(), w.RowId, w.DataCenter.Value);
+                        }
+
+                        return m;
+                    });
+                }
+                if (!heelsReady) {
+                    ImGui.SameLine();
+                    ImGuiComponents.HelpMarker("A supported version of Simple Heels is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
+                }
+                
             }
 
             if (ImGui.CollapsingHeader("Automatic Applications")) {
@@ -240,6 +286,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.Name = characterName;
                     Character.PenumbraCollection = penumbraCollection;
                     Character.HonorificIdentity = honorificIdentity;
+                    Character.HeelsIdentity = heelsIdentity;
                     Character.DefaultEnabledCustomizeIndexes = defaultEnabledCustomizeIndexes;
                     Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
                     Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;

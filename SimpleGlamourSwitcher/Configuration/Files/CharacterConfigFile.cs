@@ -23,6 +23,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public Guid? PenumbraCollection;
     public Guid? DefaultOutfit;
     public (string Name, uint World) HonorificIdentity = (string.Empty, 0);
+    public (string Name, uint World) HeelsIdentity = (string.Empty, 0);
     
     public bool Deleted;
     public Style? CustomStyle;

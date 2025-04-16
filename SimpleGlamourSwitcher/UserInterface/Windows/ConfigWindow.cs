@@ -1,6 +1,8 @@
 ﻿using System.Numerics;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using ECommons;
 using ImGuiNET;
 using SimpleGlamourSwitcher.Utility;
 
@@ -21,8 +23,8 @@ public class ConfigWindow : Window {
             PluginConfig.Dirty = true;
             PluginConfig.Hotkey = newHotkey;
         }
-
-
+        ImGui.TextDisabled("Set a hotkey to open the main UI.");
+        
         PluginConfig.Dirty |= ImGui.Checkbox("Fullscreen", ref PluginConfig.FullScreenMode);
 
         if (PluginConfig.FullScreenMode) {

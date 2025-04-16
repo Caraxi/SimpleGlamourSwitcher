@@ -7,9 +7,7 @@ using SimpleGlamourSwitcher.UserInterface.Components;
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParentConfig<PluginConfigFile>, INamedConfigFile {
-    
     public HashSet<VirtualKey> Hotkey = [];
-    public ConditionFlag[]? IgnoreInCondition = [];
     public Vector4 BackgroundColour = new(0, 0, 0, 0.5f);
     public Vector2 CharacterListImageSize = new(128, 128);
     public float SidebarSize = 280f;
@@ -36,8 +34,6 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
 
     protected override void Setup() {
         if (Version == 0) {
-            Hotkey = [VirtualKey.MENU, VirtualKey.OEM_3];
-            IgnoreInCondition = [ConditionFlag.InCombat, ConditionFlag.LoggingOut];
             Version = 1;
         }
     }

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -46,7 +47,7 @@ public static class HotkeyHelper {
             // if (ClientState.LocalContentId == 0) return;
             // if (ClientState.LocalPlayer == null) return;
             if (IsSettingHotkey) return;
-            if (Condition.Any(PluginConfig.IgnoreInCondition ?? [])) return;
+            if (Condition.Any(ConditionFlag.LoggingOut, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51, ConditionFlag.InCombat, ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent)) return;
             if (HeldKeys.SetEquals(PluginConfig.Hotkey)) {
                 PluginState.ShowGlamourSwitcher();
                 handleType = NativeKeyState.KeyHandleType.Block;
@@ -90,7 +91,7 @@ public static class HotkeyHelper {
         outKeys = [];
         var modified = false;
         var identifier = name.Contains("###") ? $"{name.Split("###", 2)[1]}" : name;
-        var strKeybind = string.Join("+", keys.Select(k => k.GetKeyName()));
+        var strKeybind = keys.Count == 0 ? "Not Set" : string.Join("+", keys.Select(k => k.GetKeyName()));
 
         ImGui.SetNextItemWidth(100 * ImGuiHelpers.GlobalScale);
 
@@ -174,10 +175,21 @@ public static class HotkeyHelper {
             }
         } else {
             ImGui.SameLine();
-            if (!ImGui.Button($"Set Keybind###setHotkeyButton{identifier}")) return modified;
-            Safety.Restart();
-            _settingKey = identifier;
-            _newKeys = [];
+            if (ImGui.Button($"Set Keybind###setHotkeyButton{identifier}")) {
+                Safety.Restart();
+                _settingKey = identifier;
+                _newKeys = [];
+            }
+            
+            ImGui.SameLine();
+            if (ImGui.Button($"Clear Keybind###clearKeybind_{identifier}")) {
+                modified = true;
+                _newKeys = [];
+                outKeys = [];
+            }
+            
+            return modified;
+           
         }
 
         return modified;

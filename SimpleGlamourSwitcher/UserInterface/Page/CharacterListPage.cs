@@ -146,6 +146,12 @@ public class CharacterListPage : Page {
         foreach (var a in actions) a();
     }
 
+    public override void DrawLeft(ref WindowControlFlags controlFlags) {
+        if (ImGui.Button("Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+            MainWindow.PopPage();
+        }
+    }
+
     public override void DrawRight(ref WindowControlFlags controlFlags) {
         ImGui.Checkbox("Show Hidden Characters", ref showHidden);
         base.DrawRight(ref controlFlags);

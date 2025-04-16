@@ -6,7 +6,7 @@ using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 namespace SimpleGlamourSwitcher.Configuration;
 
 public abstract class ConfigFile {
-    public uint Version { get; protected set; }
+    public uint Version { get; set; }
     
     [JsonIgnore]
     public Guid Guid { get; protected set; }

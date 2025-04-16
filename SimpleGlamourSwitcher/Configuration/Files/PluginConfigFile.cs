@@ -12,7 +12,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public Vector4 BackgroundColour = ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.WindowBg));
     public Vector2 CharacterListImageSize = new(128, 128);
     public float SidebarSize = 280f;
-    public bool ShowActiveCharacterInCharacterList = false;
+    public bool ShowActiveCharacterInCharacterList = true;
     public Dictionary<ulong, Guid> SelectedCharacter = new();
     public string ImageFilePickerLastPath = string.Empty;
     public bool AutoCloseAfterApplying = true;

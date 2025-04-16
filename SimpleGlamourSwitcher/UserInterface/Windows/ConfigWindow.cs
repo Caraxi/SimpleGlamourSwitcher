@@ -37,5 +37,6 @@ public class ConfigWindow : Window {
         
         PluginConfig.Dirty |= ImGui.Checkbox("Close window after applying outfit", ref PluginConfig.AutoCloseAfterApplying);
         PluginConfig.Dirty |= ImGui.Checkbox("Log actions to chat", ref PluginConfig.LogActionsToChat);
+        PluginConfig.Dirty |= ImGui.Checkbox("Show current character on character list", ref PluginConfig.ShowActiveCharacterInCharacterList);
     }
 }

@@ -131,10 +131,16 @@ public static class ImageEditor {
                     
                     ImGui.EndTooltip();
                 }
+            } else {
+                using (ImRaii.Disabled()) {
+                    ImGui.Button("Load Image from Clipboard##clipboardNone", buttonSize);
+                }
             }
-            
-            if (image != null && ImGui.Button("Crop Image", buttonSize)) {
-                Plugin.MainWindow.OpenPage(new ImageEditorPage(imageProvider, style));
+
+            using (ImRaii.Disabled(image == null)) {
+                if (ImGui.Button("Crop Image", buttonSize)) {
+                    Plugin.MainWindow.OpenPage(new ImageEditorPage(imageProvider, style));
+                }
             }
 
             if (sideBySide) {

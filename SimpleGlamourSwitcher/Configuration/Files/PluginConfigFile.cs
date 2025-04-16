@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Keys;
+using ImGuiNET;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.UserInterface.Components;
 
@@ -8,7 +9,7 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParentConfig<PluginConfigFile>, INamedConfigFile {
     public HashSet<VirtualKey> Hotkey = [];
-    public Vector4 BackgroundColour = new(0, 0, 0, 0.5f);
+    public Vector4 BackgroundColour = ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.WindowBg));
     public Vector2 CharacterListImageSize = new(128, 128);
     public float SidebarSize = 280f;
     public bool ShowActiveCharacterInCharacterList = false;

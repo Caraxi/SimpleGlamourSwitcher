@@ -29,4 +29,10 @@ public class ConfigPage : Page {
         
         ImGui.EndChild();
     }
+    
+    public override void DrawLeft(ref WindowControlFlags controlFlags) {
+        if (ImGui.Button("Back", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+            MainWindow.PopPage();
+        }
+    }
 }

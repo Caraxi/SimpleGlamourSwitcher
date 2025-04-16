@@ -256,6 +256,12 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         base.DrawCenter(ref controlFlags);
     }
 
+    public override void DrawLeft(ref WindowControlFlags controlFlags) {
+        if (ImGui.Button("Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+            MainWindow.PopPage();
+        }
+    }
+    
     private void SaveChanges() {
         if (folder == null) {
             var newFolderGuid = newFolder?.FolderGuid ?? Guid.NewGuid();

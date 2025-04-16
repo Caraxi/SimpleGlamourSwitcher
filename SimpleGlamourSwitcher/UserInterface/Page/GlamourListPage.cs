@@ -77,17 +77,30 @@ public class GlamourListPage : Page {
             Polaroid.Draw(image, ActiveCharacter.ImageDetail, ActiveCharacter.Name, (PluginConfig.CustomStyle?.CharacterPolaroid ?? Style.Default.CharacterPolaroid).FitTo(ImGui.GetContentRegionAvail()));
 
             var buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2);
-            
-            if (ImGui.Button("Apply Defaults", buttonSize)) {
-                GlamourSystem.ApplyCharacter().ConfigureAwait(false);
-            }
-            
             if (ImGui.Button("Edit Character", buttonSize)) {
                 MainWindow?.OpenPage(new EditCharacterPage(ActiveCharacter));
             }
             
             if (ImGui.Button("Open in Explorer", buttonSize)) {
                 CharacterConfigFile.GetFile(ActiveCharacter.Guid).Directory?.OpenInExplorer();
+            }
+
+            using (ImRaii.Disabled(!ImGui.GetIO().KeyShift)) {
+                if (ImGui.Button("Revert Character State", buttonSize)) {
+                    GlamourSystem.ApplyCharacter().ConfigureAwait(false);
+                }
+            }
+
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+                ImGui.BeginTooltip();
+                ImGui.Text("Revert Character State");
+                var s = ImGui.GetItemRectSize() * Vector2.UnitX * 1.75f;
+                ImGui.Dummy(s);
+                ImGui.Separator();
+                ImGui.Text("Resets character appearance and outfit to\ntheir game defaults and then applies the\ncharacter's default outfit.");
+                ImGui.Spacing();
+                ImGui.TextDisabled("Hold SHIFT to confirm");
+                ImGui.EndTooltip();
             }
         }
         

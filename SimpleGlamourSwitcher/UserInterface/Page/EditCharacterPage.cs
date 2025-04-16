@@ -1,4 +1,7 @@
 ﻿using System.Numerics;
+using Dalamud.Interface;
+using Dalamud.Interface.Colors;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
@@ -90,7 +93,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     return r;
                 });
 
-                using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2)) {
+                var honorificReady = HonorificIpc.IsReady();
+                using (ImRaii.Disabled(!honorificReady))
+                using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (honorificReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
                     dirty |= CustomInput.InputText("Honorific Identity:", ref honorificIdentity.Name, 100);
                     ImGui.SameLine();
                     var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(honorificIdentity.World);
@@ -126,6 +131,11 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                         return m;
                     });
                 }
+
+                if (!honorificReady) {
+                    ImGui.SameLine();
+                    ImGuiComponents.HelpMarker("A supported version of Honorific is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
+                }
             }
 
             if (ImGui.CollapsingHeader("Automatic Applications")) {
@@ -155,7 +165,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 
                 ImGui.Columns(1);
             }
-            
+            var MaxExpansion = Directory.Exists("ex4") ? Directory.Exists("ex5") ? 5 : 4 : 3; 
             if (ImGui.CollapsingHeader("Default Advanced Appearance Toggles")) {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                     ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");

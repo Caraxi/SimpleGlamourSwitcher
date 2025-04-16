@@ -28,16 +28,17 @@ public static class GlamourSystem {
                 defaultOutfit.Apply();
             }
         }
-        
-        HonorificIpc.SetLocalPlayerIdentity?.Invoke(ActiveCharacter.HonorificIdentity.Name, ActiveCharacter.HonorificIdentity.World);
+
+        try {
+            HonorificIpc.SetLocalPlayerIdentity?.Invoke(ActiveCharacter.HonorificIdentity.Name, ActiveCharacter.HonorificIdentity.World);
+        } catch (Exception ex) {
+            PluginLog.Warning(ex, "Failed to set honorific identity.");
+        }
         
         await Task.Delay(1000);
         PluginLog.Warning("Redrawing Character");
         await Framework.RunOnFrameworkThread(() => {
             PenumbraIpc.RedrawObject.Invoke(0);
         });
-
     }
-    
-    
 }

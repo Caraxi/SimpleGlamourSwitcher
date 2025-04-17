@@ -1,7 +1,10 @@
 ﻿using System.Numerics;
+using Dalamud.Interface;
+using ECommons.ImGuiMethods;
 using ImGuiNET;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
+using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.Utility;
 
@@ -76,7 +79,18 @@ public static class ImGuiExt {
 
         return false;
     }
-    
-    
-    
+
+    public static bool ButtonWithIcon(string label, FontAwesomeIcon icon, Vector2 size) {
+        try {
+            return ImGui.Button(label, size);
+        } finally {
+            if (PluginConfig.ShowButtonIcons) {
+                using (PluginInterface.UiBuilder.IconFontHandle.Push()) {
+                    var textSize = ImGui.CalcTextSize(icon.ToIconString());
+                    ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize, ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * new Vector2(0, 0.5f) - textSize * new Vector2(-0.5f, 0.5f), ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+                }
+            }
+            
+        }
+    }
 }

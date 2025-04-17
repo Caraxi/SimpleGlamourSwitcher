@@ -24,13 +24,13 @@ public class GlamourListPage : Page {
     
     public GlamourListPage(Guid folderGuid = default) {
         ActiveFolder = ActiveCharacter == null || !ActiveCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid;
-        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, () => {
-            MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null));
-        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Folder" } );
-        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, () => {
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Outfit", () => {
             if (ActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(ActiveCharacter,  ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Outfit"} );
-        
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
+            MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null));
+        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Folder" } );
+       
         LoadOutfits();
     }
 
@@ -62,7 +62,7 @@ public class GlamourListPage : Page {
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
 
-        if (ImGui.Button(ActiveCharacter == null ? "Select Character" : "Switch Character", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        if (ImGuiExt.ButtonWithIcon(ActiveCharacter == null ? "Select Character" : "Switch Character", FontAwesomeIcon.PersonDressBurst, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow?.OpenPage(new CharacterListPage());
         }
 
@@ -77,16 +77,17 @@ public class GlamourListPage : Page {
             Polaroid.Draw(image, ActiveCharacter.ImageDetail, ActiveCharacter.Name, (PluginConfig.CustomStyle?.CharacterPolaroid ?? Style.Default.CharacterPolaroid).FitTo(ImGui.GetContentRegionAvail()));
 
             var buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2);
-            if (ImGui.Button("Edit Character", buttonSize)) {
+            if (ImGuiExt.ButtonWithIcon("Edit Character", FontAwesomeIcon.PencilAlt, buttonSize)) {
                 MainWindow?.OpenPage(new EditCharacterPage(ActiveCharacter));
             }
             
-            if (ImGui.Button("Open in Explorer", buttonSize)) {
+            if (ImGuiExt.ButtonWithIcon("Open in Explorer", FontAwesomeIcon.FolderTree, buttonSize)) {
                 CharacterConfigFile.GetFile(ActiveCharacter.Guid).Directory?.OpenInExplorer();
             }
 
             using (ImRaii.Disabled(!ImGui.GetIO().KeyShift)) {
-                if (ImGui.Button("Revert Character State", buttonSize)) {
+                if (ImGuiExt.ButtonWithIcon(
+                        "Revert Character State", FontAwesomeIcon.Undo, buttonSize)) {
                     GlamourSystem.ApplyCharacter().ConfigureAwait(false);
                 }
             }

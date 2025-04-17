@@ -1,6 +1,8 @@
 using System.Numerics;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
+using ECommons.ImGuiMethods;
 using ImGuiNET;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
@@ -233,7 +235,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             
             
             if (folder == null) {
-                if (ImGui.Button("Create Folder", inputSize) || returnPressed) {
+                if (ImGuiExt.ButtonWithIcon("Create Folder", FontAwesomeIcon.FolderPlus, inputSize) || returnPressed) {
                     SaveChanges();
                     ActiveCharacter.Dirty = true;
                     MainWindow.PopPage();
@@ -245,7 +247,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     
                 }
             } else {
-                if (ImGui.Button("Save Changes", inputSize)) {
+                if (ImGuiExt.ButtonWithIcon("Save Changes", FontAwesomeIcon.Save, inputSize)) {
                     SaveChanges();
                     MainWindow.PopPage();
                 }
@@ -257,7 +259,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
     }
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGui.Button("Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow.PopPage();
         }
     }

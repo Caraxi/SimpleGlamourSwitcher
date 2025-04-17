@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
@@ -21,7 +22,7 @@ public abstract class Page {
     public float SidebarScaleLeft { get; protected set; } = 1f;
 
     protected Page() {
-        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cog, () => {
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cog, "Settings", () => {
             if (MainWindow?.ActivePage is ConfigPage) {
                 MainWindow?.PopPage();
             } else {
@@ -41,34 +42,25 @@ public abstract class Page {
     private void DrawBottomRightButtons(ref WindowControlFlags controlFlags) {
         if (BottomRightButtons.Count == 0) return;
         
-        var buttonsPerRow = MathF.Floor(ImGui.GetContentRegionAvail().X / (56f * ImGuiHelpers.GlobalScale)) + 1;
-        var buttonWidth = MathF.Floor((ImGui.GetContentRegionAvail().X - (buttonsPerRow - 1f) * ImGui.GetStyle().ItemSpacing.X) / buttonsPerRow);
-        var buttonRows = MathF.Ceiling(BottomRightButtons.Count / buttonsPerRow);
+        var buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2);
 
-
-        var totalSize = (buttonRows * buttonWidth) + (ImGui.GetStyle().ItemSpacing.Y * (buttonRows + 1));
         
-        
+        var totalSize = buttonSize.Y * BottomRightButtons.Count + (ImGui.GetStyle().ItemSpacing.Y * (BottomRightButtons.Count + 1));
         
         ImGui.Dummy(new Vector2(0, ImGui.GetContentRegionAvail().Y - totalSize));
         
-        var b = 0;
-        
-        for (b = 0; b < buttonsPerRow - BottomRightButtons.Count % buttonsPerRow; b++) {
-            ImGui.Dummy(new Vector2(buttonWidth));
-            ImGui.SameLine();
-        }
-
-
         foreach (var btn in BottomRightButtons.OrderByDescending(btn => btn.DisplayPriority)) {
-            if (b++ % buttonsPerRow == 0) {
-                ImGui.NewLine();
-            }
             using (ImRaii.Disabled(btn.IsDisabled()))
-            using (ImRaii.PushId(btn.Id))
-            using (btn.Font().Push()) {
-                if (ImGui.Button(btn.Text, new Vector2(buttonWidth))) {
-                    btn.Action();
+            using (ImRaii.PushId(btn.Id)) {
+                
+                if (btn.Icon != 0) {
+                    if (ImGuiExt.ButtonWithIcon(btn.Text, btn.Icon, buttonSize)) {
+                        btn.Action();
+                    }
+                } else {
+                    if (ImGui.Button(btn.Text, buttonSize)) {
+                        btn.Action();
+                    }
                 }
             }
 
@@ -77,9 +69,7 @@ public abstract class Page {
                     ImGui.SetTooltip(btn.Tooltip);
                 }
             }
-
             
-            ImGui.SameLine();
         }
     }
 

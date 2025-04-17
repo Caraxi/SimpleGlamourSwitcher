@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
+using ECommons.ImGuiMethods;
 using ImGuiNET;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
@@ -31,7 +33,7 @@ public class ConfigPage : Page {
     }
     
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGui.Button("Back", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow.PopPage();
         }
     }

@@ -23,7 +23,7 @@ public class CharacterListPage : Page {
     
     public CharacterListPage() {
         
-        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, () => {
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "New Character", () => {
             MainWindow?.OpenPage(new EditCharacterPage(null));
         }) { IsDisabled = () => ClientState.LocalPlayer == null, Tooltip = "New Character"} );
         
@@ -105,7 +105,7 @@ public class CharacterListPage : Page {
         if (characters.Count == 0) {
             ImGuiExt.CenterText("No Characters Available", centerHorizontally: true, centerVertically: true, shadowed: true);
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X / 2 - ImGui.GetItemRectSize().X / 2);
-            if (ImGui.Button("Create Character", ImGui.GetItemRectSize() * Vector2.UnitX + ImGui.GetTextLineHeightWithSpacing() * 2 * Vector2.UnitY)) {
+            if (ImGuiExt.ButtonWithIcon("Create Character", FontAwesomeIcon.PersonCirclePlus, ImGui.GetItemRectSize() * Vector2.UnitX + ImGui.GetTextLineHeightWithSpacing() * 2 * Vector2.UnitY)) {
                 MainWindow.OpenPage(new EditCharacterPage(null));
             }
             
@@ -147,7 +147,7 @@ public class CharacterListPage : Page {
     }
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGui.Button("Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        if (ImGuiExt.ButtonWithIcon("Cancel", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow.PopPage();
         }
     }

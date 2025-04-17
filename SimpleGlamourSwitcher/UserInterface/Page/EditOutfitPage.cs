@@ -37,7 +37,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private string outfitName = outfit?.Name ?? string.Empty;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGui.Button("Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow?.PopPage();
         }
     }
@@ -114,7 +114,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         using (ImRaii.Group())
         using (ImRaii.ItemWidth(SubWindowWidth * ImGuiHelpers.GlobalScale)) {
 
-            if (ImGui.Button("Save Outfit", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+            if (ImGuiExt.ButtonWithIcon("Save Outfit", FontAwesomeIcon.Save, new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                 Outfit.Name = outfitName;
                 
                 Outfit.Save(true);

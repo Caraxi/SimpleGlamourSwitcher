@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
@@ -54,7 +55,7 @@ public static class ImageEditor {
             
 
 
-            if (ImGui.Button("Load Image", buttonSize)) {
+            if (ImGuiExt.ButtonWithIcon("Load Image", FontAwesomeIcon.FileUpload, buttonSize)) {
                 controlFlags |= WindowControlFlags.PreventClose;
                 Plugin.MainWindow.AllowAutoClose = false;
                 _fileDialogManager.Reset();
@@ -65,7 +66,7 @@ public static class ImageEditor {
             
             if (IImageProvider.SupportedImageFileTypes.Any(t => clipText.EndsWith($".{t}") && File.Exists(clipText))) {
                 using (ImRaii.Disabled(!confirmReplace)) {
-                    if (ImGui.Button("Load Image from Clipboard##filePath", buttonSize)) {
+                    if (ImGuiExt.ButtonWithIcon("Load Image from Clipboard##filePath", FontAwesomeIcon.Clipboard, buttonSize)) {
                         controlFlags |= WindowControlFlags.PreventClose;
                         imageProvider.LoadFile(true, [clipText]);
                     }
@@ -85,7 +86,7 @@ public static class ImageEditor {
                 }
             } else if (Common.TryGetClipboardImage(out var clipImage)) {
                 using (ImRaii.Disabled(!confirmReplace)) {
-                    if (ImGui.Button("Load Image from Clipboard##clipboardImage", buttonSize)) {
+                    if (ImGuiExt.ButtonWithIcon("Load Image from Clipboard##clipboardImage", FontAwesomeIcon.Clipboard, buttonSize)) {
                         controlFlags |= WindowControlFlags.PreventClose;
                         imageProvider.LoadImage(clipImage);
                     }
@@ -104,7 +105,7 @@ public static class ImageEditor {
                 }
             } else if (Common.TryGetClipboardFile(out var clipFile) && IImageProvider.SupportedImageFileTypes.Any(f => clipFile.EndsWith($".{f}"))) {
                 using (ImRaii.Disabled(!confirmReplace)) {
-                    if (ImGui.Button("Load Image from Clipboard##clipboardFile", buttonSize)) {
+                    if (ImGuiExt.ButtonWithIcon("Load Image from Clipboard##clipboardFile", FontAwesomeIcon.Clipboard, buttonSize)) {
                         controlFlags |= WindowControlFlags.PreventClose;
                         
                         var clipImg = TextureProvider.GetFromFileAbsolute(clipFile).GetWrapOrDefault();
@@ -133,12 +134,12 @@ public static class ImageEditor {
                 }
             } else {
                 using (ImRaii.Disabled()) {
-                    ImGui.Button("Load Image from Clipboard##clipboardNone", buttonSize);
+                    ImGuiExt.ButtonWithIcon("Load Image from Clipboard##clipboardNone", FontAwesomeIcon.Clipboard, buttonSize);
                 }
             }
 
             using (ImRaii.Disabled(image == null)) {
-                if (ImGui.Button("Crop Image", buttonSize)) {
+                if (ImGuiExt.ButtonWithIcon("Crop Image", FontAwesomeIcon.Crop, buttonSize)) {
                     Plugin.MainWindow.OpenPage(new ImageEditorPage(imageProvider, style));
                 }
             }

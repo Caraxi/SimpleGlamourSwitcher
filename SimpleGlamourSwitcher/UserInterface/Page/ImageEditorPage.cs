@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using ECommons.ImGuiMethods;
 using ImGuiNET;
@@ -19,7 +20,7 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
     private RectangleHandle UvEditHandle = RectangleHandle.None;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGui.Button("Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow?.PopPage();
         }
     }
@@ -147,7 +148,7 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
         }
 
         ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X / 2 - editorSize.X / 2);
-        if (ImGui.Button("Confirm", editorSize with { Y = ImGui.GetTextLineHeightWithSpacing() * 2 })) {
+        if (ImGuiExt.ButtonWithIcon("Confirm", FontAwesomeIcon.CheckCircle, editorSize with { Y = ImGui.GetTextLineHeightWithSpacing() * 2 })) {
             controlFlags |= WindowControlFlags.PreventClose;
             imageProvider.SetImageDetail(newDetail);
             MainWindow.PopPage();

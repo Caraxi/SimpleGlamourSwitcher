@@ -9,21 +9,22 @@ public class ButtonInfo {
 
     public ButtonInfo() { }
 
-    public ButtonInfo(string text, Action onClick) {
+    public ButtonInfo(FontAwesomeIcon icon, string text, Action onClick) {
         Text = text;
+        Icon = icon;
         Action = onClick;
     }
-
-    public ButtonInfo(FontAwesomeIcon icon, Action onClick) {
-        Text = icon.ToIconString();
+    
+    public ButtonInfo(string text, Action onClick) {
+        Text = text;
+        Icon = 0;
         Action = onClick;
-        Font = () => PluginInterface.UiBuilder.IconFontHandle;
     }
 
     public string Text { get; init; } = string.Empty;
     public string Tooltip { get; init; } = string.Empty;
     public Action Action { get; init; } = () => { };
-    public Func<IFontHandle> Font { get; init; } = () => PluginInterface.UiBuilder.DefaultFontHandle;
+    public FontAwesomeIcon Icon { get; init; } = 0;
     public string Id { get; init; } = Guid.NewGuid().ToString();
     
     public int DisplayPriority { get; init; } = 0;

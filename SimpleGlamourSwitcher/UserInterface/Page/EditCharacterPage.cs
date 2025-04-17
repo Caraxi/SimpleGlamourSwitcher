@@ -281,7 +281,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             controlFlags |= a;
             
             using (ImRaii.Disabled(!(dirty || IsNewCharacter))) {
-                if (ImGui.Button(IsNewCharacter ? "Create Character" : "Save Character", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+                if (ImGuiExt.ButtonWithIcon(IsNewCharacter ? "Create Character" : "Save Character", FontAwesomeIcon.Save, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                     controlFlags |= WindowControlFlags.PreventClose;
                     Character.Name = characterName;
                     Character.PenumbraCollection = penumbraCollection;
@@ -335,7 +335,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             }
 
             using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
-                if (ImGui.Button(IsNewCharacter ? "Cancel" : dirty ? "Revert Changes" : "Cancel", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+                if (ImGuiExt.ButtonWithIcon(IsNewCharacter ? "Cancel" : dirty ? "Revert Changes" : "Cancel", FontAwesomeIcon.Ban, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                     controlFlags |= WindowControlFlags.PreventClose;
                     MainWindow?.PopPage();
                 }

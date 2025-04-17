@@ -4,7 +4,6 @@ namespace SimpleGlamourSwitcher.Service;
 
 public static class PluginState {
     public static bool TryGetActiveCharacterGuid(out Guid guid) {
-        PluginLog.Verbose("TryGetActiveCharacterGuid()");
         return PluginConfig.SelectedCharacter.TryGetValue(ClientState.LocalContentId, out guid);
     }
     
@@ -12,7 +11,7 @@ public static class PluginState {
     public static void OnLogout(int type, int code) {
         PluginLog.Verbose($"OnLogout(type: {type} , code: {code})");
         ActionQueue.Clear();
-        Config.SwitchCharacter(null);
+        Config.SwitchCharacter(null, false);
         Plugin.MainWindow.IsOpen = false;
     }
     

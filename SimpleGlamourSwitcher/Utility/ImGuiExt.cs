@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
-using ECommons.ImGuiMethods;
+using Dalamud.Interface.ManagedFontAtlas;
+using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
@@ -91,6 +92,27 @@ public static class ImGuiExt {
                 }
             }
             
+        }
+    }
+    
+    public static bool SelectableWithNote(string label, string note, bool isSelected = false, IFontHandle? noteFont = null) {
+        using (ImRaii.Group()) {
+            if (ImGui.Selectable(label, isSelected)) {
+                return true;
+            }
+            
+            ImGui.SameLine();
+            using ((noteFont ?? PluginInterface.UiBuilder.DefaultFontHandle).Push()) {
+                var idSize = ImGui.CalcTextSize(note);
+                var dummySize = ImGui.GetContentRegionAvail().X - idSize.X - 10;
+                if (dummySize > 0) {
+                    ImGui.Dummy(new Vector2(dummySize, 1));
+                    ImGui.SameLine();
+                }
+                ImGui.TextDisabled(note);
+            }
+
+            return false;
         }
     }
 }

@@ -37,7 +37,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
     private (string Name, uint World) heelsIdentity = character?.HeelsIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
     
-    private Guid? penumbraCollection = character?.PenumbraCollection ?? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id;
+    private Guid? penumbraCollection = character == null ? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id : character.PenumbraCollection;
     
     private readonly HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
     private readonly HashSet<HumanSlot> defaultDisableEquipSlots = character?.DefaultDisabledEquipmentSlots.Clone() ?? [];
@@ -72,22 +72,17 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 dirty |= CustomInput.Combo("Penumbra Collection", penumbraCollection == null ? "No Collection Selected" : penumbraCollections.TryGetValue(penumbraCollection.Value, out var selectedName) ? selectedName : $"{penumbraCollection}", (search) => {
                     a |= WindowControlFlags.PreventClose;
                     var r = false;
+
+                    if (ImGuiExt.SelectableWithNote("No Collection", "Collection will not be changed", penumbraCollection == null)) {
+                        r = true;
+                        penumbraCollection = null;
+                    }
+                    
                     foreach (var (guid, name) in penumbraCollections.OrderBy(kvp => kvp.Value)) {
                         if (!string.IsNullOrWhiteSpace(search) && !name.Contains(search, StringComparison.InvariantCultureIgnoreCase)) continue;
-                        if (ImGui.Selectable(name, guid == penumbraCollection)) {
+                        if (ImGuiExt.SelectableWithNote($"{name}##{guid}", $"{guid}", guid == penumbraCollection, PluginInterface.UiBuilder.MonoFontHandle)) {
                             r = true;
                             penumbraCollection = guid;
-                        }
-                        ImGui.SameLine();
-                        using (ImRaii.PushFont(UiBuilder.MonoFont)) {
-                            var idSize = ImGui.CalcTextSize($"{guid}");
-                            var dummySize = ImGui.GetContentRegionAvail().X - idSize.X - 10;
-                            if (dummySize > 0) {
-                                ImGui.Dummy(new Vector2(dummySize, 1));
-                                ImGui.SameLine();
-                            }
-                            
-                            ImGui.TextDisabled($"{guid}");
                         }
                     }
 

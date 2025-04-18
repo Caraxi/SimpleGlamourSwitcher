@@ -252,7 +252,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 
                 ImGui.Columns(1);
             }
-            var MaxExpansion = Directory.Exists("ex4") ? Directory.Exists("ex5") ? 5 : 4 : 3; 
+            
             if (ImGui.CollapsingHeader("Default Advanced Appearance Toggles")) {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                     ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");

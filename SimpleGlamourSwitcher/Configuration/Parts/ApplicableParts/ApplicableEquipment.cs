@@ -34,7 +34,7 @@ public record ApplicableEquipment : ApplicableItem {
         }
     }
 
-    public static ApplicableEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerItem item, Dictionary<MaterialValueIndex, GlamourerMaterial> materials, Guid penumbraCollection) {
+    public static ApplicableEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerItem item, Dictionary<MaterialValueIndex, GlamourerMaterial>? materials, Guid penumbraCollection) {
         var equipItem = PluginService.ItemManager.Resolve(slot.ToEquipSlot(), item.ItemId.Id);
         
         return new ApplicableEquipment {
@@ -42,7 +42,7 @@ public record ApplicableEquipment : ApplicableItem {
             ItemId = item.ItemId,
             Stain = new ApplicableStain { Apply = item.ApplyStain, Stain = item.Stain, Stain2 = item.Stain2 },
             ModConfigs = OutfitModConfig.GetModListFromEquipment(slot, equipItem, penumbraCollection),
-            Materials = ApplicableMaterial.FilterForSlot(materials, slot)
+            Materials = ApplicableMaterial.FilterForSlot(materials ?? [], slot)
         };
     }
 

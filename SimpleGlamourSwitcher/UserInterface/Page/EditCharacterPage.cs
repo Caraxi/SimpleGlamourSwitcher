@@ -36,7 +36,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     
     private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
     private (string Name, uint World) heelsIdentity = character?.HeelsIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
-    
+
+    private Guid? customizePlusProfile = character == null ? CustomizePlus.TryGetActiveProfileOnCharacter(0, out var activeProfile) ? activeProfile.UniqueId : null : character.CustomizePlusProfile;
+
     private Guid? penumbraCollection = character == null ? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id : character.PenumbraCollection;
     
     private readonly HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
@@ -177,6 +179,48 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     ImGuiComponents.HelpMarker("A supported version of Simple Heels is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
                 }
                 
+                
+                var customizeReady = CustomizePlus.IsReady();
+                using (ImRaii.Disabled(!customizeReady)) {
+
+                    var profileName = "Not Set";
+                    if (customizePlusProfile != null) {
+                        if (customizePlusProfile == Guid.Empty) {
+                            profileName = "No Profile";
+                        } else {
+                            if (CustomizePlus.TryGetProfileDataByUniqueId(customizePlusProfile.Value, out var profile)) {
+                                profileName = profile.Name;
+                            } else {
+                                profileName = $"{customizePlusProfile}";
+                            }
+                        }
+                    }
+                    
+                    dirty |= CustomInput.Combo("Customize Plus Profile", profileName, () => {
+
+                        var r = false;
+                        var list = CustomizePlus.GetProfileList();
+
+                        if (ImGuiExt.SelectableWithNote("Not Set", "Leave profile as is", customizePlusProfile == null)) {
+                            customizePlusProfile = null;
+                            r = true;
+                        }
+                        
+                        if (ImGuiExt.SelectableWithNote("No Profile", "Use empty profile", customizePlusProfile == Guid.Empty)) {
+                            customizePlusProfile = Guid.Empty;
+                            r = true;
+                        }
+                        
+                        foreach (var p in list) {
+                            if (ImGuiExt.SelectableWithNote(p.VirtualPath + $"##{p.UniqueId}", p.UniqueId.ToString(), customizePlusProfile == p.UniqueId, PluginInterface.UiBuilder.MonoFontHandle)) {
+                                customizePlusProfile = p.UniqueId;
+                                r = true;
+                            }
+                        }
+                        
+                        return r;
+                    });
+                }
             }
 
             if (ImGui.CollapsingHeader("Automatic Applications")) {
@@ -286,6 +330,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
                     Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;
                     Character.DefaultEnabledToggles = defaultEnabledToggles;
+                    Character.CustomizePlusProfile = customizePlusProfile;
 
                     Character.ApplyOnLogin = applyOnLogin;
                     Character.ApplyOnPluginReload = applyOnPluginReload;
@@ -328,21 +373,23 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     
                 }
             }
-
-            using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
-                if (ImGuiExt.ButtonWithIcon(IsNewCharacter ? "Cancel" : dirty ? "Revert Changes" : "Cancel", FontAwesomeIcon.Ban, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-                    controlFlags |= WindowControlFlags.PreventClose;
-                    MainWindow?.PopPage();
-                }
-            }
-
-            if (dirty && !ImGui.GetIO().KeyShift) {
-                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
-                    ImGui.SetTooltip("Hold SHIFT to confirm");
-                }
-            }
         }
         
         ImGui.EndChild();
+    }
+
+    public override void DrawLeft(ref WindowControlFlags controlFlags) {
+        using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
+            if (ImGuiExt.ButtonWithIcon(IsNewCharacter ? "Cancel" : dirty ? "Revert Changes" : "Cancel", FontAwesomeIcon.Ban, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+                controlFlags |= WindowControlFlags.PreventClose;
+                MainWindow?.PopPage();
+            }
+        }
+
+        if (dirty && !ImGui.GetIO().KeyShift) {
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+                ImGui.SetTooltip("Hold SHIFT to confirm");
+            }
+        }
     }
 }

@@ -179,21 +179,23 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     ImGuiComponents.HelpMarker("A supported version of Simple Heels is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
                 }
                 
-                
                 var customizeReady = CustomizePlus.IsReady();
                 using (ImRaii.Disabled(!customizeReady)) {
-
                     var profileName = "Not Set";
-                    if (customizePlusProfile != null) {
-                        if (customizePlusProfile == Guid.Empty) {
-                            profileName = "No Profile";
-                        } else {
-                            if (CustomizePlus.TryGetProfileDataByUniqueId(customizePlusProfile.Value, out var profile)) {
-                                profileName = profile.Name;
+                    if (customizeReady) {
+                        if (customizePlusProfile != null) {
+                            if (customizePlusProfile == Guid.Empty) {
+                                profileName = "No Profile";
                             } else {
-                                profileName = $"{customizePlusProfile}";
+                                if (CustomizePlus.TryGetProfileDataByUniqueId(customizePlusProfile.Value, out var profile)) {
+                                    profileName = profile.Name;
+                                } else {
+                                    profileName = $"{customizePlusProfile}";
+                                }
                             }
                         }
+                    } else {
+                        profileName = "A supported version of Customize+ is not detected";
                     }
                     
                     dirty |= CustomInput.Combo("Customize Plus Profile", profileName, () => {

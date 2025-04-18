@@ -73,9 +73,13 @@ public static class CustomizePlus {
         }
     }
 
-    public static IList<CustomizePlusProfileDataTuple> GetProfileList() => Api.GetProfileList();
+    public static IList<CustomizePlusProfileDataTuple> GetProfileList() => IsReady() ? Api.GetProfileList() : [];
 
     public static bool TryGetProfileByUniqueId(Guid guid, [NotNullWhen(true)] out string? profileData) {
+        if (!IsReady()) {
+            profileData = null;
+            return false;
+        }
         var getProfile = Api.GetProfileByUniqueId(guid);
         var error = (ErrorCode)getProfile.errorCode;
         if (error == ErrorCode.Success && getProfile.profileData != null) {
@@ -88,6 +92,10 @@ public static class CustomizePlus {
     }
 
     public static bool TryGetProfileDataByUniqueId(Guid guid, out CustomizePlusProfileDataTuple profileData) {
+        if (!IsReady()) {
+            profileData = EmptyProfile;
+            return false;
+        }
         var list = Api.GetProfileList();
         return list.FindFirst(p => p.UniqueId == guid, out profileData);
     }

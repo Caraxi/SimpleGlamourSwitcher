@@ -187,18 +187,23 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private void ShowSlot(string slotName, HumanSlot equipSlot, ApplicableItem equipment) {
         try {
             var equipItem = equipment.GetEquipItem(equipSlot);
-            ShowSlot(slotName, equipItem.Name, equipItem.IconId.Id, equipment, equipment is ApplicableEquipment ae ? ae.Stain : null, equipment.Materials, showLinks: ImGui.GetIO().KeyShift);
+            ShowSlot(slotName, equipItem.Name, equipItem.IconId.Id, equipment, equipment is ApplicableEquipment ae ? ae.Stain : null, equipment.Materials);
         } catch (Exception ex) {
             ImGui.TextWrapped($"{ex}");
         }
     }
     
-    private void ShowSlot(string slotName, string itemName, uint iconId, ApplicableItem equipment, ApplicableStain? stains = null, List<ApplicableMaterial>? materials = null, bool showLinks = true) {
+    private void ShowSlot(string slotName, string itemName, uint iconId, ApplicableItem equipment, ApplicableStain? stains = null, List<ApplicableMaterial>? materials = null) {
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slotName}")) {
            
             var tex = TextureProvider.GetFromGameIcon(iconId).GetWrapOrEmpty();
             ImGui.Image(tex.ImGuiHandle, new Vector2(ImGui.GetTextLineHeight() * 2 + ImGui.GetStyle().FramePadding.Y * 4 + ImGui.GetStyle().ItemSpacing.Y));
+#if DEBUG
+            if (ImGui.GetIO().KeyAlt && ImGui.GetIO().KeyShift) {
+                ImGui.GetWindowDrawList().AddText(ImGui.GetItemRectMin(), 0xFF0000FF, $"{iconId}");
+            }
+#endif
             ImGui.SameLine();
 
             var s = new Vector2(280 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);

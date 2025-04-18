@@ -223,4 +223,15 @@ public class MainWindow : Window {
             PluginConfig.WindowSize = ImGui.GetWindowSize();
         }
     }
+
+    public void HoldAutoClose() {
+        AllowAutoClose = false;
+        Framework.RunOnTick(() => {
+            if (IsFocused) {
+                HoldAutoClose();
+            } else {
+                AllowAutoClose = true;
+            }
+        }, delayTicks: 20);
+    }
 }

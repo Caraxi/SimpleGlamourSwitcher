@@ -17,7 +17,8 @@ public static class ModListDisplay {
 
     private static Vector2 buttonSize = new Vector2(ImGui.GetTextLineHeightWithSpacing());
     
-    public static void Show(IHasModConfigs modable, string slotName) {
+    public static bool Show(IHasModConfigs modable, string slotName) {
+        var edited = false;
 
         var p = ImGui.GetItemRectMax();
         var s = new Vector2(ImGui.CalcItemWidth(), ImGui.GetTextLineHeightWithSpacing());
@@ -92,7 +93,6 @@ public static class ModListDisplay {
         
         if (ImGuiExt.IconButton($"{id}_open", FontAwesomeIcon.Edit, buttonSize)) {
             ImGui.OpenPopup(id);
-            PluginLog.Debug($"Hello Popup: {id}");
         }
         
         ImGui.SetNextWindowPos(popupPosition);
@@ -109,6 +109,7 @@ public static class ModListDisplay {
                 
                 if (ImGuiExt.IconButton("##trash", FontAwesomeIcon.Trash, buttonSize) && ImGui.GetIO().KeyShift) {
                     modable.ModConfigs.Remove(m);
+                    edited = true;
                 }
 
                 if (ImGui.IsItemHovered()) {
@@ -134,6 +135,7 @@ public static class ModListDisplay {
                     }
 
                     modable.ModConfigs[i] = modConfig;
+                    edited = true;
                 }
 
                 if (ImGui.IsItemHovered()) {
@@ -202,7 +204,8 @@ public static class ModListDisplay {
                                 var modConfig = new OutfitModConfig(mod.Key, false, 0, []);
                                 modable.ModConfigs.Add(modConfig);
                             }
-                            
+
+                            edited = true;
                             ImGui.CloseCurrentPopup();
                         }
 
@@ -234,8 +237,8 @@ public static class ModListDisplay {
             
             ImGui.EndPopup();
         }
-        
-        
+
+        return edited;
     }
 
 

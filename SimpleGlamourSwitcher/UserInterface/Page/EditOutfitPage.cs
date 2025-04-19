@@ -25,8 +25,13 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
     private readonly string folderPath = character.ParseFolderPath(folderGuid);
     private const float SubWindowWidth = 600f;
-    
+
     private readonly FileDialogManager fileDialogManager = new();
+
+    private OutfitEquipment? equipment;
+    private OutfitAppearance? appearance;
+
+    private bool dirty;
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -37,12 +42,28 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private string outfitName = outfit?.Name ?? string.Empty;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-            MainWindow?.PopPage();
+        using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
+            if (ImGuiExt.ButtonWithIcon(dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+                MainWindow?.PopPage();
+            }
+        }
+        
+        #if DEBUG
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) && ImGui.IsMouseClicked(ImGuiMouseButton.Right)) {
+            dirty = false;
+        }
+        #endif
+        
+
+        if (dirty && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+            ImGui.SetTooltip("Hold SHIFT to confirm.");
         }
     }
 
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
+        equipment ??= Outfit.Equipment.Clone();
+        appearance ??= Outfit.Appearance.Clone();
+        
         fileDialogManager.Draw();
         controlFlags |= WindowControlFlags.PreventClose;
         ImGui.Spacing();
@@ -54,7 +75,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         ImGui.SameLine();
         using (ImRaii.Group())
         using (ImRaii.ItemWidth(SubWindowWidth * ImGuiHelpers.GlobalScale)) {
-            CustomInput.InputText("Outfit Name", ref outfitName, 100, errorMessage: outfitName.Length == 0 ? "Please enter a name" : string.Empty);
+            dirty |= CustomInput.InputText("Outfit Name", ref outfitName, 100, errorMessage: outfitName.Length == 0 ? "Please enter a name" : string.Empty);
             CustomInput.ReadOnlyInputText("Path", folderPath);
         }
         
@@ -65,7 +86,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         ImGui.SameLine();
         if (ImGui.BeginChild("equipment", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {
 
-            ImGui.Checkbox("##applyAppearance", ref Outfit.Appearance.Apply);
+            dirty |= ImGui.Checkbox("##applyAppearance", ref appearance.Apply);
             ImGui.SameLine();
             using (ImRaii.Group()) {
                 if (ImGui.CollapsingHeader("Appearance")) {
@@ -82,7 +103,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             }
            
             
-            ImGui.Checkbox("##applyEquipment", ref Outfit.Equipment.Apply);
+            ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
             ImGui.SameLine();
             if (ImGui.CollapsingHeader("Equipment")) {
                 using (ImRaii.PushIndent()) {
@@ -116,7 +137,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
             if (ImGuiExt.ButtonWithIcon("Save Outfit", FontAwesomeIcon.Save, new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                 Outfit.Name = outfitName;
-                
+                Outfit.Equipment = equipment ?? Outfit.Equipment;
+                Outfit.Appearance = appearance ?? Outfit.Appearance;
                 Outfit.Save(true);
                 MainWindow?.PopPage();
             }
@@ -132,8 +154,9 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     private void ShowCustomize(CustomizeIndex customizeIndex) {
-        var customize = Outfit.Appearance[customizeIndex];
-        ImGui.Checkbox($"##enableCustomize_{customizeIndex}", ref customize.Apply);
+        appearance ??= Outfit.Appearance.Clone();
+        var customize = appearance[customizeIndex];
+        dirty |= ImGui.Checkbox($"##enableCustomize_{customizeIndex}", ref customize.Apply);
         ImGui.SameLine();
         CustomizeEditor.ShowReadOnly($"{customizeIndex}##customizeEditor_{customizeIndex}", customizeIndex, customize);
     }
@@ -145,12 +168,13 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     private void DrawParameter(AppearanceParameterKind kind) {
-        var param = Outfit.Appearance[kind];
+        appearance ??= Outfit.Appearance.Clone();
+        var param = appearance[kind];
         
-        ImGui.Checkbox($"##enableParameter_{kind}", ref param.Apply);
+        dirty |= ImGui.Checkbox($"##enableParameter_{kind}", ref param.Apply);
         ImGui.SameLine();
 
-        param.ShowEditor($"{kind}##paramEditor_{kind}", kind, true);
+        dirty |= param.ShowEditor($"{kind}##paramEditor_{kind}", kind, true);
     }
 
     private void DrawEquipment() {
@@ -160,12 +184,14 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     public void ShowSlot(HumanSlot slot) {
-        var equip = Outfit.Equipment[slot];
+        equipment ??= Outfit.Equipment.Clone();
+        
+        var equip = equipment[slot];
 
         using (ImRaii.Group()) {
             using (ImRaii.Group()) {
                 ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));
-                ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
+                dirty |= ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
             }
 
             ImGui.SameLine();
@@ -178,8 +204,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             ImGui.SameLine();
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
             using (ImRaii.Group()) {
-                Outfit.Equipment.HatVisible.ShowToggleEditor("Headwear Visible");
-                Outfit.Equipment.VisorToggle.ShowToggleEditor("Visor Toggle");
+                dirty |= equipment.HatVisible.ShowToggleEditor("Headwear Visible");
+                dirty |= equipment.VisorToggle.ShowToggleEditor("Visor Toggle");
             }
         }
     }
@@ -263,7 +289,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
                 ImGui.EndGroup();
                 
-                ModListDisplay.Show(equipment, slotName);
+                dirty |= ModListDisplay.Show(equipment, slotName);
             }
         }
     }

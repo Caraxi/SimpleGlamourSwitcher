@@ -20,6 +20,7 @@ using UiBuilder = Dalamud.Interface.UiBuilder;
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
 public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, OutfitConfigFile? outfit) : Page {
+    
     public bool IsNewOutfit { get; } = outfit == null;
     public OutfitConfigFile Outfit { get; } = outfit ?? OutfitConfigFile.CreateFromLocalPlayer(character, folderGuid, character.GetOptionsProvider(folderGuid));
 
@@ -30,7 +31,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
     private OutfitEquipment? equipment;
     private OutfitAppearance? appearance;
-
+    private string outfitName = outfit?.Name ?? string.Empty;
+    
     private bool dirty;
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
@@ -38,9 +40,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         ImGuiExt.CenterText(IsNewOutfit ? "Creating" : "Editing Outfit", shadowed: true);
         ImGuiExt.CenterText(IsNewOutfit ? $"New Outfit in {folderPath}" : $"{folderPath} / {Outfit.Name}", shadowed: true);
     }
-
-    private string outfitName = outfit?.Name ?? string.Empty;
-
+    
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
         using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
             if (ImGuiExt.ButtonWithIcon(dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {

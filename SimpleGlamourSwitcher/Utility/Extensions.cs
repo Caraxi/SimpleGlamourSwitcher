@@ -1,10 +1,12 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Files;
 
 namespace SimpleGlamourSwitcher.Utility;
 
@@ -64,6 +66,13 @@ public static class Extensions {
             HumanSlot.RFinger => "Right Ring",
             HumanSlot.Face => "Glasses",
             _ => slot.ToString()
+        };
+    }
+
+    public static string PrettyName(this CustomizeIndex cIndex) {
+        return cIndex switch {
+            CustomizeIndex.BustSize => "Bust Size",
+            _ => cIndex.ToString()
         };
     }
 

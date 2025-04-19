@@ -38,6 +38,7 @@ public static class PenumbraIpc {
     public static readonly API.SetCollectionForObject SetCollectionForObject = new(PluginInterface);
     public static readonly API.Legacy.SetCollectionForObject LegacySetCollectionForObject = new(PluginInterface);
     public static readonly API.SetCollection SetCollection = new(PluginInterface);
+    public static readonly API.GetCurrentModSettings GetCurrentModSettings = new(PluginInterface);
     
     private static readonly API.CheckCurrentChangedItemFunc CheckCurrentChangedItemFunc = new(PluginInterface);
     private static Func<string, (string ModDirectory, string ModName)[]>? _checkCurrentChangedItem;

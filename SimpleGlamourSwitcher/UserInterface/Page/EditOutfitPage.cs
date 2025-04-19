@@ -263,7 +263,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
                 ImGui.EndGroup();
                 
-                ModListDisplay.Show(equipment);
+                ModListDisplay.Show(equipment, slotName);
             }
         }
     }

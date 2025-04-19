@@ -115,4 +115,13 @@ public static class ImGuiExt {
             return false;
         }
     }
+
+    public static bool IconButton(string id, FontAwesomeIcon icon, Vector2 buttonSize) {
+        if (!id.StartsWith("##")) id = $"##{id}";
+        try {
+            return ImGui.Button($"{id}", buttonSize);
+        } finally {
+            ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+        }
+    }
 }

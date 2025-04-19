@@ -2,6 +2,7 @@
 using ImGuiNET;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
+using SimpleGlamourSwitcher.Utility;
 using Race = Lumina.Excel.Sheets.Race;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components;
@@ -96,7 +97,7 @@ public static class CustomizeEditor {
         var r = ShowEditorEntry(label, index, customize, isReadOnly);
 
         if (customize is ApplicableCustomizeModable modable) {
-            ModListDisplay.Show(modable);
+            ModListDisplay.Show(modable, $"{index.PrettyName()}");
         }
         
 

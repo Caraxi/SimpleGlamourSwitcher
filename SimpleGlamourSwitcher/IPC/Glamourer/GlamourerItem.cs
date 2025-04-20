@@ -1,7 +1,7 @@
 ﻿namespace SimpleGlamourSwitcher.IPC.Glamourer;
 
 public class GlamourerItem : GlamourerToggleable {
-    public Penumbra.GameData.Structs.ItemId ItemId;
+    public ulong ItemId;
     public bool Crest;
     public bool ApplyStain;
     public bool ApplyCrest;

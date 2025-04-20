@@ -21,6 +21,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
     public List<Guid> ApplyBefore = new();
     public List<Guid> ApplyAfter = new();
+    public string? SortName;
     
     public ImageDetail ImageDetail { get; set; } = new();
 

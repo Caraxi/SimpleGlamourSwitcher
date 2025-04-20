@@ -32,6 +32,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private OutfitEquipment? equipment;
     private OutfitAppearance? appearance;
     private string outfitName = outfit?.Name ?? string.Empty;
+    private string? sortName = outfit?.SortName ?? string.Empty;
     
     private bool dirty;
     
@@ -122,6 +123,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
             if (ImGui.CollapsingHeader("Details")) {
                 ImGui.Text($"GUID: {Outfit.Guid}");
+                dirty |= ImGui.InputTextWithHint("Custom Sort Name", outfitName, ref sortName, 128);
             }
             
         }
@@ -137,6 +139,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
             if (ImGuiExt.ButtonWithIcon("Save Outfit", FontAwesomeIcon.Save, new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                 Outfit.Name = outfitName;
+                Outfit.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();
                 Outfit.Equipment = equipment ?? Outfit.Equipment;
                 Outfit.Appearance = appearance ?? Outfit.Appearance;
                 Outfit.Save(true);

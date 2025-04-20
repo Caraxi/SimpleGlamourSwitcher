@@ -121,9 +121,9 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         base.Setup();
     }
 
-    public async Task<Dictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder = null, CancellationToken cancellationToken = default) {
+    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder = null, CancellationToken cancellationToken = default) {
         return await Task.Run(() => {
-            var outfits = new Dictionary<Guid, OutfitConfigFile>();
+            var outfits = new List<OutfitConfigFile>();
             
             PluginLog.Verbose($"Getting Outfits from {OutfitDirectory.FullName}");
             
@@ -133,10 +133,15 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 if (outfitCfg == null) continue;
                 var outfitFolder = Folders.ContainsKey(outfitCfg.Folder) ? outfitCfg.Folder : Guid.Empty;
                 if (folder != null && outfitFolder != folder) continue;
-                outfits.Add(guid, outfitCfg);
+                outfits.Add(outfitCfg);
             }
             
-            return outfits;
+            var dict = new OrderedDictionary<Guid, OutfitConfigFile>();
+            foreach (var outfit in outfits.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name  : o.SortName)) {
+                dict.Add(outfit.Guid, outfit);
+            }
+
+            return dict;
         }, cancellationToken).WaitAsync(cancellationToken);
     }
     

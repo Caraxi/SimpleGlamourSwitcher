@@ -58,7 +58,7 @@ public class GlamourListPage : Page {
 
     private (ItemType Type, Guid Guid)? dragItem;
     
-    private Dictionary<Guid, OutfitConfigFile>? outfits;
+    private OrderedDictionary<Guid, OutfitConfigFile>? outfits;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
 

@@ -18,21 +18,35 @@ public abstract class Page {
     protected List<ButtonInfo> BottomRightButtons { get; } = [];
 
 
+    public virtual bool AllowStack => true;
+
+
     public float SidebarScaleRight { get; protected set; } = 1f;
     public float SidebarScaleLeft { get; protected set; } = 1f;
 
     protected Page() {
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cog, "Settings", () => {
             if (MainWindow?.ActivePage is ConfigPage) {
-                MainWindow?.PopPage();
+                MainWindow.PopPage();
             } else {
                 MainWindow?.OpenPage(new ConfigPage());
             }
         }) { DisplayPriority = -100 });
+        
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Clipboard, "Changelog", () => {
+            if (MainWindow.ActivePage is ChangeLogPage) {
+                MainWindow.PopPage();
+            } else {
+                MainWindow.OpenPage(new ChangeLogPage());
+            }
+        }) { DisplayPriority = -99 });
+        
     }
     
     public virtual void DrawLeft(ref WindowControlFlags controlFlags) {
-        
+        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+            MainWindow.PopPage();
+        }
     }
     
     public virtual void DrawRight(ref WindowControlFlags controlFlags) {

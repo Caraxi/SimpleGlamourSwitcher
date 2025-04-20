@@ -19,12 +19,6 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
 
     private RectangleHandle UvEditHandle = RectangleHandle.None;
 
-    public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-            MainWindow?.PopPage();
-        }
-    }
-
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         DrawEditor(ref controlFlags);
     }

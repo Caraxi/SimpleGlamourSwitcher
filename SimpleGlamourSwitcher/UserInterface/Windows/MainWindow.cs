@@ -122,7 +122,7 @@ public class MainWindow : Window {
         if (cleanStack) {
             previousPageStack.Clear();
         } else {
-            if (ActivePage != null) previousPageStack.Push(ActivePage);
+            if (ActivePage is { AllowStack: true }) previousPageStack.Push(ActivePage);
         }
         
         ActivePage = page;
@@ -149,6 +149,14 @@ public class MainWindow : Window {
     }
 
     public override void Draw() {
+        try {
+            DrawContent();
+        } catch (Exception ex) {
+            PluginLog.Error(ex, "Error drawing main window.");
+        }
+    }
+
+    private void DrawContent() {
         ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize(), ImGui.ColorConvertFloat4ToU32(PluginConfig.BackgroundColour));
 
         ActivePage ??= new GlamourListPage();

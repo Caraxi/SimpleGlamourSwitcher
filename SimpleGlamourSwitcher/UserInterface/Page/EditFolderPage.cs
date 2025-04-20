@@ -257,12 +257,6 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         
         base.DrawCenter(ref controlFlags);
     }
-
-    public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-            MainWindow.PopPage();
-        }
-    }
     
     private void SaveChanges() {
         if (folder == null) {

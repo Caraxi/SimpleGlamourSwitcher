@@ -9,6 +9,7 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
 public class ConfigPage : Page {
+    public override bool AllowStack => false;
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
         ImGuiExt.CenterText("Config", shadowed: true);
@@ -30,11 +31,5 @@ public class ConfigPage : Page {
         }
         
         ImGui.EndChild();
-    }
-    
-    public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        if (ImGuiExt.ButtonWithIcon("Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-            MainWindow.PopPage();
-        }
     }
 }

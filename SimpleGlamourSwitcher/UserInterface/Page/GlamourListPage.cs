@@ -104,9 +104,6 @@ public class GlamourListPage : Page {
                 ImGui.EndTooltip();
             }
         }
-        
-        
-        base.DrawLeft(ref controlFlags);
     }
     
     

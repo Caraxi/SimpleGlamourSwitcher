@@ -29,6 +29,7 @@ public class PluginService {
     public static ActionQueueService ActionQueue { get; private set; } = new();
 
     public static ItemManager ItemManager => _serviceManager.GetService<ItemManager>();
+    public static DictBonusItems DictBonusItems => _serviceManager.GetService<DictBonusItems>();
     
     private static ServiceManager _serviceManager = null!;
 

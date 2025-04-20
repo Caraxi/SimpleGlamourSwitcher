@@ -54,7 +54,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             dirty = false;
         }
         #endif
-        
 
         if (dirty && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
             ImGui.SetTooltip("Hold SHIFT to confirm.");
@@ -82,7 +81,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
 
-
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();
         if (ImGui.BeginChild("equipment", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {
@@ -102,7 +100,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     }
                 }
             }
-           
             
             ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
             ImGui.SameLine();
@@ -112,8 +109,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 }
             }
             
-            
-
             if (ImGui.CollapsingHeader("Image")) {
                 var folder = character.Folders.GetValueOrDefault(folderGuid);
                 var outfitStyle = folder?.OutfitPolaroidStyle ?? (character.CustomStyle ?? PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
@@ -129,7 +124,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         }
         ImGui.EndChild();
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
-
         
         ImGui.Spacing();
         ImGui.Dummy(new Vector2(pad, 1f));
@@ -145,9 +139,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 Outfit.Save(true);
                 MainWindow?.PopPage();
             }
-            
         }
-
     }
 
     private void DrawAppearance() {
@@ -199,7 +191,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
             ImGui.SameLine();
             using (ImRaii.Group()) {
-                ShowSlot($"{slot}", slot, equip);
+                ShowSlot(slot, equip);
             }
         }
 
@@ -213,24 +205,15 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         }
     }
     
-    private void ShowSlot(string slotName, HumanSlot equipSlot, ApplicableItem equipment) {
-        try {
-            var equipItem = equipment.GetEquipItem(equipSlot);
-            ShowSlot(slotName, equipItem.Name, equipItem.IconId.Id, equipment, equipment is ApplicableEquipment ae ? ae.Stain : null, equipment.Materials);
-        } catch (Exception ex) {
-            ImGui.TextWrapped($"{ex}");
-        }
-    }
-    
-    private void ShowSlot(string slotName, string itemName, uint iconId, ApplicableItem equipment, ApplicableStain? stains = null, List<ApplicableMaterial>? materials = null) {
+    private void ShowSlot(HumanSlot slot, ApplicableItem equipment) {
+        var equipItem = equipment.GetEquipItem(slot);
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
-        using (ImRaii.PushId($"State_{slotName}")) {
-           
-            var tex = TextureProvider.GetFromGameIcon(iconId).GetWrapOrEmpty();
+        using (ImRaii.PushId($"State_{slot}")) {
+            var tex = TextureProvider.GetFromGameIcon(equipItem.IconId.Id).GetWrapOrEmpty();
             ImGui.Image(tex.ImGuiHandle, new Vector2(ImGui.GetTextLineHeight() * 2 + ImGui.GetStyle().FramePadding.Y * 4 + ImGui.GetStyle().ItemSpacing.Y));
 #if DEBUG
             if (ImGui.GetIO().KeyAlt && ImGui.GetIO().KeyShift) {
-                ImGui.GetWindowDrawList().AddText(ImGui.GetItemRectMin(), 0xFF0000FF, $"{iconId}");
+                ImGui.GetWindowDrawList().AddText(ImGui.GetItemRectMin(), 0xFF0000FF, $"{equipItem.IconId.Id}");
             }
 #endif
             ImGui.SameLine();
@@ -238,12 +221,26 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             var s = new Vector2(280 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
 
             using (ImRaii.Group()) {
-                ImGui.SetNextItemWidth(s.X - (materials is { Count: > 0 } ? s.Y + ImGui.GetStyle().ItemSpacing.X : 0) - (stains != null ? s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2 : 0));
+                ImGui.SetNextItemWidth(s.X - (equipment.Materials is { Count: > 0 } ? s.Y + ImGui.GetStyle().ItemSpacing.X : 0) - (equipment is ApplicableEquipment ? s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2 : 0));
 
                 ImGui.BeginGroup();
-                ImGui.InputText("##itemName", ref itemName, 64, ImGuiInputTextFlags.ReadOnly);
 
-                if (materials is { Count: > 0 }) {
+                if (equipment is ApplicableEquipment applicableEquipment) {
+                    if (ItemPicker.Show($"##{slot}", slot, ref equipItem)) {
+                        applicableEquipment.ItemId = equipItem.ItemId;
+                        dirty = true;
+                    }
+                } else if (equipment is ApplicableBonus applicableBonus) {
+                    if (ItemPicker.Show($"##{slot}", slot, ref equipItem)) {
+                        applicableBonus.BonusItemId = equipItem.Id.Id;
+                        dirty = true;
+                    }
+                } else {
+                    var name = equipItem.Name;
+                    ImGui.InputText("##itemName", ref name, 64, ImGuiInputTextFlags.ReadOnly);
+                }
+                
+                if (equipment.Materials is { Count: > 0 }) {
                     ImGui.SameLine();
                     using (ImRaii.PushFont(UiBuilder.IconFont)) {
                         if (ImGui.Button(FontAwesomeIcon.Palette.ToIconString(), new Vector2(s.Y))) { }
@@ -252,13 +249,13 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     if (ImGui.IsItemHovered()) {
                         ImGui.BeginTooltip();
 
-                        ImGui.Text($"{slotName} Advanced Dyes");
+                        ImGui.Text($"{slot.PrettyName()} Advanced Dyes");
                         ImGui.Separator();
 
                         using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
                         using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(3, ImGui.GetStyle().CellPadding.Y))) {
                             if (ImGui.BeginTable("materialsTable", 4)) {
-                                foreach (var material in materials) {
+                                foreach (var material in equipment.Materials) {
                                     ImGui.TableNextColumn();
                                     var t = $"{material.MaterialValueIndex.MaterialString()} {material.MaterialValueIndex.RowString()}";
                                     ImGui.SetNextItemWidth(ImGui.CalcTextSize(t).X + ImGui.GetStyle().FramePadding.X * 2);
@@ -283,16 +280,16 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     }
                 }
 
-                if (stains != null) {
+                if (equipment is ApplicableEquipment ae) {
                     ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{slotName}, Stain 1##{slotName}_stain1", ref stains.Stain, new Vector2(s.Y));
+                    dirty |= StainPicker.Show($"{slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
                     ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{slotName}, Stain 2##{slotName}_stain2", ref stains.Stain2, new Vector2(s.Y));
+                    dirty |= StainPicker.Show($"{slot}, Stain 2##{slot}_stain2", ref ae.Stain.Stain2, new Vector2(s.Y));
                 }
 
                 ImGui.EndGroup();
                 
-                dirty |= ModListDisplay.Show(equipment, slotName);
+                dirty |= ModListDisplay.Show(equipment, $"{slot.PrettyName()}");
             }
         }
     }

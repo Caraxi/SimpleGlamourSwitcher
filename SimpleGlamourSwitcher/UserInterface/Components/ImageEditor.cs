@@ -138,7 +138,7 @@ public static class ImageEditor {
                 }
             }
 
-            using (ImRaii.Disabled(image == null)) {
+            using (ImRaii.Disabled(image == null || imageProvider.IsUsingDefaultImage())) {
                 if (ImGuiExt.ButtonWithIcon("Crop Image", FontAwesomeIcon.Crop, buttonSize)) {
                     Plugin.MainWindow.OpenPage(new ImageEditorPage(imageProvider, style));
                 }

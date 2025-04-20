@@ -209,13 +209,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         var equipItem = equipment.GetEquipItem(slot);
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slot}")) {
-            var tex = TextureProvider.GetFromGameIcon(equipItem.IconId.Id).GetWrapOrEmpty();
-            ImGui.Image(tex.ImGuiHandle, new Vector2(ImGui.GetTextLineHeight() * 2 + ImGui.GetStyle().FramePadding.Y * 4 + ImGui.GetStyle().ItemSpacing.Y));
-#if DEBUG
-            if (ImGui.GetIO().KeyAlt && ImGui.GetIO().KeyShift) {
-                ImGui.GetWindowDrawList().AddText(ImGui.GetItemRectMin(), 0xFF0000FF, $"{equipItem.IconId.Id}");
-            }
-#endif
+            ItemIcon.Draw(slot, equipItem);
             ImGui.SameLine();
 
             var s = new Vector2(280 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);

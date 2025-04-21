@@ -9,6 +9,7 @@ using OtterGui.Services;
 using Penumbra.GameData.Data;
 using Penumbra.GameData.DataContainers;
 
+#pragma warning disable SeStringEvaluator
 namespace SimpleGlamourSwitcher.Service;
 
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
@@ -37,6 +38,7 @@ public class PluginService {
         var logger = new Logger();
         _serviceManager = new ServiceManager(logger)
             .AddDalamudService<IDataManager>(PluginInterface)
+            .AddDalamudService<ISeStringEvaluator>(PluginInterface)
             .AddSingleton<DictAction>()
             .AddSingleton<DictBNpc>()
             .AddSingleton<DictBNpcNames>()

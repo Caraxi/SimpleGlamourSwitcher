@@ -9,7 +9,7 @@
 );
 using System.Diagnostics.CodeAnalysis;
 using ECommons.EzIpcManager;
-using OtterGui;
+using OtterGui.Extensions;
 
 namespace SimpleGlamourSwitcher.IPC;
 

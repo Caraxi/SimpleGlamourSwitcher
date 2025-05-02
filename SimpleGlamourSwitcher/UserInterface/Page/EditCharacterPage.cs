@@ -14,6 +14,7 @@ using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
+using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
 using UiBuilder = Dalamud.Interface.UiBuilder;
@@ -47,6 +48,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     private readonly HashSet<ToggleType> defaultEnabledToggles = character?.DefaultEnabledToggles.Clone() ?? [];
     
     private readonly Dictionary<Guid, string> penumbraCollections = PenumbraIpc.GetCollections.Invoke();
+    
+    private PolaroidStyle? outfitStyle = character?.OutfitPolaroidStyle.Clone();
+    private PolaroidStyle? folderStyle = character?.FolderPolaroidStyle.Clone();
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -313,6 +317,47 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 ImGui.Columns(1);
             }
 
+            
+            var useCustomOutfitPolaroid = outfitStyle != null;
+            var useCustomFolderPolaroid = folderStyle != null;
+            
+            if (ImGui.Checkbox(useCustomOutfitPolaroid ? "##useCustomOutfitPolaroid" : "Use custom outfit style", ref useCustomOutfitPolaroid)) {
+                if (useCustomOutfitPolaroid) {
+                    outfitStyle = (PluginConfig.CustomStyle?.OutfitList.Polaroid ?? Style.Default.OutfitList.Polaroid).Clone();
+                } else {
+                    outfitStyle = null;
+                }
+                dirty = true;
+            }
+
+            if (outfitStyle != null) {
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Custom Outfit Image Style")) {
+                    using (ImRaii.PushIndent()) {
+                        dirty |= PolaroidStyle.DrawEditor("Outfit", outfitStyle);
+                    }
+                }
+            }
+
+            if (ImGui.Checkbox(useCustomFolderPolaroid ? "##useCustomFolderPolaroid" : "Use custom folder style", ref useCustomFolderPolaroid)) {
+                if (useCustomFolderPolaroid) {
+                    folderStyle = (PluginConfig.CustomStyle?.FolderPolaroid ?? Style.Default.FolderPolaroid).Clone();
+                } else {
+                    folderStyle = null;
+                }
+
+                dirty = true;
+            }
+
+            if (folderStyle != null) {
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Custom Folder Image Style")) {
+                    using (ImRaii.PushIndent()) {
+                        dirty |= PolaroidStyle.DrawEditor("Folder", folderStyle);
+                    }
+                }
+            }
+            
 
             if (ImGui.CollapsingHeader("Image")) {
                 var style = (PluginConfig.CustomStyle ?? Style.Default).CharacterPolaroid;
@@ -333,6 +378,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;
                     Character.DefaultEnabledToggles = defaultEnabledToggles;
                     Character.CustomizePlusProfile = customizePlusProfile;
+                    Character.OutfitPolaroidStyle = outfitStyle;
+                    Character.FolderPolaroidStyle = folderStyle;
 
                     Character.ApplyOnLogin = applyOnLogin;
                     Character.ApplyOnPluginReload = applyOnPluginReload;

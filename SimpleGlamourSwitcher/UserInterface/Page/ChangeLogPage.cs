@@ -21,6 +21,10 @@ public class ChangeLogPage : Page {
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         _configIndex = 0;
         using (ImRaii.Child("changelogs", ImGui.GetContentRegionAvail())) {
+            ChangelogFor("1.0.0.10", () => {
+                C("Added option to set image sizes for the root outfit folder.");
+                C("Added ability to adjust padding around images.");
+            });
             ChangelogFor("1.0.0.9", "Added protections for invalid items in equipment slots.");
             ChangelogFor("1.0.0.8", () => {
                 C("Added ability to change selected dyes on items.");

@@ -111,7 +111,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             
             if (ImGui.CollapsingHeader("Image")) {
                 var folder = character.Folders.GetValueOrDefault(folderGuid);
-                var outfitStyle = folder?.OutfitPolaroidStyle ?? (character.CustomStyle ?? PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+                var outfitStyle = folder?.OutfitPolaroidStyle ?? character?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
                 ImageEditor.Draw(Outfit, outfitStyle, Outfit.Name, ref controlFlags);
             }
             

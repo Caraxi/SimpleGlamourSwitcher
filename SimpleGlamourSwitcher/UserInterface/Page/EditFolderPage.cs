@@ -78,7 +78,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
             if (ImGui.Checkbox(useCustomOutfitPolaroid ? "##useCustomOutfitPolaroid" : "Use custom outfit style", ref useCustomOutfitPolaroid)) {
                 if (useCustomOutfitPolaroid) {
-                    outfitStyle = (ActiveCharacter.CustomStyle?.OutfitList.Polaroid ?? PluginConfig.CustomStyle?.OutfitList.Polaroid ?? Style.Default.OutfitList.Polaroid).Clone();
+                    outfitStyle = (ActiveCharacter.OutfitPolaroidStyle ?? PluginConfig.CustomStyle?.OutfitList.Polaroid ?? Style.Default.OutfitList.Polaroid).Clone();
                 } else {
                     outfitStyle = null;
                 }
@@ -86,16 +86,16 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
             if (outfitStyle != null) {
                 ImGui.SameLine();
-                if (ImGui.CollapsingHeader("Custom Outfit Style")) {
+                if (ImGui.CollapsingHeader("Custom Outfit Image Style")) {
                     using (ImRaii.PushIndent()) {
-                        PolaroidStyle.DrawEditor("Outfit", outfitStyle, PolaroidStyle.PolaroidStyleEditorFlags.ImageSize | PolaroidStyle.PolaroidStyleEditorFlags.ShowPreview);
+                        PolaroidStyle.DrawEditor("Outfit", outfitStyle);
                     }
                 }
             }
 
             if (ImGui.Checkbox(useCustomFolderPolaroid ? "##useCustomFolderPolaroid" : "Use custom folder style", ref useCustomFolderPolaroid)) {
                 if (useCustomFolderPolaroid) {
-                    folderStyle = (ActiveCharacter.CustomStyle?.FolderPolaroid ?? PluginConfig.CustomStyle?.FolderPolaroid ?? Style.Default.FolderPolaroid).Clone();
+                    folderStyle = (ActiveCharacter.FolderPolaroidStyle ?? PluginConfig.CustomStyle?.FolderPolaroid ?? Style.Default.FolderPolaroid).Clone();
                 } else {
                     folderStyle = null;
                 }
@@ -103,9 +103,9 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
             if (folderStyle != null) {
                 ImGui.SameLine();
-                if (ImGui.CollapsingHeader("Custom Folder Style")) {
+                if (ImGui.CollapsingHeader("Custom Folder Image Style")) {
                     using (ImRaii.PushIndent()) {
-                        PolaroidStyle.DrawEditor("Folder", folderStyle, PolaroidStyle.PolaroidStyleEditorFlags.ImageSize | PolaroidStyle.PolaroidStyleEditorFlags.ShowPreview);
+                        PolaroidStyle.DrawEditor("Folder", folderStyle);
                     }
                 }
             }
@@ -226,7 +226,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 var f = folder ?? newFolder;
                 if (f != null) {
                     var pFolder = ActiveCharacter.Folders.GetValueOrDefault(parentFolder);
-                    var style = pFolder?.FolderPolaroidStyle ?? (ActiveCharacter.CustomStyle ?? PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
+                    var style = pFolder?.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
                     ImageEditor.Draw(f, style, folderName, ref controlFlags);
                 }
             }

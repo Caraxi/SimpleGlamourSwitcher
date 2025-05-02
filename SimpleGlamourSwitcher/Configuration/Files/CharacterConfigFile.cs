@@ -9,6 +9,7 @@ using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
+using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
@@ -27,8 +28,10 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public (string Name, uint World) HeelsIdentity = (string.Empty, 0);
     
     public bool Deleted;
-    public Style? CustomStyle;
-
+    
+    public PolaroidStyle? OutfitPolaroidStyle;
+    public PolaroidStyle? FolderPolaroidStyle;
+    
     string IImageProvider.Name => Name;
 
     public ImageDetail ImageDetail { get; set; } = new();

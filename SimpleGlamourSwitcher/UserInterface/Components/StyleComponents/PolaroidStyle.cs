@@ -37,15 +37,21 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
     [Flags]
     public enum PolaroidStyleEditorFlags : uint {
         None = 0,
-        ImageSize = 1,
-
-        ShowPreview  = 0x80000000,
+        ImageSize = 1U << 0,
+        FramePadding = 1U << 1,
+        FrameRounding = 1U << 2,
+        ShowPreview  = 1U << 31,
         All = uint.MaxValue
     }
     
     
     public static bool DrawEditor(string header, PolaroidStyle style, PolaroidStyleEditorFlags flags = PolaroidStyleEditorFlags.All) {
         var edited = false;
+
+        if (flags.HasFlag(PolaroidStyleEditorFlags.ImageSize)) {
+            ImGui.TextDisabled("Note: Adjusting the image size will cause existing images to stretch to fit the new size.");
+        }
+        
         using (ImRaii.PushIndent()) {
             ImRaii.IEndObject? group = null;
             
@@ -66,6 +72,16 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
                 edited |= ImGui.DragFloat2($"Image Size##{header}", ref style.ImageSize, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
             }
             
+            if (flags.HasFlag(PolaroidStyleEditorFlags.FramePadding)) {
+                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
+                edited |= ImGui.DragFloat2($"Frame Padding##{header}", ref style.FramePadding, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
+            }
+           
+            if (flags.HasFlag(PolaroidStyleEditorFlags.FrameRounding)) {
+                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
+                edited |= ImGui.DragFloat($"Frame Rounding##{header}", ref style.FrameRounding, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
+            }
+
             group?.Dispose();
 
         }

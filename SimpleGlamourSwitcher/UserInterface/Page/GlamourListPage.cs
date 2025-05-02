@@ -190,8 +190,8 @@ public class GlamourListPage : Page {
             folder = null;
         }
         
-        var folderStyle = folder?.FolderPolaroidStyle ?? (character.CustomStyle ?? PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
-        var outfitStyle = folder?.OutfitPolaroidStyle ?? (character.CustomStyle ?? PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+        var folderStyle = folder?.FolderPolaroidStyle ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
+        var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
         
         /*
         if (ActiveFolder != Guid.Empty && character.Folders.TryGetValue(ActiveFolder, out var folder)) {
@@ -502,7 +502,7 @@ public class GlamourListPage : Page {
     }
 
     private Colour GetOutfitFrameColour(CharacterConfigFile character, OutfitConfigFile outfit) {
-        var style = character.CustomStyle ?? PluginConfig.CustomStyle ?? Style.Default;
+        var style = PluginConfig.CustomStyle ?? Style.Default;
         return character.DefaultOutfit == outfit.Guid ? style.OutfitList.DefaultOutfitColour : style.OutfitList.OutfitColour;
     }
 

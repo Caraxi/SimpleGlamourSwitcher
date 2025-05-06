@@ -25,7 +25,10 @@ public static class ModListDisplay {
             return false;
         }
         return true;
+    }
 
+    public static bool IsValid(IHasModConfigs modable) {
+        return modable.ModConfigs.Count == 0 || modable.ModConfigs.All(m => TryParseModName(m.ModDirectory, out _));
     }
     
     public static bool Show(IHasModConfigs modable, string slotName) {

@@ -16,6 +16,17 @@ public abstract class ConfigFile {
     }
     
     private static Dictionary<(Type, Guid), Dictionary<Guid, Exception>> BadFiles { get; } = new();
+
+    public IReadOnlyList<string> ValidationErrors { get; private set; } = new List<string>();
+    public bool IsValid => ValidationErrors.Count == 0;
+
+    protected virtual void Validate(List<string> errors) { }
+
+    public void UpdateValidation() {
+        var errorList = new List<string>();
+        Validate(errorList);
+        ValidationErrors = errorList;
+    }
     
     protected static void AddBadFile<T>(Guid parent, Guid guid, Exception ex) where T : ConfigFile {
         if (!BadFiles.TryGetValue((typeof(T), parent), out var list)) {
@@ -101,6 +112,7 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
 
         this.parent = parent;
         Guid = guid;
+        UpdateValidation();
     }
     
     public void Save(bool force = false) {

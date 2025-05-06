@@ -1,4 +1,6 @@
-﻿using Penumbra.GameData.Enums;
+﻿using System.Collections;
+using Newtonsoft.Json;
+using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
@@ -8,8 +10,8 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts;
 
-public record OutfitEquipment : Applicable {
-    
+[JsonObject]
+public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applicable SlotData)> {
     public ApplicableEquipment Head = new();
     public ApplicableEquipment Body = new();
     public ApplicableEquipment Hands = new();
@@ -21,7 +23,6 @@ public record OutfitEquipment : Applicable {
     public ApplicableEquipment RFinger = new();
     public ApplicableEquipment LFinger = new();
     public ApplicableBonus Face = new();
-
     public ApplicableToggle HatVisible = new();
     public ApplicableToggle VisorToggle = new();
     
@@ -94,5 +95,25 @@ public record OutfitEquipment : Applicable {
             HatVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.HatVisible, glamourerEquipment.Hat.Apply, glamourerEquipment.Hat.Show),
             VisorToggle = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.VisorToggle, glamourerEquipment.Visor.Apply, glamourerEquipment.Visor.IsToggled),
         };
+    }
+
+    public IEnumerator<(string, Applicable)> GetEnumerator() {
+        yield return ("Head", Head);
+        yield return ("Body", Body);
+        yield return ("Hands", Hands);
+        yield return ("Legs", Legs);
+        yield return ("Feet", Feet);
+        yield return ("Ears", Ears);
+        yield return ("Neck", Neck);
+        yield return ("Wrists", Wrists);
+        yield return ("RFinger", RFinger);
+        yield return ("LFinger", LFinger);
+        yield return ("Glasses", Face);
+        yield return ("Hat Visible Toggle", HatVisible);
+        yield return ("Visor Toggle", VisorToggle);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
     }
 }

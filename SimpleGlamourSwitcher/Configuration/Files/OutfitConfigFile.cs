@@ -5,8 +5,10 @@ using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
+using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
@@ -139,6 +141,16 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         return instance;
 
 
+    }
+
+    protected override void Validate(List<string> errors) {
+        foreach(var (slotName, applicable) in Enumerable.Concat(Equipment, Appearance)) {
+            if (applicable is IHasModConfigs modable) {
+                if (!ModListDisplay.IsValid(modable)) {
+                    errors.Add($"Invalid mod setup in '{slotName}' slot.");
+                }
+            }
+        }
     }
 }
 

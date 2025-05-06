@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ECommons;
@@ -10,6 +11,7 @@ using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
+using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
 using UiBuilder = Dalamud.Interface.UiBuilder;
@@ -370,6 +372,22 @@ public class GlamourListPage : Page {
                         outfit.Apply();
                         if (PluginConfig.AutoCloseAfterApplying) {
                             MainWindow!.IsOpen = false;
+                        }
+                    }
+
+                    if (!outfit.IsValid) {
+                        using (PluginService.UiBuilder.IconFontHandle.Push()) {
+                            ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExclamationTriangle.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = ImGuiColors.DalamudRed });
+                        }
+
+                        if (ImGui.IsItemHovered()) {
+                            using (ImRaii.Tooltip()) {
+                                ImGui.Text("Issues Detected");
+                                ImGui.Separator();
+                                foreach (var err in outfit.ValidationErrors) {
+                                    ImGui.Text($" - {err}");
+                                }
+                            }
                         }
                     }
                     

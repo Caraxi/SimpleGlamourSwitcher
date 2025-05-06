@@ -1,4 +1,6 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
+﻿using System.Collections;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
+using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
@@ -10,7 +12,8 @@ using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts;
 
-public record OutfitAppearance : Applicable {
+[JsonObject]
+public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
     
     public ApplicableCustomize Race = new();
     public ApplicableCustomize Gender = new();
@@ -200,5 +203,60 @@ public record OutfitAppearance : Applicable {
             DecalColor = ApplicableParameterColorAlpha.FromExistingStateAlpha(defaultOptionsProvider, AppearanceParameterKind.DecalColor, parameter.DecalColor),
         };
     }
-    
+
+    public IEnumerator<(string, Applicable)> GetEnumerator() {
+        yield return ("Race", Race);
+        yield return ("Gender", Gender);
+        yield return ("BodyType", BodyType);
+        yield return ("Height", Height);
+        yield return ("Clan", Clan);
+        yield return ("Face", Face);
+        yield return ("Hairstyle", Hairstyle);
+        yield return ("Highlights", Highlights);
+        yield return ("SkinColor", SkinColor);
+        yield return ("EyeColorRight", EyeColorRight);
+        yield return ("HairColor", HairColor);
+        yield return ("HighlightsColor", HighlightsColor);
+        yield return ("FacialFeature1", FacialFeature1);
+        yield return ("FacialFeature2", FacialFeature2);
+        yield return ("FacialFeature3", FacialFeature3);
+        yield return ("FacialFeature4", FacialFeature4);
+        yield return ("FacialFeature5", FacialFeature5);
+        yield return ("FacialFeature6", FacialFeature6);
+        yield return ("FacialFeature7", FacialFeature7);
+        yield return ("LegacyTattoo", LegacyTattoo);
+        yield return ("TattooColor", TattooColor);
+        yield return ("Eyebrows", Eyebrows);
+        yield return ("EyeColorLeft", EyeColorLeft);
+        yield return ("EyeShape", EyeShape);
+        yield return ("SmallIris", SmallIris);
+        yield return ("Nose", Nose);
+        yield return ("Jaw", Jaw);
+        yield return ("Mouth", Mouth);
+        yield return ("Lipstick", Lipstick);
+        yield return ("LipColor", LipColor);
+        yield return ("MuscleMass", MuscleMass);
+        yield return ("TailShape", TailShape);
+        yield return ("BustSize", BustSize);
+        yield return ("FacePaint", FacePaint);
+        yield return ("FacePaintReversed", FacePaintReversed);
+        yield return ("FacePaintColor", FacePaintColor);
+        yield return ("FacePaintUvMultiplier", FacePaintUvMultiplier);
+        yield return ("FacePaintUvOffset", FacePaintUvOffset);
+        yield return ("MuscleTone", MuscleTone);
+        yield return ("LeftLimbalIntensity", LeftLimbalIntensity);
+        yield return ("RightLimbalIntensity", RightLimbalIntensity);
+        yield return ("SkinDiffuse", SkinDiffuse);
+        yield return ("HairDiffuse", HairDiffuse);
+        yield return ("HairHighlight", HairHighlight);
+        yield return ("LeftEye", LeftEye);
+        yield return ("RightEye", RightEye);
+        yield return ("FeatureColor", FeatureColor);
+        yield return ("LipDiffuse", LipDiffuse);
+        yield return ("DecalColor", DecalColor);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
@@ -7,42 +8,67 @@ using Penumbra.Api.Enums;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.IPC;
-using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.Utility;
 using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components;
 
 public static class ModListDisplay {
+    private static Vector2 _buttonSize = new(ImGui.GetTextLineHeightWithSpacing());
+    private static readonly Cached<Dictionary<string, string>> CachedModList = new(TimeSpan.FromSeconds(5), () => PenumbraIpc.GetModList.Invoke());
+    private static string _locatingMod = string.Empty;
+    private static string modSearch = string.Empty;
+    
+    private static bool TryParseModName(string modDirectory, out string modName) {
+        if (!CachedModList.Value.TryGetValue(modDirectory, out modName!)) {
+            modName = modDirectory;
+            return false;
+        }
+        return true;
 
-    private static Vector2 buttonSize = new Vector2(ImGui.GetTextLineHeightWithSpacing());
+    }
     
     public static bool Show(IHasModConfigs modable, string slotName) {
         var edited = false;
-
         var p = ImGui.GetItemRectMax();
         var s = new Vector2(ImGui.CalcItemWidth(), ImGui.GetTextLineHeightWithSpacing());
-        
         var configs = modable.ModConfigs;
         
         var modName = "Vanilla";
         Vector2 popupPosition;
         if (configs.Count > 0) {
-            modName = configs.Count == 1 ? configs.First().ModDirectory : $"{configs.Count} Mods";
+            bool modExists;
 
+            if (configs.Count == 1) {
+                modExists = TryParseModName(configs.First().ModDirectory, out modName);
+            } else {
+                modName = $"{configs.Count} Mods";
+                modExists = configs.All(m => TryParseModName(m.ModDirectory, out _));
+            }
 
-            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * 2 - buttonSize.X * 2);
-            
-            ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
+            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * 2 - _buttonSize.X * 2);
+            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, !modExists)) {
+                ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
+            }
             popupPosition = ImGui.GetItemRectMin();
-            buttonSize = new Vector2(ImGui.GetItemRectSize().Y);
+            _buttonSize = new Vector2(ImGui.GetItemRectSize().Y);
             
             if (ImGui.IsItemHovered())
                 using (ImRaii.Tooltip()) {
                     foreach (var modConfig in configs) {
+                        var exists = TryParseModName(modConfig.ModDirectory, out var name);
                         if (configs.Count > 1) {
-                            ImGui.Text(modConfig.ModDirectory);
+                            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, !modExists)) {
+                                ImGui.Text(name);
+                            }
+                            
                             if (ImGui.GetIO().KeyShift) ImGui.Separator();
+                        }
+                        
+                        if (!exists) {
+                            using (ImRaii.PushIndent(1, configs.Count > 1)) {
+                                ImGui.TextColored(ImGuiColors.DalamudRed, "This mod does not exist.");
+                            }
                         }
 
                         if (configs.Count > 1 && ImGui.GetIO().KeyShift == false) continue;
@@ -58,7 +84,7 @@ public static class ModListDisplay {
             ImGui.SameLine();
             if (configs.Count == 1) {
                 using (ImRaii.PushFont(UiBuilder.IconFont)) {
-                    if (ImGui.Button("##modLink", buttonSize)) {
+                    if (ImGui.Button("##modLink", _buttonSize)) {
                         ShowPenumbraWindow(TabType.Mods, configs[0].ModDirectory);
                     }
                     ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), FontAwesomeIcon.Link.ToIconString());
@@ -82,7 +108,7 @@ public static class ModListDisplay {
             }
             
         } else {
-            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * 1 - buttonSize.X * 1);
+            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * 1 - _buttonSize.X * 1);
             ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
             popupPosition = ImGui.GetItemRectMin();
         }
@@ -91,93 +117,118 @@ public static class ModListDisplay {
 
         var id = $"##editMods_{ImGui.GetID("editModsPopup")}";
         
-        if (ImGuiExt.IconButton($"{id}_open", FontAwesomeIcon.Edit, buttonSize)) {
+        if (ImGuiExt.IconButton($"{id}_open", FontAwesomeIcon.Edit, _buttonSize)) {
             ImGui.OpenPopup(id);
         }
         
         ImGui.SetNextWindowPos(popupPosition);
         if (ImGui.BeginPopup(id, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Modal)) {
+            ImGui.Text($"Locating: {_locatingMod}");
+            if (ImGui.IsWindowAppearing()) {
+                _locatingMod = string.Empty;
+            }
             ImGui.Dummy(new Vector2(s.X, 0));
             ImGui.Text($"Edit Mods for {slotName}");
             ImGui.Separator();
             var modList = PenumbraIpc.GetModList.Invoke();
-            
-            foreach (var i in Enumerable.Range(0, modable.ModConfigs.Count)) {
-                var m = modable.ModConfigs[i];
-                using var editModId = ImRaii.PushId($"editMod_{m.ModDirectory}");
-                var editModName = modList.GetValueOrDefault(m.ModDirectory, m.ModDirectory);
-                
-                if (ImGuiExt.IconButton("##trash", FontAwesomeIcon.Trash, buttonSize) && ImGui.GetIO().KeyShift) {
-                    modable.ModConfigs.Remove(m);
-                    edited = true;
-                }
 
-                if (ImGui.IsItemHovered()) {
-                    using (ImRaii.Tooltip()) {
-                        ImGui.Text("Remove mod from slot");
-                        if (!ImGui.GetIO().KeyShift) {
-                            ImGui.TextDisabled("Hold SHIFT to confirm");
+            if (string.IsNullOrWhiteSpace(_locatingMod)) {
+                foreach (var i in Enumerable.Range(0, modable.ModConfigs.Count)) {
+                    var m = modable.ModConfigs[i];
+                    using var editModId = ImRaii.PushId($"editMod_{m.ModDirectory}");
+                    var exists = TryParseModName(m.ModDirectory, out var editModName);
+                    
+                    if (ImGuiExt.IconButton("##trash", FontAwesomeIcon.Trash, _buttonSize) && ImGui.GetIO().KeyShift) {
+                        modable.ModConfigs.Remove(m);
+                        edited = true;
+                    }
+
+                    if (ImGui.IsItemHovered()) {
+                        using (ImRaii.Tooltip()) {
+                            ImGui.Text("Remove mod from slot");
+                            if (!ImGui.GetIO().KeyShift) {
+                                ImGui.TextDisabled("Hold SHIFT to confirm");
+                            }
                         }
                     }
-                }
-                
-                ImGui.SameLine();
-                if (ImGuiExt.IconButton("##update", FontAwesomeIcon.ArrowsSpin, buttonSize) && ImGui.GetIO().KeyShift) {
-                    var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
-                    var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, m.ModDirectory);
-                    if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
-                    OutfitModConfig modConfig;
-                    if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
-                        var modSettings = getModSettings.Item2.Value;
-                        modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                    
+                    if (exists) {
+                        ImGui.SameLine();
+                        if (ImGuiExt.IconButton("##update", FontAwesomeIcon.ArrowsSpin, _buttonSize) && ImGui.GetIO().KeyShift) {
+                            var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, m.ModDirectory);
+                            if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+                            OutfitModConfig modConfig;
+                            if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
+                                var modSettings = getModSettings.Item2.Value;
+                                modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                            } else {
+                                modConfig = new OutfitModConfig(m.ModDirectory, false, 0, []);
+                            }
+
+                            modable.ModConfigs[i] = modConfig;
+                            edited = true;
+                        }
+
+                        if (ImGui.IsItemHovered()) {
+                            using (ImRaii.Tooltip()) {
+                                ImGui.Text("Update mod configs to current state");
+                                var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                                var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, m.ModDirectory);
+                                if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+                                if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
+                                    var modSettings = getModSettings.Item2.Value;
+                                    var modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                                    ShowModSettingsTable(modConfig);
+                                } else {
+                                    var modConfig = new OutfitModConfig(m.ModDirectory, false, 0, []);
+                                    ShowModSettingsTable(modConfig, ImGuiTableFlags.BordersOuter);
+                                }
+
+                                if (!ImGui.GetIO().KeyShift) {
+                                    ImGui.TextDisabled("Hold SHIFT to confirm");
+                                }
+                            }
+                        }
+
                     } else {
-                        modConfig = new OutfitModConfig(m.ModDirectory, false, 0, []);
-                    }
-
-                    modable.ModConfigs[i] = modConfig;
-                    edited = true;
-                }
-
-                if (ImGui.IsItemHovered()) {
-                    using (ImRaii.Tooltip()) {
-                        ImGui.Text("Update mod configs to current state");
-                        
-                        var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
-                        var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, m.ModDirectory);
-                        if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
-                        
-                        if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
-                            var modSettings = getModSettings.Item2.Value;
-                            var modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3);
-                            ShowModSettingsTable(modConfig);
-                        } else {
-                            var modConfig = new OutfitModConfig(m.ModDirectory, false, 0, []);
-                            ShowModSettingsTable(modConfig, ImGuiTableFlags.BordersOuter);
+                        ImGui.SameLine();
+                        if (ImGuiExt.IconButton("##locateMod", FontAwesomeIcon.Search, _buttonSize)) {
+                            _locatingMod = m.ModDirectory;
                         }
-                        
-                        if (!ImGui.GetIO().KeyShift) {
-                            ImGui.TextDisabled("Hold SHIFT to confirm");
+
+                        if (ImGui.IsItemHovered()) {
+                            using (ImRaii.Tooltip()) {
+                                ImGui.Text("Locate mod");
+                            }
                         }
                     }
-                }
-                
-                ImGui.SameLine();
-                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-                ImGui.InputText($"##modInfo_{m.ModDirectory}", ref editModName, 64, ImGuiInputTextFlags.ReadOnly);
 
-                if (ImGui.IsItemHovered()) {
-                    using (ImRaii.Tooltip()) {
-                        using (ImRaii.PushIndent()) {
-                            ShowModSettingsTable(m);
-                            ImGui.Spacing();
+                    ImGui.SameLine();
+                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, !exists)) {
+                        ImGui.InputText($"##modInfo_{m.ModDirectory}", ref editModName, 64, ImGuiInputTextFlags.ReadOnly);
+                    }
+
+                    if (ImGui.IsItemHovered()) {
+                        using (ImRaii.Tooltip()) {
+                            if (!exists) {
+                                ImGui.TextColored(ImGuiColors.DalamudRed, "This mod does not exist.");
+                            }
+
+                            using (ImRaii.PushIndent()) {
+                                ShowModSettingsTable(m);
+                                ImGui.Spacing();
+                            }
                         }
                     }
                 }
+
+            } else {
+                ImGui.Text($"Locating mod: {_locatingMod}");
             }
-            
-            
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-            if (ImGui.BeginCombo("##addMod", "Add Mod...", ImGuiComboFlags.HeightLargest)) {
+            if (ImGui.BeginCombo("##addMod", string.IsNullOrWhiteSpace(_locatingMod) ? "Add Mod..." : "Locate Mod...", ImGuiComboFlags.HeightLargest)) {
                 ImGui.Spacing();
 
                 if (ImGui.IsWindowAppearing()) {
@@ -190,19 +241,27 @@ public static class ModListDisplay {
                 
                 if (ImGui.BeginChild("modList", new Vector2(ImGui.GetContentRegionAvail().X, 400 * ImGuiHelpers.GlobalScale))) {
                     foreach (var mod in modList.OrderBy(k => k.Value)) {
-
                         if (!string.IsNullOrWhiteSpace(modSearch) && !(mod.Key.Contains(modSearch, StringComparison.InvariantCultureIgnoreCase) || mod.Value.Contains(modSearch, StringComparison.InvariantCultureIgnoreCase))) continue;
-                        
                         if (ImGui.Selectable(mod.Value)) {
-                            var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
-                            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, mod.Key);
-                            if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
-                                var modSettings = getModSettings.Item2.Value;
-                                var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3);
-                                modable.ModConfigs.Add(modConfig);
+                            if (string.IsNullOrWhiteSpace(_locatingMod)) {
+                                var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                                var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, mod.Key);
+                                if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
+                                    var modSettings = getModSettings.Item2.Value;
+                                    var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                                    modable.ModConfigs.Add(modConfig);
+                                } else {
+                                    var modConfig = new OutfitModConfig(mod.Key, false, 0, []);
+                                    modable.ModConfigs.Add(modConfig);
+                                }
                             } else {
-                                var modConfig = new OutfitModConfig(mod.Key, false, 0, []);
-                                modable.ModConfigs.Add(modConfig);
+                                var existing = modable.ModConfigs.FirstOrDefault(m => m.ModDirectory == _locatingMod);
+                                if (existing is not null) {
+                                    var index = modable.ModConfigs.IndexOf(existing);
+                                    modable.ModConfigs[index] = existing with { ModDirectory = mod.Key };
+                                    edited = true;
+                                    _locatingMod = string.Empty;
+                                }
                             }
 
                             edited = true;
@@ -225,12 +284,11 @@ public static class ModListDisplay {
                         }
                     }
                 }
+
                 ImGui.EndChild();
                 ImGui.EndCombo();
             }
             
-
-
             if (ImGui.Button("Done", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 1.5f))) {
                 ImGui.CloseCurrentPopup();
             }
@@ -240,10 +298,6 @@ public static class ModListDisplay {
 
         return edited;
     }
-
-
-    private static string modSearch = string.Empty;
-
 
     private static void ShowModSettingsTable(OutfitModConfig modConfig, ImGuiTableFlags flags = ImGuiTableFlags.None) {
         if (ImGui.BeginTable("modSettingsTable", 2, flags)) {
@@ -262,13 +316,11 @@ public static class ModListDisplay {
                     ImGui.TableNextColumn();
                     foreach (var sl in l) ImGui.Text(sl);
                 }
-
             }
                                
             ImGui.EndTable();
         }
     }
-
 
     private static void ShowPenumbraWindow(TabType tab, string modDirectory) {
         Plugin.MainWindow.HoldAutoClose();

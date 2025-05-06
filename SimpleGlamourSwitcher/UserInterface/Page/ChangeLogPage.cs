@@ -21,6 +21,10 @@ public class ChangeLogPage : Page {
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         _configIndex = 0;
         using (ImRaii.Child("changelogs", ImGui.GetContentRegionAvail())) {
+            ChangelogFor("1.0.0.11", () => {
+                C("Will now detect missing mods assigned to an outfit.");
+                C("Added ability to update a mod assigned on an item, maintaining the associated configuration .");
+            });
             ChangelogFor("1.0.0.10", () => {
                 C("Added option to set image sizes for the root outfit folder.");
                 C("Added ability to adjust padding around images.");

@@ -1,12 +1,11 @@
-﻿using System.Collections.Immutable;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
+using ImGuiNET;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
-using SimpleGlamourSwitcher.Configuration.Files;
 
 namespace SimpleGlamourSwitcher.Utility;
 
@@ -27,8 +26,10 @@ public static class Extensions {
     public static void OpenWithDefaultApplication(this FileInfo fileInfo) {
         Process.Start("explorer.exe", "\"" + fileInfo.FullName + "\"");
     }
-
-
+    
+    public static string RemoveImGuiId(this string label) {
+        return label.Split("##")[0];
+    }
 
     public static BonusItemFlag ToBonusSlot(this HumanSlot slot) {
         return slot switch {
@@ -36,7 +37,10 @@ public static class Extensions {
             _ => BonusItemFlag.Unknown,
         };
     }
-    
+
+    public static Vector4 ToVector4(this uint color) {
+        return ImGui.ColorConvertU32ToFloat4(color);
+    }
     
     public static Vector2 FitTo(this Vector2 vector, float x, float? y = null) {
         return vector * MathF.Min(x / vector.X, y ?? x / vector.Y);
@@ -88,4 +92,3 @@ public static class Extensions {
         return char.IsUpper((char)world.Name.Data.Span[0]);
     }
 }
-

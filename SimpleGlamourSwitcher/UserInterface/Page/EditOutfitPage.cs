@@ -143,17 +143,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     private void DrawAppearance() {
-        foreach (var v in System.Enum.GetValues<CustomizeIndex>()) {
-            ShowCustomize(v);
-        }
-    }
-
-    private void ShowCustomize(CustomizeIndex customizeIndex) {
         appearance ??= Outfit.Appearance.Clone();
-        var customize = appearance[customizeIndex];
-        dirty |= ImGui.Checkbox($"##enableCustomize_{customizeIndex}", ref customize.Apply);
-        ImGui.SameLine();
-        CustomizeEditor.ShowReadOnly($"{customizeIndex}##customizeEditor_{customizeIndex}", customizeIndex, customize);
+        dirty |= CustomizeEditor.Show(appearance);
     }
 
     private void DrawParameters() {
@@ -168,8 +159,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         
         dirty |= ImGui.Checkbox($"##enableParameter_{kind}", ref param.Apply);
         ImGui.SameLine();
-
-        dirty |= param.ShowEditor($"{kind}##paramEditor_{kind}", kind, true);
+        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
+        dirty |= param.ShowEditor($"{kind}##paramEditor_{kind}", kind);
     }
 
     private void DrawEquipment() {

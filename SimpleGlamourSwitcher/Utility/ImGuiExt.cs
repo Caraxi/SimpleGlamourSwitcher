@@ -60,7 +60,7 @@ public static class ImGuiExt {
         drawList.AddText(position, style.TextColour, text);
     }
     
-    public static bool CheckboxTriState(string label, ref bool? value) {
+    public static bool CheckboxTriState(string label, ref bool? value, bool allowSwitchToPartial = false) {
         var v = value ?? false;
         
         try {
@@ -68,13 +68,13 @@ public static class ImGuiExt {
                 value = value switch {
                     null => true,
                     true => false,
-                    _ => null
+                    _ => allowSwitchToPartial ? null : true
                 };
                 return true;
             }
         } finally {
             if (value == null) {
-                ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() with { X = ImGui.GetItemRectMin().X + ImGui.GetItemRectSize().Y } - ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.CheckMark));
+                ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() with { X = ImGui.GetItemRectMin().X + ImGui.GetItemRectSize().Y } - ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.CheckMark), 3);
             }
         }
 
@@ -123,5 +123,10 @@ public static class ImGuiExt {
         } finally {
             ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
         }
+    }
+
+    public static void SameLineInner() {
+        ImGui.SameLine();
+        ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() with { X = ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemInnerSpacing.X });
     }
 }

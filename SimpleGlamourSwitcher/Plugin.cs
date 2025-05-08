@@ -5,6 +5,7 @@ using ECommons;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
+using SimpleGlamourSwitcher.UserInterface.Page;
 using SimpleGlamourSwitcher.UserInterface.Windows;
 using SimpleGlamourSwitcher.Utility;
 
@@ -58,7 +59,22 @@ public class Plugin : IDalamudPlugin {
             }
         }) { ShowInHelp = true, HelpMessage = "Open the Simple Glamour Switcher window." });
 
-        Framework.RunOnTick(() => { PluginState.LoadActiveCharacter(false, true); }, delayTicks: 3);
+        Framework.RunOnTick(() => {
+            PluginState.LoadActiveCharacter(false, true);
+            
+#if DEBUG
+            MainWindow.IsOpen = true;
+            Framework.RunOnTick(() => {
+                if (ActiveCharacter != null) {
+                    MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, null));
+                }
+
+            }, delayTicks: 1);
+#endif
+
+
+        }, delayTicks: 3);
+        
     }
 
     public void Dispose() {

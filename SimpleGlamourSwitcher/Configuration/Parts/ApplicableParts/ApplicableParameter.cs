@@ -19,7 +19,7 @@ public abstract record ApplicableParameter : Applicable {
         };
     }
 
-    public abstract bool ShowEditor(string s, AppearanceParameterKind kind, bool readOnly);
+    public abstract bool ShowEditor(string s, AppearanceParameterKind kind);
 }
 
 public record ApplicableParameterColorAlpha : ApplicableParameterColor {
@@ -43,10 +43,10 @@ public record ApplicableParameterColorAlpha : ApplicableParameterColor {
         };
     }
 
-    public override bool ShowEditor(string s, AppearanceParameterKind kind, bool readOnly) {
+    public override bool ShowEditor(string s, AppearanceParameterKind kind) {
         var color = new Vector4(Red, Green, Blue, Alpha);
 
-        if (ImGui.ColorEdit4(s, ref color) && !readOnly) {
+        if (ImGui.ColorEdit4(s, ref color)) {
             (Red, Green, Blue, Alpha) = (color.X, color.Y, color.Z, color.W);
             return true;
         }
@@ -80,11 +80,11 @@ public record ApplicableParameterColor : ApplicableParameter {
         };
     }
 
-    public override bool ShowEditor(string s, AppearanceParameterKind kind, bool readOnly) {
+    public override bool ShowEditor(string s, AppearanceParameterKind kind) {
         var color = new Vector3(Red, Green, Blue);
 
 
-        if (ImGui.ColorEdit3(s, ref color) && !readOnly) {
+        if (ImGui.ColorEdit3(s, ref color)) {
             (Red, Green, Blue) = (color.X, color.Y, color.Z);
             return true;
         }
@@ -111,16 +111,18 @@ public record ApplicableParameterPercent : ApplicableParameter {
             Percentage = parameter.Percentage ?? 0,
         };
     }
-    
-    public override bool ShowEditor(string s, AppearanceParameterKind kind, bool readOnly) {
-        if (readOnly) {
-            var valueStr = $"{Percentage * 100}%";
-            ImGui.InputText(s, ref valueStr, 64, ImGuiInputTextFlags.ReadOnly);
-            return false;
-        }
 
+    private float maxValue = 100;
+    private float minValue = 0;
+    
+    public override bool ShowEditor(string s, AppearanceParameterKind kind) {
         var value = Percentage * 100;
-        if (!ImGui.SliderFloat(s, ref value, 0, 100)) return false;
+        if (value > maxValue) maxValue = value;
+        if (value < minValue) minValue = value;
+        if (!ImGui.SliderFloat(s, ref value, minValue, maxValue, "%.2f%%")) return false;
+        if (ImGui.IsItemHovered()) {
+            ImGui.SetTooltip("Hold CTRL and click to set arbitrary values.");
+        }
         Percentage = value / 100f;
         return true;
     }
@@ -145,13 +147,7 @@ public record ApplicableParameterFloat : ApplicableParameter {
         };
     }
     
-    public override bool ShowEditor(string s, AppearanceParameterKind kind, bool readOnly) {
-        if (readOnly) {
-            var valueStr = $"{Value}";
-            ImGui.InputText(s, ref valueStr, 64, ImGuiInputTextFlags.ReadOnly);
-            return false;
-        }
-
+    public override bool ShowEditor(string s, AppearanceParameterKind kind) {
         return ImGui.DragFloat(s, ref Value, 0.01f);
     }
 }

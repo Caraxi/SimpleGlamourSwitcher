@@ -12,12 +12,8 @@ using SimpleGlamourSwitcher.IPC;
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
 public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
-
-
     private OrderedDictionary<Guid, OutfitConfigFile> outfits = new();
 
-    private CustomizePlus.ErrorCode LastCustomizePlusError = CustomizePlus.ErrorCode.Success;
-    
     public override void Draw() {
 
         if (ImGui.Button("Copy Glamourer State")) {

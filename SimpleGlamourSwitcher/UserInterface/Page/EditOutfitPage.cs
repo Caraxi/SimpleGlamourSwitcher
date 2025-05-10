@@ -156,9 +156,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private void DrawParameter(AppearanceParameterKind kind) {
         appearance ??= Outfit.Appearance.Clone();
         var param = appearance[kind];
-        
-        dirty |= ImGui.Checkbox($"##enableParameter_{kind}", ref param.Apply);
-        ImGui.SameLine();
+        CustomizeEditor.ShowApplyEnableCheckbox(kind.PrettyName(), ref param.Apply, ref appearance.Apply);
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
         dirty |= param.ShowEditor($"{kind}##paramEditor_{kind}", kind);
     }
@@ -168,7 +166,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             ShowSlot(s);
         }
     }
-
+    
     public void ShowSlot(HumanSlot slot) {
         equipment ??= Outfit.Equipment.Clone();
         
@@ -177,7 +175,18 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         using (ImRaii.Group()) {
             using (ImRaii.Group()) {
                 ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));
-                dirty |= ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
+                using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), !equipment.Apply)) {
+                    dirty |= ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
+                }
+        
+                if (ImGui.IsItemHovered()) {
+                    using (ImRaii.Tooltip()) {
+                        ImGui.Text($"Enable {slot.PrettyName()}");
+                        if (!equipment.Apply) {
+                            ImGui.TextDisabled("This option is will not be applied because the Equipment option is not enabled for this outfit.");
+                        }
+                    }
+                }
             }
 
             ImGui.SameLine();

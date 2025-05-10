@@ -6,6 +6,7 @@ using ImGuiNET;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Enum;
 
 namespace SimpleGlamourSwitcher.Utility;
 
@@ -76,7 +77,13 @@ public static class Extensions {
     public static string PrettyName(this CustomizeIndex cIndex) {
         return cIndex switch {
             CustomizeIndex.BustSize => "Bust Size",
-            _ => cIndex.ToString()
+            _ => cIndex.ToDefaultName()
+        };
+    }
+
+    public static string PrettyName(this AppearanceParameterKind kind) {
+        return kind switch {
+            _ => kind.ToString()
         };
     }
 

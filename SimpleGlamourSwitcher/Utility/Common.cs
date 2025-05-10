@@ -114,4 +114,14 @@ public static class Common {
         file = files[0];
         return true;
     }
+
+    public static IEnumerable<T> Concat<T>(params IEnumerable<T>[] sources) {
+        foreach (var source in sources) {
+            foreach(var item in source) yield return item;
+        }
+    }
+    public static IReadOnlyList<T> ConcatList<T>(params IEnumerable<T>[] sources) {
+        return Concat(sources).ToList();
+    }
+
 }

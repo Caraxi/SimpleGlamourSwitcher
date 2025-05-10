@@ -4,6 +4,7 @@ using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using Glamourer.GameData;
 using OtterGui.Log;
 using OtterGui.Services;
 using Penumbra.GameData.Data;
@@ -31,6 +32,7 @@ public class PluginService {
 
     public static ItemManager ItemManager => _serviceManager.GetService<ItemManager>();
     public static DictBonusItems DictBonusItems => _serviceManager.GetService<DictBonusItems>();
+    public static CustomizeManager CustomizeManager => _serviceManager.GetService<CustomizeManager>();
     
     private static ServiceManager _serviceManager = null!;
 
@@ -39,6 +41,8 @@ public class PluginService {
         _serviceManager = new ServiceManager(logger)
             .AddDalamudService<IDataManager>(PluginInterface)
             .AddDalamudService<ISeStringEvaluator>(PluginInterface)
+            .AddDalamudService<ITextureProvider>(PluginInterface)
+            .AddDalamudService<IPluginLog>(PluginInterface)
             .AddSingleton<DictAction>()
             .AddSingleton<DictBNpc>()
             .AddSingleton<DictBNpcNames>()
@@ -66,8 +70,9 @@ public class PluginService {
             .AddSingleton<RestrictedGear>()
             .AddSingleton<RestrictedItemsFemale>()
             .AddSingleton<RestrictedItemsMale>()
-            .AddSingleton<RestrictedItemsRace>();
-        
+            .AddSingleton<RestrictedItemsRace>()
+            .AddSingleton<NpcCustomizeSet>()
+            .AddSingleton<CustomizeManager>();
         
 
         _serviceManager.EnsureRequiredServices();

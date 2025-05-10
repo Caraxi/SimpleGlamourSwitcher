@@ -129,4 +129,9 @@ public static class ImGuiExt {
         ImGui.SameLine();
         ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() with { X = ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemInnerSpacing.X });
     }
+    
+    public static void SameLineNoSpace() {
+        ImGui.SameLine();
+        ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() with { X = ImGui.GetItemRectMax().X });
+    }
 }

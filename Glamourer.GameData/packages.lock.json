@@ -2,17 +2,11 @@
   "version": 1,
   "dependencies": {
     "net9.0-windows7.0": {
-      "DalamudPackager": {
+      "DotNet.ReproducibleBuilds": {
         "type": "Direct",
-        "requested": "[12.0.0, )",
-        "resolved": "12.0.0",
-        "contentHash": "J5TJLV3f16T/E2H2P17ClWjtfEBPpq3yxvqW46eN36JCm6wR+EaoaYkqG9Rm5sHqs3/nK/vKjWWyvEs/jhKoXw=="
-      },
-      "SharpClipboard": {
-        "type": "Direct",
-        "requested": "[3.5.2, )",
-        "resolved": "3.5.2",
-        "contentHash": "FdH8/Rd+xDLwnj7CgeQAZb/EuPGzSXNxfE1SOr2I1XbWB6pANhYvTsc70GYelXWZHBGlct2p+PJK/AETTbkHjQ=="
+        "requested": "[1.2.25, )",
+        "resolved": "1.2.25",
+        "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
       },
       "JetBrains.Annotations": {
         "type": "Transitive",
@@ -31,20 +25,6 @@
         "type": "Transitive",
         "resolved": "9.0.2",
         "contentHash": "MNe7GSTBf3jQx5vYrXF0NZvn6l7hUKF6J54ENfAgCO8y6xjN1XUmKKWG464LP2ye6QqDiA1dkaWEZBYnhoZzjg=="
-      },
-      "ecommons": {
-        "type": "Project"
-      },
-      "glamourer.api": {
-        "type": "Project"
-      },
-      "glamourer.gamedata": {
-        "type": "Project",
-        "dependencies": {
-          "OtterGui": "[1.0.0, )",
-          "Penumbra.GameData": "[1.0.0, )",
-          "Penumbra.String": "[1.0.6, )"
-        }
       },
       "ottergui": {
         "type": "Project",

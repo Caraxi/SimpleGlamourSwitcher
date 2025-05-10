@@ -72,4 +72,8 @@ public class PluginService {
 
         _serviceManager.EnsureRequiredServices();
     }
+
+    internal static void Dispose() {
+        _serviceManager.Dispose();
+    }
 }

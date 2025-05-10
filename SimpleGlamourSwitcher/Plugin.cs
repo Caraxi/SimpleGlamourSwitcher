@@ -86,5 +86,6 @@ public class Plugin : IDalamudPlugin {
         ActionQueue.Dispose();
         Config.Shutdown();
         PenumbraIpc.Dispose();
+        PluginService.Dispose();
     }
 }

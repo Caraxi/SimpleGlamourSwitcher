@@ -2,8 +2,8 @@
   "Author": "Caraxi",
   "Name": "Simple Glamour Switcher",
   "RepoUrl": "https://github.com/Caraxi/SimpleGlamourSwitcher",
-  "Punchline": "...",
-  "Description": "...",
+  "Punchline": "Alternative glamour management",
+  "Description": "An alternative to using Glamourer for saving and reapplying outfits.\n - Allows for easy switching between multiple character setups.\n - Improved temporary mod settings, applying and reverting changes to individual slots.\n - Improved advanced dye application.\n\nRequires Glamourer and Penumbra, with optional support for Honorific, Simple Heels and Customize+.",
   "InternalName": "SimpleGlamourSwitcher",
   "ApplicableVersion": "any"
 }

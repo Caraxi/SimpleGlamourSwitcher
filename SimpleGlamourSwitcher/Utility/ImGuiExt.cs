@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
+using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using UiBuilder = Dalamud.Interface.UiBuilder;
@@ -116,12 +117,20 @@ public static class ImGuiExt {
         }
     }
 
-    public static bool IconButton(string id, FontAwesomeIcon icon, Vector2 buttonSize) {
+
+    private static Vector2? _defaultIconButtonSize;
+    public static bool IconButton(string id, FontAwesomeIcon icon, Vector2? buttonSize = null) {
         if (!id.StartsWith("##")) id = $"##{id}";
         try {
-            return ImGui.Button($"{id}", buttonSize);
+            if (_defaultIconButtonSize != null) return ImGui.Button($"{id}", buttonSize ?? _defaultIconButtonSize.Value);
+            var f = false;
+            ImGui.Checkbox("###dummy", ref f);
+            _defaultIconButtonSize = ImGui.GetItemRectSize();
+            return false;
         } finally {
-            ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+            using (PluginService.UiBuilder.IconFontHandle.Push()) {
+                ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize, ImGui.GetItemRectMin() + ImGui.GetItemRectSize() / 2 - ImGui.CalcTextSize(icon.ToIconString()) / 2, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
+            }
         }
     }
 

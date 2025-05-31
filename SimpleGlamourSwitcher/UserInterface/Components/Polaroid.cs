@@ -46,16 +46,14 @@ public static class Polaroid {
         var tl = ImGui.GetItemRectMin();
         var br = ImGui.GetItemRectMax();
         var drawList = ImGui.GetWindowDrawList();
+        drawList.PushClipRect(tl, br);
         drawList.AddRectFilled(tl, br, style.FrameColour, style.FrameRounding);
         drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour);
         if (image != null) {
             drawList.AddImage(image.ImGuiHandle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax);        
         }
         var textSize = ImGui.CalcTextSize(text);
-
         var labelPosition = tl + style.FramePadding + style.ImageSize * Vector2.UnitY + style.FramePadding * Vector2.UnitY + style.ImageSize * new Vector2(0.5f, 0f) - textSize * new Vector2(0.5f, 0f);
-        
-        
         for (var sx = -style.LabelShadowSize; sx < style.LabelShadowSize; sx++) {
             for (var sy = -style.LabelShadowSize; sy < style.LabelShadowSize; sy++) {
                 drawList.AddText(labelPosition + new Vector2(sx, sy) + style.LabelShadowOffset, style.LabelShadowColour, text);
@@ -63,6 +61,7 @@ public static class Polaroid {
         }
         
         drawList.AddText(labelPosition , style.LabelColour, text);
+        drawList.PopClipRect();
     }
     
     

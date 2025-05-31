@@ -40,7 +40,6 @@ public static class Polaroid {
         DrawPolaroid(image, imageDetail, text, style);
     }
     
-    
     private static void DrawPolaroid(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
         style ??= PolaroidStyle.Default;
         var tl = ImGui.GetItemRectMin();
@@ -52,24 +51,22 @@ public static class Polaroid {
         if (image != null) {
             drawList.AddImage(image.ImGuiHandle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax);        
         }
+        
         var textSize = ImGui.CalcTextSize(text);
         var labelPosition = tl + style.FramePadding + style.ImageSize * Vector2.UnitY + style.FramePadding * Vector2.UnitY + style.ImageSize * new Vector2(0.5f, 0f) - textSize * new Vector2(0.5f, 0f);
+        var labelDrawList = drawList;
+        
+        if (textSize.X > br.X - tl.X && ImGui.IsItemHovered()) {
+            labelDrawList = ImGui.GetForegroundDrawList();
+            labelDrawList.AddRectFilled(labelPosition - style.FramePadding, labelPosition + textSize + style.FramePadding, style.FrameColour, style.FrameRounding, ImDrawFlags.RoundCornersAll);
+        } 
+        
         for (var sx = -style.LabelShadowSize; sx < style.LabelShadowSize; sx++) {
             for (var sy = -style.LabelShadowSize; sy < style.LabelShadowSize; sy++) {
-                drawList.AddText(labelPosition + new Vector2(sx, sy) + style.LabelShadowOffset, style.LabelShadowColour, text);
+                labelDrawList.AddText(labelPosition + new Vector2(sx, sy) + style.LabelShadowOffset, style.LabelShadowColour, text);
             }
         }
-        
-        drawList.AddText(labelPosition , style.LabelColour, text);
+        labelDrawList.AddText(labelPosition , style.LabelColour, text);
         drawList.PopClipRect();
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
 }

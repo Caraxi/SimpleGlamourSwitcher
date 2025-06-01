@@ -250,7 +250,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             if (Automation.Gearsets.TryGetValue(currentGearset.Value.Id, out var guid)) {
                 if (guid != null) {
                     if (outfits.TryGetValue(guid.Value, out var outfit)) {
-                        Chat.Print($"Applying Gearset#{currentGearset.Value.Id} Automation: {outfit.Name}");
                         await outfit.Apply();
                     } else {
                         Chat.PrintError($"Failed to find outfit configured for Gearset '{currentGearset.Value.Name}'.", "Simple Glamour Switcher", 500);
@@ -264,7 +263,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
         if (isGearsetSwitch && Automation.DefaultGearset != null) {
             if (outfits.TryGetValue(Automation.DefaultGearset.Value, out var outfit)) {
-                Chat.Print($"Applying Any Gearset Automation: {outfit.Name}");
                 await outfit.Apply();
             } else {
                 Chat.PrintError($"Failed to find outfit configured for 'Any Gearset'.", "Simple Glamour Switcher", 500);
@@ -274,7 +272,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         
         if (isCharacterSwitch && Automation.CharacterSwitch != null) {
             if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var outfit)) {
-                Chat.Print($"Applying Character Switch Automation: {outfit.Name}");
                 await outfit.Apply();
             } else {
                 Chat.PrintError($"Failed to find outfit configured for Character Switch", "Simple Glamour Switcher", 500);
@@ -284,7 +281,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         
         if (isLogin && Automation.Login != null) {
             if (outfits.TryGetValue(Automation.Login.Value, out var outfit)) {
-                Chat.Print($"Applying Login Automation: {outfit.Name}");
                 await outfit.Apply();
             } else {
                 Chat.PrintError($"Failed to find outfit configured for Login.", "Simple Glamour Switcher", 500);

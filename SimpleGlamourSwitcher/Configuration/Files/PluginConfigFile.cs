@@ -21,7 +21,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public Vector2 WindowSize = new(800, 600);
     public Vector2 FullscreenOffset = new(0, 0);
     public Vector2 FullscreenPadding = new(0, 0);
-    
+    public string DebugDefaultPage = string.Empty;
     
     public Style? CustomStyle;
     

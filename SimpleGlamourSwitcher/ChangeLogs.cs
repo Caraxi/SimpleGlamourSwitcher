@@ -3,6 +3,12 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.1.0.0", () => {
+            Change("Added ability to apply outfits when switching gearsets.");
+            Change("Configure within the 'Automations' menu.", 1);
+            Change("Added ability to apply other outfits before or after a specific outfit.");
+            Change("Configure within individual outfits under the 'Outfit Links' submenu.", 1);
+        });
         ChangelogFor("1.0.0.12", () => {
             Change("Added ability to edit some properties of appearance in saved outfits.");
             Change("The remaining properties will be editable in a future version.", 1);

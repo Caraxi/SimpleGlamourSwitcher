@@ -2,7 +2,6 @@ using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ECommons.ImGuiMethods;
 using ImGuiNET;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
@@ -15,9 +14,8 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
 public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Page {
-
-
-
+    private bool dirty;
+    
     private readonly CharacterFolder? newFolder = editFolder == null ? new CharacterFolder() { FolderGuid = Guid.NewGuid(), ConfigFile = ActiveCharacter } : null;
     
     
@@ -33,10 +31,12 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
     private HashSet<HumanSlot>? defaultEquipmentToggles = editFolder?.CustomDefaultDisabledEquipmentSlots.Clone();
     private HashSet<AppearanceParameterKind>? defaultParameterToggles = editFolder?.CustomDefaultEnabledParameterKinds.Clone();
     private HashSet<ToggleType>? defaultToggleTypes = editFolder?.CustomDefaultEnabledToggles.Clone();
-    
+    private CharacterFolder.DefaultLinks? defaultLinks = editFolder?.CustomDefaultLinks.Clone();
 
     private bool hidden = editFolder?.Hidden ?? false;
     private CharacterFolder? folder = editFolder;
+
+    private OutfitLinksEditor? outfitLinksEditor;
 
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -46,7 +46,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         if (ActiveCharacter == null) return;
-
+        if (dirty) controlFlags |= WindowControlFlags.PreventClose;
+        
         var w = MathF.Min(500, ImGui.GetContentRegionAvail().X) * ImGuiHelpers.GlobalScale;
         
         var pad = (ImGui.GetContentRegionAvail().X - SubWindowWidth * ImGuiHelpers.GlobalScale) / 2f;
@@ -61,12 +62,12 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 ImGui.SetKeyboardFocusHere();
                 focusName = false;
             }
-            var returnPressed = CustomInput.InputText("New Folder Name", ref folderName, 64, errorMessage: folderName.Length == 0 ? "Please enter a name" : string.Empty, flags: ImGuiInputTextFlags.EnterReturnsTrue);
+            dirty |= CustomInput.InputText("New Folder Name", ref folderName, 64, errorMessage: folderName.Length == 0 ? "Please enter a name" : string.Empty);
             CustomInput.ReadOnlyInputText("Path", folderPath);
             var inputSize = ImGui.GetItemRectSize();
             if (ImGui.IsItemActive()) focusName = true;
 
-            ImGui.Checkbox("Hide Folder", ref hidden);
+            dirty |= ImGui.Checkbox("Hide Folder", ref hidden);
             
             
             var useCustomOutfitPolaroid = outfitStyle != null;
@@ -75,47 +76,39 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             var useCustomDefaultEquipmentToggles = defaultEquipmentToggles != null;
             var useCustomDefaultParameterToggles = defaultParameterToggles != null;
             var useCustomDefaultToggles = defaultToggleTypes != null;
-
+            var useCustomDefaultLinks = defaultLinks != null;
+            
             if (ImGui.Checkbox(useCustomOutfitPolaroid ? "##useCustomOutfitPolaroid" : "Use custom outfit style", ref useCustomOutfitPolaroid)) {
-                if (useCustomOutfitPolaroid) {
-                    outfitStyle = (ActiveCharacter.OutfitPolaroidStyle ?? PluginConfig.CustomStyle?.OutfitList.Polaroid ?? Style.Default.OutfitList.Polaroid).Clone();
-                } else {
-                    outfitStyle = null;
-                }
+                dirty = true;
+                outfitStyle = useCustomOutfitPolaroid ? (ActiveCharacter.OutfitPolaroidStyle ?? PluginConfig.CustomStyle?.OutfitList.Polaroid ?? Style.Default.OutfitList.Polaroid).Clone() : null;
             }
 
             if (outfitStyle != null) {
                 ImGui.SameLine();
                 if (ImGui.CollapsingHeader("Custom Outfit Image Style")) {
                     using (ImRaii.PushIndent()) {
-                        PolaroidStyle.DrawEditor("Outfit", outfitStyle);
+                        dirty |= PolaroidStyle.DrawEditor("Outfit", outfitStyle);
                     }
                 }
             }
 
             if (ImGui.Checkbox(useCustomFolderPolaroid ? "##useCustomFolderPolaroid" : "Use custom folder style", ref useCustomFolderPolaroid)) {
-                if (useCustomFolderPolaroid) {
-                    folderStyle = (ActiveCharacter.FolderPolaroidStyle ?? PluginConfig.CustomStyle?.FolderPolaroid ?? Style.Default.FolderPolaroid).Clone();
-                } else {
-                    folderStyle = null;
-                }
+                dirty = true;
+                folderStyle = useCustomFolderPolaroid ? (ActiveCharacter.FolderPolaroidStyle ?? PluginConfig.CustomStyle?.FolderPolaroid ?? Style.Default.FolderPolaroid).Clone() : null;
             }
 
             if (folderStyle != null) {
                 ImGui.SameLine();
                 if (ImGui.CollapsingHeader("Custom Folder Image Style")) {
                     using (ImRaii.PushIndent()) {
-                        PolaroidStyle.DrawEditor("Folder", folderStyle);
+                        dirty |= PolaroidStyle.DrawEditor("Folder", folderStyle);
                     }
                 }
             }
             
             if (ImGui.Checkbox(useCustomDefaultAppearanceToggles ? "##useCustomDefaultAppearanceToggles" : "Use Custom Default Appearance Toggles", ref useCustomDefaultAppearanceToggles)) {
-                if (useCustomDefaultAppearanceToggles) {
-                    defaultAppearanceToggles = ActiveCharacter.DefaultEnabledCustomizeIndexes.Clone();
-                } else {
-                    defaultAppearanceToggles = null;
-                }
+                dirty = true;
+                defaultAppearanceToggles = useCustomDefaultAppearanceToggles ? ActiveCharacter.DefaultEnabledCustomizeIndexes.Clone() : null;
             }
             
             if (useCustomDefaultAppearanceToggles && defaultAppearanceToggles != null) {
@@ -125,6 +118,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     foreach (var ci in Enum.GetValues<CustomizeIndex>()) {
                         var v = defaultAppearanceToggles.Contains(ci);
                         if (ImGui.Checkbox($"{ci}##defaultEnabledCustomize", ref v)) {
+                            dirty = true;
                             if (v) {
                                 defaultAppearanceToggles.Add(ci);
                             } else {
@@ -139,11 +133,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             }
             
             if (ImGui.Checkbox(useCustomDefaultParameterToggles ? "##useCustomDefaultParameterToggles" : "Use Custom Default Advanced Appearance Toggles", ref useCustomDefaultParameterToggles)) {
-                if (useCustomDefaultParameterToggles) {
-                    defaultParameterToggles = ActiveCharacter.DefaultEnabledParameterKinds.Clone();
-                } else {
-                    defaultParameterToggles = null;
-                }
+                dirty = true;
+                defaultParameterToggles = useCustomDefaultParameterToggles ? ActiveCharacter.DefaultEnabledParameterKinds.Clone() : null;
             }
             
             if (useCustomDefaultParameterToggles && defaultParameterToggles != null) {
@@ -153,6 +144,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
                         var v = defaultParameterToggles.Contains(ci);
                         if (ImGui.Checkbox($"{ci}##defaultEnabledParameter", ref v)) {
+                            dirty = true;
                             if (v) {
                                 defaultParameterToggles.Add(ci);
                             } else {
@@ -167,11 +159,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             }
             
             if (ImGui.Checkbox(useCustomDefaultEquipmentToggles ? "##useCustomDefaultEquipToggles" : "Use Custom Default Equipment Toggles", ref useCustomDefaultEquipmentToggles)) {
-                if (useCustomDefaultEquipmentToggles) {
-                    defaultEquipmentToggles = ActiveCharacter.DefaultDisabledEquipmentSlots.Clone();
-                } else {
-                    defaultEquipmentToggles = null;
-                }
+                dirty = true;
+                defaultEquipmentToggles = useCustomDefaultEquipmentToggles ? ActiveCharacter.DefaultDisabledEquipmentSlots.Clone() : null;
             }
             
             if (useCustomDefaultEquipmentToggles && defaultEquipmentToggles != null) {
@@ -181,6 +170,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     foreach (var hs in Common.GetGearSlots()) {
                         var v = !defaultEquipmentToggles.Contains(hs);
                         if (ImGui.Checkbox($"{hs.PrettyName()}##defaultEnabledEquip", ref v)) {
+                            dirty = true;
                             if (v) {
                                 defaultEquipmentToggles.Remove(hs);
                             } else {
@@ -195,11 +185,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             }
             
             if (ImGui.Checkbox(useCustomDefaultToggles ? "##useCustomDefaultToggles" : "Use Custom Defaults for Other Toggles", ref useCustomDefaultToggles)) {
-                if (useCustomDefaultToggles) {
-                    defaultToggleTypes = ActiveCharacter.DefaultEnabledToggles.Clone();
-                } else {
-                    defaultToggleTypes = null;
-                }
+                dirty = true;
+                defaultToggleTypes = useCustomDefaultToggles ? ActiveCharacter.DefaultEnabledToggles.Clone() : null;
             }
             
             if (useCustomDefaultToggles && defaultToggleTypes != null) {
@@ -209,11 +196,13 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     foreach (var ci in Enum.GetValues<ToggleType>()) {
                         var v = defaultToggleTypes.Contains(ci);
                         if (ImGui.Checkbox($"{ci}##defaultEnabledToggle", ref v)) {
+                            dirty = true;
                             if (v) {
                                 defaultToggleTypes.Add(ci);
                             } else {
                                 defaultToggleTypes.Remove(ci);
                             }
+                            
                         }
                         ImGui.NextColumn();
                     }
@@ -221,6 +210,24 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     ImGui.Columns(1);
                 }
             }
+            
+            
+            if (ImGui.Checkbox(useCustomDefaultLinks ? "##useCustomOutfitLinks" : "Use Custom Defaults for Outfit Links", ref useCustomDefaultLinks)) {
+                dirty = true;
+                outfitLinksEditor = null;
+                defaultLinks = useCustomDefaultLinks ? new CharacterFolder.DefaultLinks() { Before = ActiveCharacter.DefaultLinkBefore.Clone(), After = ActiveCharacter.DefaultLinkAfter.Clone() } : null;
+            }
+            
+            if (useCustomDefaultLinks && defaultLinks != null) {
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Custom Defaults for Outfit Links")) {
+                    outfitLinksEditor ??= new OutfitLinksEditor(ActiveCharacter, defaultLinks.Before, defaultLinks.After);
+                    if (outfitLinksEditor.Draw($"New Outfit inside {folderName.OrDefault("This Folder")}")) {
+                        dirty = true;
+                    }
+                }
+            }
+            
             
             if (ImGui.CollapsingHeader("Image")) {
                 var f = folder ?? newFolder;
@@ -235,21 +242,23 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             
             
             if (folder == null) {
-                if (ImGuiExt.ButtonWithIcon("Create Folder", FontAwesomeIcon.FolderPlus, inputSize) || returnPressed) {
+                if (ImGuiExt.ButtonWithIcon("Create Folder", FontAwesomeIcon.FolderPlus, inputSize)) {
                     SaveChanges();
                     ActiveCharacter.Dirty = true;
                     MainWindow.PopPage();
 
                     var guid = folder?.FolderGuid;
                     if (guid != null) {
-                        MainWindow?.OpenPage(new GlamourListPage(guid.Value));
+                        MainWindow.OpenPage(new GlamourListPage(guid.Value));
                     }
                     
                 }
             } else {
-                if (ImGuiExt.ButtonWithIcon("Save Changes", FontAwesomeIcon.Save, inputSize)) {
-                    SaveChanges();
-                    MainWindow.PopPage();
+                using (ImRaii.Disabled(!(dirty || ImGui.GetIO().KeyShift))) {
+                    if (ImGuiExt.ButtonWithIcon("Save Changes", FontAwesomeIcon.Save, inputSize)) {
+                        SaveChanges();
+                        MainWindow.PopPage();
+                    }
                 }
             }
         }
@@ -278,10 +287,28 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.CustomDefaultEnabledCustomizeIndexes = defaultAppearanceToggles;
         folder.CustomDefaultEnabledParameterKinds = defaultParameterToggles;
         folder.CustomDefaultEnabledToggles = defaultToggleTypes;
+        folder.CustomDefaultLinks = defaultLinks;
 
         if (ActiveCharacter == null) return;
         ActiveCharacter.Dirty = true;
         ActiveCharacter.Save(true);
+    }
+    
+    public override void DrawLeft(ref WindowControlFlags controlFlags) {
+        if (dirty) controlFlags |= WindowControlFlags.PreventClose;
+
+        using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
+            if (ImGuiExt.ButtonWithIcon(dirty && folder != null ? "Revert Changes" : "Cancel", FontAwesomeIcon.Ban, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+                controlFlags |= WindowControlFlags.PreventClose;
+                MainWindow.PopPage();
+            }
+        }
+
+        if (!dirty || ImGui.GetIO().KeyShift) return;
+        
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+            ImGui.SetTooltip("Hold SHIFT to confirm");
+        }
     }
     
 }

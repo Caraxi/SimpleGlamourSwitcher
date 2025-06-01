@@ -83,24 +83,28 @@ public class GlamourListPage : Page {
                 MainWindow?.OpenPage(new EditCharacterPage(ActiveCharacter));
             }
             
+            if (ImGuiExt.ButtonWithIcon("Configure Automations", FontAwesomeIcon.Robot, buttonSize)) {
+                MainWindow?.OpenPage(new AutomationPage(ActiveCharacter));
+            }
+            
             if (ImGuiExt.ButtonWithIcon("Open in Explorer", FontAwesomeIcon.FolderTree, buttonSize)) {
                 CharacterConfigFile.GetFile(ActiveCharacter.Guid).Directory?.OpenInExplorer();
             }
 
             using (ImRaii.Disabled(!ImGui.GetIO().KeyShift)) {
                 if (ImGuiExt.ButtonWithIcon(
-                        "Revert Character State", FontAwesomeIcon.Undo, buttonSize)) {
+                        "Reapply Automation", FontAwesomeIcon.Undo, buttonSize)) {
                     GlamourSystem.ApplyCharacter().ConfigureAwait(false);
                 }
             }
 
             if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
                 ImGui.BeginTooltip();
-                ImGui.Text("Revert Character State");
+                ImGui.Text("Reapply Automation");
                 var s = ImGui.GetItemRectSize() * Vector2.UnitX * 1.75f;
                 ImGui.Dummy(s);
                 ImGui.Separator();
-                ImGui.Text("Resets character appearance and outfit to\ntheir game defaults and then applies the\ncharacter's default outfit.");
+                ImGui.Text("Resets character appearance and outfit to\ntheir game defaults and then applies the\ncharacter's automations as if logging in again.");
                 ImGui.Spacing();
                 ImGui.TextDisabled("Hold SHIFT to confirm");
                 ImGui.EndTooltip();
@@ -369,7 +373,7 @@ public class GlamourListPage : Page {
                 
                 if (drag == null) {
                     if (Polaroid.Button((outfit as IImageProvider).GetImage(), outfit.ImageDetail, outfit.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(character, outfit) })) {
-                        outfit.Apply();
+                        outfit.Apply().ConfigureAwait(false);
                         if (PluginConfig.AutoCloseAfterApplying) {
                             MainWindow!.IsOpen = false;
                         }
@@ -405,18 +409,45 @@ public class GlamourListPage : Page {
                         }
                         ImGuiExt.CenterText(outfit.Name, centerVertically: true, centerHorizontally: false, size: ImGui.GetItemRectSize() + ImGui.GetStyle().ItemSpacing);
                         ImGui.Separator();
-                        
 
-                        if (character.DefaultOutfit == outfitGuid) {
-                            if (ImGui.MenuItem("Remove as Default Outfit")) {
-                                character.DefaultOutfit = null;
-                                character.Dirty = true;
+
+                        if (ImGui.BeginMenu("Automation")) {
+
+                            bool AutomationOption(string name, ref Guid? setValue) {
+                                if (setValue == outfitGuid) {
+                                    if (ImGui.MenuItem($"Remove as {name} outfit")) {
+                                        setValue = null;
+                                        return true;
+                                    }
+                                } else {
+                                    if (ImGui.MenuItem($"Set as {name} outfit")) {
+                                        setValue = outfitGuid;
+                                        return true;
+                                    }
+                                }
+
+                                return false;
                             }
-                        } else {
-                            if (ImGui.MenuItem("Set as Default Outfit")) {
-                                character.DefaultOutfit = outfitGuid;
-                                character.Dirty = true;
+                            
+                            character.Dirty |= AutomationOption("Login", ref character.Automation.Login);
+                            character.Dirty |= AutomationOption("Character Switch", ref character.Automation.CharacterSwitch);
+
+                            var activeGearset = GameHelper.GetActiveGearset();
+                            if (activeGearset != null) {
+                                var gearsetAutomation = character.Automation.Gearsets.GetValueOrDefault(activeGearset.Value.Id, null);
+                                if (AutomationOption($"'{activeGearset.Value.Name}' Gearset", ref gearsetAutomation)) {
+                                    if (gearsetAutomation == null) {
+                                        character.Automation.Gearsets.Remove(activeGearset.Value.Id);
+                                    } else {
+                                        character.Automation.Gearsets[activeGearset.Value.Id] = gearsetAutomation;
+                                    }
+                                    character.Dirty = true;
+                                }
                             }
+                            
+                            character.Dirty |= AutomationOption("default Gearset", ref character.Automation.DefaultGearset);
+                            
+                            ImGui.EndMenu();
                         }
                     
 
@@ -521,7 +552,8 @@ public class GlamourListPage : Page {
 
     private Colour GetOutfitFrameColour(CharacterConfigFile character, OutfitConfigFile outfit) {
         var style = PluginConfig.CustomStyle ?? Style.Default;
-        return character.DefaultOutfit == outfit.Guid ? style.OutfitList.DefaultOutfitColour : style.OutfitList.OutfitColour;
+        var anyAutomation = character.Automation.Login == outfit.Guid || character.Automation.CharacterSwitch == outfit.Guid || character.Automation.DefaultGearset == outfit.Guid;
+        return anyAutomation ? style.OutfitList.DefaultOutfitColour : style.OutfitList.OutfitColour;
     }
 
     public override void DrawRight(ref WindowControlFlags controlFlags) {

@@ -34,20 +34,33 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     public static OutfitConfigFile Create(CharacterConfigFile parent, Guid folderGuid) {
         var instance = Create(parent);
         instance.Folder = folderGuid;
+
+        if (folderGuid != Guid.Empty && parent.Folders.TryGetValue(folderGuid, out var folder)) {
+            instance.ApplyBefore = folder.DefaultLinkBefore.Clone();
+            instance.ApplyAfter = folder.DefaultLinkAfter.Clone();
+        } else {
+            instance.ApplyBefore = parent.DefaultLinkBefore.Clone();
+            instance.ApplyAfter = parent.DefaultLinkAfter.Clone();
+        }
+        
         return instance;
     }
     
-    public void Apply() {
+    public async Task Apply() {
         Notice.Show($"Apply Outfit: {Name}");
+
+        var stack = await GlamourSystem.HandleLinks(this);
+        var stackOutfit = new OutfitConfigFile() { Appearance = stack.Appearance, Equipment = stack.Equipment };
+        
         var redraw = false;
 
-        Framework.RunOnTick(() => {
+        await Framework.RunOnTick(() => {
 
-            GlamourerIpc.ApplyOutfit(this);
+            GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment);
             
-            Appearance.ApplyToCharacter(ref redraw);
+            stack.Appearance.ApplyToCharacter(ref redraw);
             Framework.RunOnTick(() => {
-                Equipment.ApplyToCharacter(ref redraw);
+                stack.Equipment.ApplyToCharacter(ref redraw);
 
                 if (redraw) {
                     Framework.RunOnTick(() => {

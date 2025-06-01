@@ -22,14 +22,14 @@ public static class GlamourerIpc {
     public static readonly API.SetMetaState SetMetaState = new(PluginInterface);
     public static readonly API.RevertState RevertState = new(PluginInterface);
 
-    public static JObject? GetCustomizationJObject(OutfitConfigFile config) {
+    public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment) {
         
         var state = GetState(0);
         if (state == null) return null;
 
         var stateMaterials = state.Materials ?? new Dictionary<MaterialValueIndex, GlamourerMaterial>();
         
-        var appearance = config.Appearance;
+        // var appearance = config.Appearance;
 
         var obj = new JObject();
         var customize = new JObject();
@@ -94,13 +94,13 @@ public static class GlamourerIpc {
             
         }
 
-        if (config.Equipment.Apply) {
-            if (config.Equipment.HatVisible.Apply) {
-                equipment["Hat"] = new JObject { { "Apply", true }, { "Show", config.Equipment.HatVisible.Toggle } };
+        if (outfitEquipment.Apply) {
+            if (outfitEquipment.HatVisible.Apply) {
+                equipment["Hat"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.HatVisible.Toggle } };
             }
 
-            if (config.Equipment.VisorToggle.Apply) {
-                equipment["Visor"] = new JObject { { "Apply", true }, { "IsToggled", config.Equipment.VisorToggle.Toggle } };
+            if (outfitEquipment.VisorToggle.Apply) {
+                equipment["Visor"] = new JObject { { "Apply", true }, { "IsToggled", outfitEquipment.VisorToggle.Toggle } };
             }
             
             var revertMaterial = new JObject {
@@ -109,12 +109,12 @@ public static class GlamourerIpc {
             };
             
             foreach (var slot in Common.GetGearSlots()) {
-                if (config.Equipment[slot].Apply) {
+                if (outfitEquipment[slot].Apply) {
                     foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToHumanSlot() == slot)) {
                         materials[mIndex.Key.ToString("X16")] = revertMaterial;
                     }
 
-                    foreach (var material in config.Equipment[slot].Materials) {
+                    foreach (var material in outfitEquipment[slot].Materials) {
                         materials[material.Index] = new JObject {
                             ["DiffuseR"] = material.DiffuseR,
                             ["DiffuseG"] = material.DiffuseG,
@@ -144,8 +144,8 @@ public static class GlamourerIpc {
         return obj;
     }
 
-    public static void ApplyOutfit(OutfitConfigFile config) {
-        var obj = GetCustomizationJObject(config);
+    public static void ApplyOutfit(OutfitAppearance appearance, OutfitEquipment equipment) {
+        var obj = GetCustomizationJObject(appearance, equipment);
         if (obj == null) return;
 
         ApplyState.Invoke(obj, 0, 0, ApplyFlag.Customization);

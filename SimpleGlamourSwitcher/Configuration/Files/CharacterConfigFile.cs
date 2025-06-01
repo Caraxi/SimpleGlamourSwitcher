@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Interface.Textures.TextureWraps;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
@@ -22,7 +23,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public bool ApplyOnPluginReload = false;
 
     public Guid? PenumbraCollection;
-    public Guid? DefaultOutfit;
+    [Obsolete("Use Automation")] public Guid? DefaultOutfit;
     public Guid? CustomizePlusProfile;
     public (string Name, uint World) HonorificIdentity = (string.Empty, 0);
     public (string Name, uint World) HeelsIdentity = (string.Empty, 0);
@@ -37,6 +38,11 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public ImageDetail ImageDetail { get; set; } = new();
     
     public Dictionary<Guid, CharacterFolder> Folders = new();
+    
+    public AutomationConfig Automation = new();
+
+    public List<Guid> DefaultLinkBefore { get; set; } = [];
+    public List<Guid> DefaultLinkAfter { get; set; } = [];
     
     public delegate bool IncludeCharacter(CharacterConfigFile character);
     public static class Filters {
@@ -121,10 +127,22 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             if (!Folders.ContainsKey(f.Parent)) f.Parent = Guid.Empty;
         }
         
+#pragma warning disable CS0612 // Type or member is obsolete
+        if (DefaultOutfit != null) {
+            Automation.Login = DefaultOutfit;
+            Automation.CharacterSwitch = DefaultOutfit;
+            DefaultOutfit = null;
+        }
+#pragma warning restore CS0612 // Type or member is obsolete
+        
         base.Setup();
     }
 
-    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder = null, CancellationToken cancellationToken = default) {
+    
+    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits() => await GetOutfits(null, CancellationToken.None);
+    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(CancellationToken cancellationToken) => await GetOutfits(null, cancellationToken);
+    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder) => await GetOutfits(folder, CancellationToken.None);
+    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder, CancellationToken cancellationToken) {
         return await Task.Run(() => {
             var outfits = new List<OutfitConfigFile>();
             
@@ -204,11 +222,11 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         return new DirectoryInfo(configFile.Directory?.FullName ?? throw new InvalidOperationException());
     }
 
-    public string ParseFolderPath(Guid guid) => ParseFolderPath(guid, []);
-    private string ParseFolderPath(Guid guid, HashSet<Guid> folders) {
+    public string ParseFolderPath(Guid guid, bool characterName = true) => ParseFolderPath(guid, [], characterName);
+    private string ParseFolderPath(Guid guid, HashSet<Guid> folders, bool characterName = true) {
         if (!folders.Add(guid)) throw new Exception("Folder loop caught");
-        if (guid == Guid.Empty || !Folders.TryGetValue(guid, out var folder)) return Name;
-        return $"{ParseFolderPath(folder.Parent, folders)} / {folder.Name}";
+        if (guid == Guid.Empty || !Folders.TryGetValue(guid, out var folder)) return characterName ? Name : string.Empty;
+        return characterName || folder.Parent != Guid.Empty ? $"{ParseFolderPath(folder.Parent, folders)} / {folder.Name}" : folder.Name;
     }
 
     
@@ -220,5 +238,58 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public IDefaultOutfitOptionsProvider GetOptionsProvider(Guid folderGuid) {
         if (folderGuid == Guid.Empty) return this;
         return Folders.GetValueOrDefault(folderGuid) as IDefaultOutfitOptionsProvider ?? this;
+    }
+
+    
+    
+    public async Task ApplyAutomation(bool isLogin = false, bool isCharacterSwitch = false, bool isGearsetSwitch = false) {
+        var outfits = await GetOutfits();
+
+        var currentGearset = GameHelper.GetActiveGearset();
+        if (currentGearset != null) {
+            if (Automation.Gearsets.TryGetValue(currentGearset.Value.Id, out var guid)) {
+                if (guid != null) {
+                    if (outfits.TryGetValue(guid.Value, out var outfit)) {
+                        Chat.Print($"Applying Gearset#{currentGearset.Value.Id} Automation: {outfit.Name}");
+                        await outfit.Apply();
+                    } else {
+                        Chat.PrintError($"Failed to find outfit configured for Gearset '{currentGearset.Value.Name}'.", "Simple Glamour Switcher", 500);
+                    }
+                }
+                
+                return;
+            }
+            
+        }
+
+        if (isGearsetSwitch && Automation.DefaultGearset != null) {
+            if (outfits.TryGetValue(Automation.DefaultGearset.Value, out var outfit)) {
+                Chat.Print($"Applying Any Gearset Automation: {outfit.Name}");
+                await outfit.Apply();
+            } else {
+                Chat.PrintError($"Failed to find outfit configured for 'Any Gearset'.", "Simple Glamour Switcher", 500);
+            }
+            return;
+        }
+        
+        if (isCharacterSwitch && Automation.CharacterSwitch != null) {
+            if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var outfit)) {
+                Chat.Print($"Applying Character Switch Automation: {outfit.Name}");
+                await outfit.Apply();
+            } else {
+                Chat.PrintError($"Failed to find outfit configured for Character Switch", "Simple Glamour Switcher", 500);
+            }
+            return;
+        }
+        
+        if (isLogin && Automation.Login != null) {
+            if (outfits.TryGetValue(Automation.Login.Value, out var outfit)) {
+                Chat.Print($"Applying Login Automation: {outfit.Name}");
+                await outfit.Apply();
+            } else {
+                Chat.PrintError($"Failed to find outfit configured for Login.", "Simple Glamour Switcher", 500);
+            }
+            return;
+        }
     }
 }

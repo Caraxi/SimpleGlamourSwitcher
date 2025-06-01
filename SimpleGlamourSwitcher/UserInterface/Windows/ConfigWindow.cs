@@ -39,5 +39,19 @@ public class ConfigWindow : Window {
         PluginConfig.Dirty |= ImGui.Checkbox("Log actions to chat", ref PluginConfig.LogActionsToChat);
         PluginConfig.Dirty |= ImGui.Checkbox("Show current character on character list", ref PluginConfig.ShowActiveCharacterInCharacterList);
         PluginConfig.Dirty |= ImGui.Checkbox("Show icons on buttons", ref PluginConfig.ShowButtonIcons);
+        
+        #if DEBUG
+        var debugPages = new[] { "automation", "outfit" };
+        var debugPage = debugPages.IndexOf(PluginConfig.DebugDefaultPage);
+        if (debugPage < 0) {
+            debugPage = 0;
+            PluginConfig.DebugDefaultPage = debugPages[0];
+        }
+        if (ImGui.Combo("Debug: Startup Page", ref debugPage, debugPages, debugPages.Length)) {
+            PluginConfig.Dirty = true;
+            PluginConfig.DebugDefaultPage = debugPages[debugPage];
+        }
+        #endif
+        
     }
 }

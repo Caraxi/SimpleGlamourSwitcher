@@ -11,16 +11,20 @@ public static class CustomInput {
     
     public static bool InputText(string label, ref string text, uint maxLength, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None, string errorMessage = "", TextInputStyle? style = null) {
         style ??= Style.Default.TextInput;
-        
+        var width = ImGui.CalcItemWidth();
         using (ImRaii.Group())
         using (ImRaii.PushId(label))
-        using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, 3))
-        using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(32, 16))) {
+        using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, style.BorderSize))
+        using(ImRaii.PushColor(ImGuiCol.Border, style.BorderColour.U32))
+        using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, style.FramePadding)) {
             try {
-                using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
-                    ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));    
+                if (style.PadTop) {
+                    using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
+                        ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));    
+                    }
                 }
                 
+                ImGui.SetNextItemWidth(width);
                 return ImGui.InputText("##customInputText", ref text, maxLength, flags);
             } finally {
                 ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() - new Vector2(-8f, ImGui.GetTextLineHeight() / 2f), label.Split("##")[0], style.Label);
@@ -46,17 +50,22 @@ public static class CustomInput {
     public static bool Combo(string label, string preview, Func<string, bool> drawContents, ImGuiComboFlags comboFlags = ImGuiComboFlags.HeightLargest, string? errorMessage = "", ComboStyle? style = null, bool showSearchBar = true) {
         style ??= Style.Default.Combo;
         var ret = false;
-        using (ImRaii.Group())
-        using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, 3))
-        using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(32, 16))) 
-        using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 3))
-        using (ImRaii.PushId(label)) {
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
-                ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));    
-            }
 
+        var comboWidth = ImGui.CalcItemWidth();
+        using (ImRaii.Group())
+        using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, style.BorderSize))
+        using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, style.FramePadding)) 
+        using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, style.BorderSize))
+        using (ImRaii.PushId(label)) {
+            if (style.PadTop) {
+                using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
+                    ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));    
+                }
+            }
+            
             var comboOpen = false;
             using (ImRaii.PushColor(ImGuiCol.Text, style.PreviewColour.U32)) {
+                ImGui.SetNextItemWidth(comboWidth);
                 comboOpen = ImGui.BeginCombo("##customCombo", preview, comboFlags);
             }
             

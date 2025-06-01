@@ -4,14 +4,11 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
-using Lumina.Excel.Sheets;
 using Penumbra.GameData.Enums;
-using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
-using SimpleGlamourSwitcher.IPC.Glamourer;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
@@ -33,6 +30,11 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     private OutfitAppearance? appearance;
     private string outfitName = outfit?.Name ?? string.Empty;
     private string? sortName = outfit?.SortName ?? string.Empty;
+
+    private List<Guid>? linkBefore;
+    private List<Guid>? linkAfter;
+    
+    private OutfitLinksEditor? linksEditor;
     
     private bool dirty;
     
@@ -45,7 +47,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
         using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
             if (ImGuiExt.ButtonWithIcon(dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-                MainWindow?.PopPage();
+                MainWindow.PopPage();
             }
         }
         
@@ -60,9 +62,15 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         }
     }
 
+
+    
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         equipment ??= Outfit.Equipment.Clone();
         appearance ??= Outfit.Appearance.Clone();
+
+        linkBefore = Outfit.ApplyBefore;
+        linkAfter = Outfit.ApplyAfter;
+        
         
         fileDialogManager.Draw();
         controlFlags |= WindowControlFlags.PreventClose;
@@ -111,11 +119,15 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             
             if (ImGui.CollapsingHeader("Image")) {
                 var folder = character.Folders.GetValueOrDefault(folderGuid);
-                var outfitStyle = folder?.OutfitPolaroidStyle ?? character?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+                var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
                 ImageEditor.Draw(Outfit, outfitStyle, Outfit.Name, ref controlFlags);
             }
-            
 
+            if (ImGui.CollapsingHeader("Outfit Links")) {
+                linksEditor ??= new OutfitLinksEditor(character, Outfit, linkBefore, linkAfter);
+                dirty |= linksEditor.Draw(outfitName.OrDefault("This Outfit"));
+            }
+            
             if (ImGui.CollapsingHeader("Details")) {
                 ImGui.Text($"GUID: {Outfit.Guid}");
                 dirty |= ImGui.InputTextWithHint("Custom Sort Name", outfitName, ref sortName, 128);
@@ -136,8 +148,10 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 Outfit.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();
                 Outfit.Equipment = equipment ?? Outfit.Equipment;
                 Outfit.Appearance = appearance ?? Outfit.Appearance;
+                Outfit.ApplyBefore = linkBefore;
+                Outfit.ApplyAfter = linkAfter;
                 Outfit.Save(true);
-                MainWindow?.PopPage();
+                MainWindow.PopPage();
             }
         }
     }

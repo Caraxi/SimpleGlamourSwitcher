@@ -2,18 +2,17 @@
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Glamourer.Api.Enums;
 using ImGuiNET;
 using SimpleGlamourSwitcher.Configuration.Files;
-using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.IPC;
+using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
 public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
     private OrderedDictionary<Guid, OutfitConfigFile> outfits = new();
-
+    private List<OutfitConfigFile> stack = new();
     public override void Draw() {
 
         if (ImGui.Button("Copy Glamourer State")) {
@@ -50,8 +49,12 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                         ImGui.Text($"{ActiveCharacter?.ParseFolderPath(outfit.Folder)} / {outfit.Name}");
                         ImGui.TableNextColumn();
                         if (ImGui.SmallButton("Copy Appearance JSON")) {
-                            var a = GlamourerIpc.GetCustomizationJObject(outfit);
+                            var a = GlamourerIpc.GetCustomizationJObject(outfit.Appearance, outfit.Equipment);
                             ImGui.SetClipboardText(a?.ToString() ?? "null");
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.SmallButton("+ Stack")) {
+                            stack.Add(outfit);
                         }
                     }
                 
@@ -61,7 +64,34 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
             }
         }
 
+        if (ImGui.CollapsingHeader("Stacking")) {
+            var stackIndex = -1;
+            if (ImGui.BeginTable("outfitStack", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders)) {
+                foreach (var outfit in stack.ToArray()) {
+                    using (ImRaii.PushId($"{outfit.Guid}_stack_{++stackIndex}")) {
+                        ImGui.TableNextColumn();
+                        ImGui.Text($"{outfit.Guid}");
+                        ImGui.TableNextColumn();
+                        ImGui.Text($"{ActiveCharacter?.ParseFolderPath(outfit.Folder)} / {outfit.Name}");
+                        ImGui.TableNextColumn();
+                        if (ImGui.SmallButton("- Stack")) {
+                            stack.RemoveAt(stackIndex);
+                        }
+                    }
+                }
+                ImGui.EndTable();
+            }
 
+            if (ImGui.Button("Stack to Outfit")) {
+                var result = GlamourSystem.StackOutfits(stack.ToArray());
+                var outfit = OutfitConfigFile.Create(ActiveCharacter);
+                outfit.Name = $"Stack: [{string.Join(", ", stack.Select(o => o.Name))}]";
+                outfit.Appearance = result.Appearance;
+                outfit.Equipment = result.Equipment;
+                outfit.Save(true);
+            }
+        }
+        
         if (ImGui.CollapsingHeader("Customize+")) {
 
             if (CustomizePlus.IsReady()) {

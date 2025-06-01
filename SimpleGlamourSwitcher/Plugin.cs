@@ -41,6 +41,7 @@ public class Plugin : IDalamudPlugin {
         HotkeyHelper.Initialize();
         PluginState.Initialize();
         ActionQueue.Initialize();
+        AutomationManager.Initialize();
 
         UiBuilder.OpenMainUi += MainWindow.Toggle;
         UiBuilder.OpenConfigUi += ConfigWindow.Toggle;
@@ -65,8 +66,16 @@ public class Plugin : IDalamudPlugin {
 #if DEBUG
             MainWindow.IsOpen = true;
             Framework.RunOnTick(() => {
-                if (ActiveCharacter != null) {
-                    MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, null));
+                if (ActiveCharacter != null && ClientState.LocalContentId != 0) {
+
+                    switch (PluginConfig.DebugDefaultPage.ToLowerInvariant()) {
+                        case "automation":
+                            MainWindow.OpenPage(new AutomationPage(ActiveCharacter));
+                            break;
+                        case "outfit":
+                            MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, null));
+                            break;
+                    }
                 }
 
             }, delayTicks: 1);
@@ -80,6 +89,7 @@ public class Plugin : IDalamudPlugin {
     public void Dispose() {
         Commands.RemoveHandler("/sgs");
         MainWindow.IsOpen = false;
+        AutomationManager.Dispose();
         ECommonsMain.Dispose();
         HotkeyHelper.Dispose();
         PluginState.Dispose();

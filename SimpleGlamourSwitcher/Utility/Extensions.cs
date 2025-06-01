@@ -7,6 +7,7 @@ using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
+using SimpleGlamourSwitcher.UserInterface.Components;
 
 namespace SimpleGlamourSwitcher.Utility;
 
@@ -98,4 +99,6 @@ public static class Extensions {
         if (world.IsPublic) return true;
         return char.IsUpper((char)world.Name.Data.Span[0]);
     }
+
+    public static uint Get(this ImGuiCol col) => ImGui.GetColorU32(col);
 }

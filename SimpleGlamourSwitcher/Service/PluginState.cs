@@ -30,9 +30,9 @@ public static class PluginState {
             PluginLog.Verbose($"Loaded character: {ActiveCharacter.Name}");
 
             if (isLogin && ActiveCharacter.ApplyOnLogin) {
-                GlamourSystem.ApplyCharacter().ConfigureAwait(false);
+                GlamourSystem.ApplyCharacter(isLogin: isLogin).ConfigureAwait(false);
             } else if (isPluginStartup && ActiveCharacter.ApplyOnPluginReload) {
-                GlamourSystem.ApplyCharacter().ConfigureAwait(false);
+                GlamourSystem.ApplyCharacter(isLogin: isPluginStartup).ConfigureAwait(false);
             }
         }
     }

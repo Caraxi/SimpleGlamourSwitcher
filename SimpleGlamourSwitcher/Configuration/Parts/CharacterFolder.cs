@@ -47,6 +47,13 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     public HashSet<HumanSlot>? CustomDefaultDisabledEquipmentSlots;
     public HashSet<AppearanceParameterKind>? CustomDefaultEnabledParameterKinds;
     public HashSet<ToggleType>? CustomDefaultEnabledToggles;
+
+    public DefaultLinks? CustomDefaultLinks;
+    
+    public class DefaultLinks {
+        public List<Guid> Before = [];
+        public List<Guid> After = [];
+    }
     
     [JsonIgnore]
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes => CustomDefaultEnabledCustomizeIndexes ?? ConfigFile?.DefaultEnabledCustomizeIndexes ?? [];
@@ -59,6 +66,12 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     
     [JsonIgnore]
     public HashSet<ToggleType> DefaultEnabledToggles => CustomDefaultEnabledToggles ?? ConfigFile?.DefaultEnabledToggles ?? [];
+    
+    [JsonIgnore]
+    public List<Guid> DefaultLinkBefore => CustomDefaultLinks?.Before ?? ConfigFile?.DefaultLinkBefore ?? [];
+    
+    [JsonIgnore]
+    public List<Guid> DefaultLinkAfter => CustomDefaultLinks?.After ?? ConfigFile?.DefaultLinkAfter ?? [];
     
     
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid) => GetImage(characterConfig, folderGuid, out _);

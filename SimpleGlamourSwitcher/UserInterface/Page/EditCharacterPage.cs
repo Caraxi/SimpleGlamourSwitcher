@@ -51,6 +51,13 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     
     private PolaroidStyle? outfitStyle = character?.OutfitPolaroidStyle.Clone();
     private PolaroidStyle? folderStyle = character?.FolderPolaroidStyle.Clone();
+
+
+    private List<Guid> linkBefore = character?.DefaultLinkBefore ?? [];
+    private List<Guid> linkAfter = character?.DefaultLinkAfter ?? [];
+
+    private OutfitLinksEditor? OutfitLinksEditor;
+    
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -317,6 +324,12 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 ImGui.Columns(1);
             }
 
+            if (ImGui.CollapsingHeader("Default Outfit Links")) {
+                OutfitLinksEditor ??= new OutfitLinksEditor(Character, linkBefore, linkAfter);
+                if (OutfitLinksEditor.Draw($"New Outfits for {Character.Name.OrDefault("This Character")}")) {
+                    dirty = true;
+                }
+            }
             
             var useCustomOutfitPolaroid = outfitStyle != null;
             var useCustomFolderPolaroid = folderStyle != null;
@@ -380,6 +393,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.CustomizePlusProfile = customizePlusProfile;
                     Character.OutfitPolaroidStyle = outfitStyle;
                     Character.FolderPolaroidStyle = folderStyle;
+                    Character.DefaultLinkBefore = linkBefore;
+                    Character.DefaultLinkAfter = linkAfter;
 
                     Character.ApplyOnLogin = applyOnLogin;
                     Character.ApplyOnPluginReload = applyOnPluginReload;
@@ -403,7 +418,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                         
                         defaultOutfit.Save(true);
 
-                        Character.DefaultOutfit = defaultOutfit.Guid;
+                        Character.Automation.Login = defaultOutfit.Guid;
                         
                         Character.Dirty = true;
                         Character.Save(true);

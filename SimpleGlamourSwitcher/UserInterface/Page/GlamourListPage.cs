@@ -553,6 +553,13 @@ public class GlamourListPage : Page {
     private Colour GetOutfitFrameColour(CharacterConfigFile character, OutfitConfigFile outfit) {
         var style = PluginConfig.CustomStyle ?? Style.Default;
         var anyAutomation = character.Automation.Login == outfit.Guid || character.Automation.CharacterSwitch == outfit.Guid || character.Automation.DefaultGearset == outfit.Guid;
+
+        if (!anyAutomation) {
+            var activeGearset = GameHelper.GetActiveGearset();
+            anyAutomation |= activeGearset != null && character.Automation.Gearsets.TryGetValue(activeGearset.Value.Id, out var gearsetAutomation) && gearsetAutomation == outfit.Guid;
+        }
+        
+        
         return anyAutomation ? style.OutfitList.DefaultOutfitColour : style.OutfitList.OutfitColour;
     }
 

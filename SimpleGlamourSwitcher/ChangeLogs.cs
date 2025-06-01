@@ -8,6 +8,7 @@ internal static class ChangeLogs {
             Change("Configure within the 'Automations' menu.", 1);
             Change("Added ability to apply other outfits before or after a specific outfit.");
             Change("Configure within individual outfits under the 'Outfit Links' submenu.", 1);
+            Change("Added option to allow the use of the hotkey inside GPose.");
         });
         ChangelogFor("1.0.0.12", () => {
             Change("Added ability to edit some properties of appearance in saved outfits.");

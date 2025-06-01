@@ -23,7 +23,10 @@ public class ConfigWindow : Window {
             PluginConfig.Dirty = true;
             PluginConfig.Hotkey = newHotkey;
         }
+        ImGui.SameLine();
         ImGui.TextDisabled("Set a hotkey to open the main UI.");
+
+        PluginConfig.Dirty |= ImGui.Checkbox("Allow Hotkey in GPose", ref PluginConfig.AllowHotkeyInGpose);
         
         PluginConfig.Dirty |= ImGui.Checkbox("Fullscreen", ref PluginConfig.FullScreenMode);
 

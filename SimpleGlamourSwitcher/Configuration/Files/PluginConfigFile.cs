@@ -28,6 +28,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public bool ShowHiddenCharacters;
     public bool LogActionsToChat;
     public bool ShowButtonIcons = true;
+    public bool AllowHotkeyInGpose = true;
 
     public static FileInfo GetFile(Guid? guid = null) {
         if (guid != null) throw new Exception($"{nameof(PluginConfigFile)} does not support GUID");

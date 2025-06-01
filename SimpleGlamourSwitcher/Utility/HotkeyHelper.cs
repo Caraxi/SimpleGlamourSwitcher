@@ -47,7 +47,8 @@ public static class HotkeyHelper {
             // if (ClientState.LocalContentId == 0) return;
             // if (ClientState.LocalPlayer == null) return;
             if (IsSettingHotkey) return;
-            if (Condition.Any(ConditionFlag.LoggingOut, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51, ConditionFlag.InCombat, ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent)) return;
+            
+            if (Condition.Any(ConditionFlag.LoggingOut, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51, ConditionFlag.InCombat, PluginConfig.AllowHotkeyInGpose && ClientState.IsGPosing ? ConditionFlag.None : ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent)) return;
             if (HeldKeys.SetEquals(PluginConfig.Hotkey)) {
                 PluginState.ShowGlamourSwitcher();
                 handleType = NativeKeyState.KeyHandleType.Block;

@@ -47,9 +47,10 @@ public static class Polaroid {
         var drawList = ImGui.GetWindowDrawList();
         drawList.PushClipRect(tl, br);
         drawList.AddRectFilled(tl, br, style.FrameColour, style.FrameRounding);
-        drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour);
+        drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour, style.FrameRounding, ImDrawFlags.RoundCornersTop);
         if (image != null) {
-            drawList.AddImage(image.ImGuiHandle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax);        
+            drawList.AddImageRounded(image.ImGuiHandle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax, uint.MaxValue, style.FrameRounding, ImDrawFlags.RoundCornersTop);
+            
         }
         
         var textSize = ImGui.CalcTextSize(text);

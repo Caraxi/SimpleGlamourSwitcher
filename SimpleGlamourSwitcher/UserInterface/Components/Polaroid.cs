@@ -45,7 +45,10 @@ public static class Polaroid {
         var tl = ImGui.GetItemRectMin();
         var br = ImGui.GetItemRectMax();
         var drawList = ImGui.GetWindowDrawList();
-        drawList.PushClipRect(tl, br);
+        var wTl = ImGui.GetWindowPos();
+        var wBr = wTl + ImGui.GetWindowSize();
+        
+        drawList.PushClipRect(new Vector2(MathF.Max(tl.X, wTl.X), MathF.Max(tl.Y, wTl.Y)), new Vector2(MathF.Min(br.X, wBr.X), MathF.Min(br.Y, wBr.Y)));
         drawList.AddRectFilled(tl, br, style.FrameColour, style.FrameRounding);
         drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour, style.FrameRounding, ImDrawFlags.RoundCornersTop);
         if (image != null) {

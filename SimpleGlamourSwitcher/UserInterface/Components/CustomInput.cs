@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
 
@@ -25,7 +25,7 @@ public static class CustomInput {
                 }
                 
                 ImGui.SetNextItemWidth(width);
-                return ImGui.InputText("##customInputText", ref text, maxLength, flags);
+                return ImGui.InputText("##customInputText", ref text, (int)maxLength, flags);
             } finally {
                 ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() - new Vector2(-8f, ImGui.GetTextLineHeight() / 2f), label.Split("##")[0], style.Label);
                 if (!string.IsNullOrWhiteSpace(errorMessage)) {

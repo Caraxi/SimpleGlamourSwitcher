@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components;
@@ -51,16 +50,16 @@ public static class StainPicker {
                         using (ImRaii.Group()) {
                             var p = ImGui.GetCursorPos();
                             if (shade.Key == 10) {
-                                ImGui.Image(texture.ImGuiHandle, size * 2, new Vector2(0, 0.647f), new Vector2(0.3333f, 1f));
+                                ImGui.Image(texture.Handle, size * 2, new Vector2(0, 0.647f), new Vector2(0.3333f, 1f));
                             } else {
-                                ImGui.Image(texture.ImGuiHandle, size * 2, new Vector2(0, 0), new Vector2(0.3333f, 0.3529f), shade.Value);
+                                ImGui.Image(texture.Handle, size * 2, new Vector2(0, 0), new Vector2(0.3333f, 0.3529f), shade.Value);
                             }
 
                             ImGui.SetCursorPos(p);
                             if (_selectedShade == shade.Key || ImGui.IsItemHovered()) {
-                                ImGui.Image(texture.ImGuiHandle, size * 2, new Vector2(0.6666f, 0), new Vector2(1, 0.3529f));
+                                ImGui.Image(texture.Handle, size * 2, new Vector2(0.6666f, 0), new Vector2(1, 0.3529f));
                             } else {
-                                ImGui.Image(texture.ImGuiHandle, size * 2, new Vector2(0.3333f, 0), new Vector2(0.6666f, 0.3529f));
+                                ImGui.Image(texture.Handle, size * 2, new Vector2(0.3333f, 0), new Vector2(0.6666f, 0.3529f));
                             }
                         }
 
@@ -113,9 +112,9 @@ public static class StainPicker {
         var texture = TextureProvider.GetFromGame("ui/uld/ListColorChooser_hr1.tex").GetWrapOrEmpty();
 
         if (stain == null || stain.Value.RowId == 0) {
-            dl.AddImage(texture.ImGuiHandle, center - drawOffset2, center + drawOffset2, new Vector2(0.8333333f, 0.3529412f), new Vector2(0.9444444f, 0.47058824f), 0x80FFFFFF);
-            dl.AddImage(texture.ImGuiHandle, center - drawOffset, center + drawOffset, new Vector2(0.27777f, 0.3529f), new Vector2(0.55555f, 0.64705f));
-            if (ImGui.IsItemHovered()) dl.AddImage(texture.ImGuiHandle, center - drawOffset, center + drawOffset, new Vector2(0.55555f, 0.3529f), new Vector2(0.83333f, 0.64705f));
+            dl.AddImage(texture.Handle, center - drawOffset2, center + drawOffset2, new Vector2(0.8333333f, 0.3529412f), new Vector2(0.9444444f, 0.47058824f), 0x80FFFFFF);
+            dl.AddImage(texture.Handle, center - drawOffset, center + drawOffset, new Vector2(0.27777f, 0.3529f), new Vector2(0.55555f, 0.64705f));
+            if (ImGui.IsItemHovered()) dl.AddImage(texture.Handle, center - drawOffset, center + drawOffset, new Vector2(0.55555f, 0.3529f), new Vector2(0.83333f, 0.64705f));
 
             if (tooltip && ImGui.IsItemHovered()) ImGui.SetTooltip("No Dye");
 
@@ -128,14 +127,17 @@ public static class StainPicker {
         var stainVec4 = new Vector4(r / 255f, g / 255f, b / 255f, 1f);
         var stainColor = ImGui.GetColorU32(stainVec4);
 
-        dl.AddImage(texture.ImGuiHandle, center - drawOffset, center + drawOffset, new Vector2(0, 0.3529f), new Vector2(0.27777f, 0.6470f), stainColor);
+        dl.AddImage(texture.Handle, center - drawOffset, center + drawOffset, new Vector2(0, 0.3529f), new Vector2(0.27777f, 0.6470f), stainColor);
         if (stain.Value.Unknown1) {
             dl.PushClipRect(center - drawOffset2, center + drawOffset2);
-            ImGui.ColorConvertRGBtoHSV(stainVec4.X, stainVec4.Y, stainVec4.Z, out var h, out var s, out var v);
-            ImGui.ColorConvertHSVtoRGB(h, s, v - 0.5f, out var dR, out var dG, out var dB);
-            ImGui.ColorConvertHSVtoRGB(h, s, v + 0.8f, out var bR, out var bG, out var bB);
-            var dColor = ImGui.GetColorU32(new Vector4(dR, dG, dB, 1));
-            var bColor = ImGui.GetColorU32(new Vector4(bR, bG, bB, 1));
+            var hsv = new Vector3();
+            ImGui.ColorConvertRGBtoHSV(stainVec4.X, stainVec4.Y, stainVec4.Z, ref hsv.X, ref hsv.Y, ref hsv.Z);
+            var dRgb = new Vector3();
+            ImGui.ColorConvertHSVtoRGB(hsv.X, hsv.Y, hsv.Z - 0.5f, ref dRgb.X, ref dRgb.Y, ref dRgb.Z);
+            var bRgb = new Vector3();
+            ImGui.ColorConvertHSVtoRGB(hsv.X, hsv.Y, hsv.Z + 0.8f, ref bRgb.X, ref bRgb.Y, ref bRgb.Z);
+            var dColor = ImGui.GetColorU32(new Vector4(dRgb, 1));
+            var bColor = ImGui.GetColorU32(new Vector4(bRgb, 1));
             var tr = pos + size with { Y = 0 };
             var bl = pos + size with { X = 0 };
             var opacity = 0U;
@@ -148,8 +150,8 @@ public static class StainPicker {
             dl.PopClipRect();
         }
 
-        dl.AddImage(texture.ImGuiHandle, center - drawOffset, center + drawOffset, new Vector2(0.27777f, 0.3529f), new Vector2(0.55555f, 0.64705f));
-        if (isSelected || ImGui.IsItemHovered()) dl.AddImage(texture.ImGuiHandle, center - drawOffset, center + drawOffset, new Vector2(0.55555f, 0.3529f), new Vector2(0.83333f, 0.64705f));
+        dl.AddImage(texture.Handle, center - drawOffset, center + drawOffset, new Vector2(0.27777f, 0.3529f), new Vector2(0.55555f, 0.64705f));
+        if (isSelected || ImGui.IsItemHovered()) dl.AddImage(texture.Handle, center - drawOffset, center + drawOffset, new Vector2(0.55555f, 0.3529f), new Vector2(0.83333f, 0.64705f));
 
         if (tooltip && ImGui.IsItemHovered()) ImGui.SetTooltip(stain.Value.Name.ExtractText());
 

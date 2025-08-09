@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface.Utility.Raii;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
 
@@ -26,7 +26,7 @@ public static class ItemIcon {
         using (ImRaii.Group()) {
             if (equipItem.IconId.Id != 0) {
                 var tex = TextureProvider.GetFromGameIcon(equipItem.IconId.Id).GetWrapOrEmpty();
-                ImGui.Image(tex.ImGuiHandle, size);
+                ImGui.Image(tex.Handle, size);
             } else {
                 ImGui.Dummy(size);
                 var dl = ImGui.GetWindowDrawList();
@@ -34,7 +34,7 @@ public static class ItemIcon {
                 if (EmptyIcons.TryGetValue(slot, out var emptyIcon)) {
                     var tex = TextureProvider.GetFromGame(emptyIcon.TexturePath).GetWrapOrDefault();
                     if (tex != null) {
-                        dl.AddImage(tex.ImGuiHandle, ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), emptyIcon.uvMin, emptyIcon.uvMax);
+                        dl.AddImage(tex.Handle, ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), emptyIcon.uvMin, emptyIcon.uvMax);
                     }
                 }
             }

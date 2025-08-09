@@ -6,7 +6,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using ECommons.ImGuiMethods;
 using Glamourer.GameData;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 using Penumbra.GameData;
 using Penumbra.GameData.Enums;
@@ -136,7 +136,7 @@ public static class CustomizeEditor {
                 if (ImGui.BeginChildFrame(ImGui.GetID($"facialFeature_{index}"), new Vector2(w / 4f, 48) * ImGuiHelpers.GlobalScale, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
                     edited |= ShowApplyEnableCheckbox(index.PrettyName(), ref aCustomize.Apply, ref appearance.Apply);
                     var icon = TextureProvider.GetFromGameIcon(iconId).GetWrapOrEmpty();
-                    if (ImGui.ImageButton(icon.ImGuiHandle, new Vector2(ImGui.GetContentRegionAvail().Y) * ImGuiHelpers.GlobalScale, Vector2.Zero, Vector2.One, 1, ImGui.GetColorU32(ImGuiCol.Button).ToVector4(), aCustomize.Value != 0 ? Vector4.One : ImGuiColors.DalamudRed)) {
+                    if (ImGui.ImageButton(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y) * ImGuiHelpers.GlobalScale, Vector2.Zero, Vector2.One, 1, ImGui.GetColorU32(ImGuiCol.Button).ToVector4(), aCustomize.Value != 0 ? Vector4.One : ImGuiColors.DalamudRed)) {
                         aCustomize.Value = aCustomize.Value != 0 ? (byte) 0 : enableValue;
                         edited = true;
                     }
@@ -224,7 +224,7 @@ public static class CustomizeEditor {
             
             if (ImGui.BeginChildFrame(ImGui.GetID("facePickerPreview"), new Vector2(ImGui.GetContentRegionAvail().X * EditorInputScale, 48 * ImGuiHelpers.GlobalScale))) {
                 var icon = TextureProvider.GetFromGameIcon(faceMakeType.SubMenuParam[appearance.Face.Value - 1]).GetWrapOrEmpty();
-                ImGui.Image(icon.ImGuiHandle, new Vector2(ImGui.GetContentRegionAvail().Y));
+                ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
                 ImGui.SameLine();
                 ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
                 ImGui.Text($"Face #{appearance.Face.Value}");
@@ -255,7 +255,7 @@ public static class CustomizeEditor {
                         }
                     }
 
-                    ImGui.GetWindowDrawList().AddImage(icon.ImGuiHandle, ImGui.GetItemRectMin(), ImGui.GetItemRectMin() + new Vector2(ImGui.GetItemRectSize().Y));
+                    ImGui.GetWindowDrawList().AddImage(icon.Handle, ImGui.GetItemRectMin(), ImGui.GetItemRectMin() + new Vector2(ImGui.GetItemRectSize().Y));
                 }
 
                 ImGui.EndCombo();
@@ -339,7 +339,7 @@ public static class CustomizeEditor {
         if (ImGui.BeginChildFrame(ImGui.GetID("hairPickerPreview"), new Vector2((ImGui.GetContentRegionAvail().X * EditorInputScale) - (cbSize.X * 3 + ImGui.GetStyle().ItemInnerSpacing.X * 3), 48 * ImGuiHelpers.GlobalScale))) {
             if (activeHairstyle.HasValue) {
                 var icon = TextureProvider.GetFromGameIcon(activeHairstyle.Value.Icon).GetWrapOrEmpty();
-                ImGui.Image(icon.ImGuiHandle, new Vector2(ImGui.GetContentRegionAvail().Y));
+                ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
             } else {
                 ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
             }
@@ -380,7 +380,7 @@ public static class CustomizeEditor {
                 
                 if (ImGui.BeginChildFrame(ImGui.GetID($"hairstyle_{cmc.FeatureID}"), new Vector2(ImGui.GetContentRegionAvail().X, 48 * ImGuiHelpers.GlobalScale), ImGuiWindowFlags.NoBackground)) {
                     try {
-                        ImGui.Image(icon.ImGuiHandle, new Vector2(ImGui.GetContentRegionAvail().Y));
+                        ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
                     } catch {
                         ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
                     }

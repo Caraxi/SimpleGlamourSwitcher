@@ -3,7 +3,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Glamourer.Api.Enums;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;

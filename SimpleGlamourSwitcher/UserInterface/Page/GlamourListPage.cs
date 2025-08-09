@@ -4,7 +4,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ECommons;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Files;
@@ -155,7 +155,7 @@ public class GlamourListPage : Page {
                                 var size = ImGui.CalcTextSize(fullText);
 
                                 if (ImGui.BeginChild($"stackTrace_{errGuid}_child", new Vector2(ImGui.GetContentRegionAvail().X, size.Y + ImGui.GetStyle().FramePadding.Y * 4 + ImGui.GetStyle().WindowPadding.Y * 2 + ImGui.GetStyle().ScrollbarSize), true, ImGuiWindowFlags.HorizontalScrollbar)) {
-                                    ImGui.InputTextMultiline($"##stackTrace_{errGuid}", ref fullText, (uint)fullText.Length, size + ImGui.GetStyle().FramePadding * 2, ImGuiInputTextFlags.ReadOnly);
+                                    ImGui.InputTextMultiline($"##stackTrace_{errGuid}", ref fullText, fullText.Length, size + ImGui.GetStyle().FramePadding * 2, ImGuiInputTextFlags.ReadOnly);
                                 }
                                 ImGui.EndChild();
                                 

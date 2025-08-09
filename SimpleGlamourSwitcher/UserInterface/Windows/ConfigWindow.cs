@@ -3,7 +3,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ECommons;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;

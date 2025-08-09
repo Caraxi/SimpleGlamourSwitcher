@@ -2,7 +2,7 @@
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using ECommons.ImGuiMethods;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
 

@@ -11,18 +11,22 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <UserSecretsId>4104b294-8575-4480-8e71-9418b1ce5962</UserSecretsId>
-        <Version>1.1.0.1</Version>
+        <Version>1.1.1.1</Version>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="12.0.0" />
+        <PackageReference Include="DalamudPackager" Version="13.0.0" />
         <PackageReference Include="SharpClipboard" Version="3.5.2" />
         <Reference Include="Dalamud">
             <Private>false</Private>
             <HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
         </Reference>
-        <Reference Include="ImGui.NET">
+        <Reference Include="Dalamud.Bindings.ImGui">
             <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\ImGui.NET.dll</HintPath>
+            <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImGui.dll</HintPath>
+        </Reference>
+        <Reference Include="Dalamud.Bindings.ImPlot">
+            <Private>false</Private>
+            <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImPlot.dll</HintPath>
         </Reference>
         <Reference Include="Lumina">
             <Private>false</Private>

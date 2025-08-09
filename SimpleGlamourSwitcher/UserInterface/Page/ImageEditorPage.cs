@@ -2,7 +2,7 @@
 using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using ECommons.ImGuiMethods;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -51,11 +51,11 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
 
             dl.AddRectFilled(ImGui.GetItemRectMin() - new Vector2(2), ImGui.GetItemRectMax() + new Vector2(2), style.BlankImageColour);
 
-            dl.AddImage(image.ImGuiHandle, ImGui.GetItemRectMin(), ImGui.GetItemRectMax());
+            dl.AddImage(image.Handle, ImGui.GetItemRectMin(), ImGui.GetItemRectMax());
 
 /*
-            dl.AddImage(image.ImGuiHandle, ImGui.GetItemRectMin(), ImGui.GetItemRectMin() + actualEditorSize * new Vector2(1, newDetail.UvMin.Y), Vector2.Zero, new Vector2(1, newDetail.UvMin.Y));
-            dl.AddImage(image.ImGuiHandle, ImGui.GetItemRectMin() + actualEditorSize * new Vector2(0, newDetail.UvMax.Y), ImGui.GetItemRectMin() + actualEditorSize * new Vector2(1, 1), new Vector2(0, newDetail.UvMax.Y), new Vector2(1, 1));
+            dl.AddImage(image.Handle, ImGui.GetItemRectMin(), ImGui.GetItemRectMin() + actualEditorSize * new Vector2(1, newDetail.UvMin.Y), Vector2.Zero, new Vector2(1, newDetail.UvMin.Y));
+            dl.AddImage(image.Handle, ImGui.GetItemRectMin() + actualEditorSize * new Vector2(0, newDetail.UvMax.Y), ImGui.GetItemRectMin() + actualEditorSize * new Vector2(1, 1), new Vector2(0, newDetail.UvMax.Y), new Vector2(1, 1));
           */
 
             var inactiveColour = 0xC0000000;
@@ -65,7 +65,7 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
             dl.AddRectFilled(ImGui.GetItemRectMin() + actualEditorSize * new Vector2(newDetail.UvMax.X, newDetail.UvMin.Y), ImGui.GetItemRectMin() + actualEditorSize * new Vector2(1, newDetail.UvMax.Y), inactiveColour);
             dl.AddRectFilled(ImGui.GetItemRectMin() + actualEditorSize * new Vector2(0, newDetail.UvMax.Y), ImGui.GetItemRectMin() + actualEditorSize * new Vector2(1, 1), inactiveColour);
 
-            // dl.AddImage(image.ImGuiHandle, ImGui.GetItemRectMin() + actualEditorSize * newDetail.UvMin, ImGui.GetItemRectMin() + actualEditorSize  * newDetail.UvMax, newDetail.UvMin, newDetail.UvMax);
+            // dl.AddImage(image.Handle, ImGui.GetItemRectMin() + actualEditorSize * newDetail.UvMin, ImGui.GetItemRectMin() + actualEditorSize  * newDetail.UvMax, newDetail.UvMin, newDetail.UvMax);
 
             var grabSize = 5;
 

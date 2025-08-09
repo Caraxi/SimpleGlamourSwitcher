@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface.Textures.TextureWraps;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 
@@ -49,7 +49,7 @@ public static class Polaroid {
         drawList.AddRectFilled(tl, br, style.FrameColour, style.FrameRounding);
         drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour, style.FrameRounding, ImDrawFlags.RoundCornersTop);
         if (image != null) {
-            drawList.AddImageRounded(image.ImGuiHandle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax, uint.MaxValue, style.FrameRounding, ImDrawFlags.RoundCornersTop);
+            drawList.AddImageRounded(image.Handle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax, uint.MaxValue, style.FrameRounding, ImDrawFlags.RoundCornersTop);
             
         }
         

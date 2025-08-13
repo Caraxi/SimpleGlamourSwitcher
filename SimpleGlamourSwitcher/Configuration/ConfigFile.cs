@@ -114,6 +114,19 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
         Guid = guid;
         UpdateValidation();
     }
+
+    protected void SaveAs(Guid guid, bool revertGuid = false) {
+        var originalGuid = this.Guid;
+
+        try {
+            this.Guid = guid;
+            Save(true);
+        } finally {
+            if (revertGuid) {
+                this.Guid = originalGuid;
+            }
+        }
+    }
     
     public void Save(bool force = false) {
         if (force) Dirty = true;

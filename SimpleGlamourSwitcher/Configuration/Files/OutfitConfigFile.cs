@@ -165,6 +165,15 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
             }
         }
     }
+
+    public async Task<OutfitConfigFile> CreateClone() {
+        return await Task.Run(() => {
+            var guid = Guid.NewGuid();
+            var parent = this.GetParent();
+            SaveAs(guid, true);
+            return Load(guid, parent);
+        }) ?? throw new Exception("Failed to clone outfit.");
+    }
 }
 
 

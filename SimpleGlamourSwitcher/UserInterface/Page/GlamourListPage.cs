@@ -37,7 +37,6 @@ public class GlamourListPage : Page {
     }
 
     private void LoadOutfits() {
-        outfits = null;
         var character = ActiveCharacter;
 
         scrollTop = true;
@@ -454,6 +453,14 @@ public class GlamourListPage : Page {
 
                         if (ImGui.MenuItem("Edit Outfit")) {
                             MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, outfit));
+                        }
+                        
+                        if (ImGui.MenuItem("Clone Outfit")) {
+                            outfit.CreateClone().ContinueWith(task => {
+                                if (task.IsCompletedSuccessfully) {
+                                    MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, task.Result));
+                                }
+                            });
                         }
 
                         if (ImGui.MenuItem("Open File")) {

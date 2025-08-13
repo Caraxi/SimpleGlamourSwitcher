@@ -3,6 +3,9 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.1.2.0", () => {
+            Change("Added ability to clone outfits.");
+        });
         ChangelogFor("1.1.0.0", () => {
             Change("Added ability to apply outfits when switching gearsets.");
             Change("Configure within the 'Automations' menu.", 1);

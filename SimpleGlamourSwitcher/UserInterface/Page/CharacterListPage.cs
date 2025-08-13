@@ -131,7 +131,7 @@ public class CharacterListPage : Page {
 
                         ImGui.Text("Hold SHIFT and ALT to confirm.");
 
-                        if (ImGui.MenuItem("> Confirm Delete <", ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
+                        if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
                             if (characterConfig.Delete()) {
                                 actions.Add(() => { characters.Remove(guid); });
                             }

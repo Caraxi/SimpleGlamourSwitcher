@@ -283,7 +283,7 @@ public class GlamourListPage : Page {
                                 
                                 ImGui.Text("All contents of the folder will be moved out\nof the folder before it is deleted.\nHold SHIFT and ALT to confirm.");
                                 
-                                if (ImGui.MenuItem("> Confirm Delete <", ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
+                                if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
 
                                     Task.Run(async () => {
                                         var moveOutfits = await character.GetOutfits(folderGuid);
@@ -465,7 +465,7 @@ public class GlamourListPage : Page {
                                 
                             ImGui.Text("Hold SHIFT and ALT to confirm.");
                                 
-                            if (ImGui.MenuItem("> Confirm Delete <", ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
+                            if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
                                 Task.Run(() => {
                                     try {
                                         outfit.GetImageFile()?.Delete();

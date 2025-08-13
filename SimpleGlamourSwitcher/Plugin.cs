@@ -62,29 +62,38 @@ public class Plugin : IDalamudPlugin {
 
         Framework.RunOnTick(() => {
             PluginState.LoadActiveCharacter(false, true);
-            
 #if DEBUG
-            MainWindow.IsOpen = true;
-            Framework.RunOnTick(() => {
-                if (ActiveCharacter != null && ClientState.LocalContentId != 0) {
-
-                    switch (PluginConfig.DebugDefaultPage.ToLowerInvariant()) {
-                        case "automation":
-                            MainWindow.OpenPage(new AutomationPage(ActiveCharacter));
-                            break;
-                        case "outfit":
-                            MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, null));
-                            break;
-                    }
-                }
-
-            }, delayTicks: 1);
+            if (ClientState.IsLoggedIn) {
+                OpenOnStartup();
+            } else {
+                ClientState.Login += OpenOnStartup;
+            }
 #endif
-
-
         }, delayTicks: 3);
         
     }
+    
+    #if DEBUG
+    private void OpenOnStartup() {
+        ClientState.Login -= OpenOnStartup;
+        Framework.RunOnTick(() => {
+            if (ActiveCharacter != null && ClientState.LocalContentId != 0) {
+                switch (PluginConfig.DebugDefaultPage.ToLowerInvariant()) {
+                    case "none":
+                        break;
+                    case "automation":
+                        MainWindow.IsOpen = true;
+                        MainWindow.OpenPage(new AutomationPage(ActiveCharacter));
+                        break;
+                    case "outfit":
+                        MainWindow.IsOpen = true;
+                        MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, null));
+                        break;
+                }
+            }
+        }, delayTicks: 1);
+    }
+    #endif
 
     public void Dispose() {
         Commands.RemoveHandler("/sgs");

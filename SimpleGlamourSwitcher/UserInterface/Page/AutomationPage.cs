@@ -37,7 +37,7 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
 
             if (ImGui.CollapsingHeader("Gearsets", ImGuiTreeNodeFlags.DefaultOpen)) {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get())) {
-                    ImGui.TextWrapped("Gearset automations apply when you change gearsets.");
+                    ImGui.TextWrapped("Gearset automations apply when you change gearsets, or if you login with a gearset active.");
                 }
 
                 ImGui.Separator();

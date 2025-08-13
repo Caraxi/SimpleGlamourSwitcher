@@ -44,7 +44,7 @@ public class ConfigWindow : Window {
         PluginConfig.Dirty |= ImGui.Checkbox("Show icons on buttons", ref PluginConfig.ShowButtonIcons);
         
         #if DEBUG
-        var debugPages = new[] { "automation", "outfit" };
+        var debugPages = new[] { "none", "automation", "outfit" };
         var debugPage = debugPages.IndexOf(PluginConfig.DebugDefaultPage);
         if (debugPage < 0) {
             debugPage = 0;

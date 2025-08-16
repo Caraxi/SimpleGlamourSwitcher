@@ -11,7 +11,7 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <UserSecretsId>4104b294-8575-4480-8e71-9418b1ce5962</UserSecretsId>
-        <Version>1.1.3.0</Version>
+        <Version>1.1.3.1</Version>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="13.0.0" />

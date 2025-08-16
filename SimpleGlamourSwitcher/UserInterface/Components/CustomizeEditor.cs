@@ -89,7 +89,7 @@ public static class CustomizeEditor {
 
     private static bool ShowColorPicker(string label, OutfitAppearance appearance, CustomizeIndex idx) {
         var edited = false;
-        edited |= ShowApplyEnableCheckbox(label, ref appearance.Face.Apply, ref appearance.Apply);
+        edited |= ShowApplyEnableCheckbox(label, ref appearance[idx].Apply, ref appearance.Apply);
         using (ImRaii.PushId($"colorPicker_{label}")) {
             edited |= ColorPicker(appearance, idx, ImGui.GetItemRectSize() with { X =  ImGui.GetContentRegionAvail().X * EditorInputScale });
         }

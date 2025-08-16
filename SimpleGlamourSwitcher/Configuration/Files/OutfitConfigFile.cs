@@ -24,6 +24,8 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     public List<Guid> ApplyBefore = new();
     public List<Guid> ApplyAfter = new();
     public string? SortName;
+
+    public List<AutoCommandEntry> AutoCommands = new();
     
     public ImageDetail ImageDetail { get; set; } = new();
 
@@ -70,6 +72,41 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
             }, delayTicks: 2);
         });
+        
+        EnqueueAutoCommands();
+    }
+
+    public void EnqueueAutoCommands() {
+        if (!PluginConfig.EnableOutfitCommands) return;
+        var parent = GetParent() ?? throw new Exception("Invalid OutfitConfigFile");
+        
+        List<string> commands = [];
+        
+        if (parent.Folders.TryGetValue(Folder, out var folder)) {
+            if (folder.AutoCommandsSkipCharacter) {
+                commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(AutoCommands.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(folder.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+            } else {
+                commands.AddRange(parent.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(AutoCommands.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(folder.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(parent.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+            }
+        } else {
+            commands.AddRange(parent.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+            commands.AddRange(AutoCommands.Where(c => c.Enabled).Select(c => c.Command));
+            commands.AddRange(parent.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+        }
+
+        foreach (var c in commands) {
+            if (PluginConfig.DryRunOutfitCommands) {
+                Chat.Print($"{c}", "Dry Run - SGS");
+            } else {
+                ActionQueue.QueueCommand(c);
+            }
+        }
     }
     
     /*

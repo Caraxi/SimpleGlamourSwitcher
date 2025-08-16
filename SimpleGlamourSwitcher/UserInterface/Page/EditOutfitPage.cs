@@ -33,6 +33,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
     private List<Guid>? linkBefore;
     private List<Guid>? linkAfter;
+    private List<AutoCommandEntry> autoCommands = outfit?.AutoCommands ?? [];
     
     private OutfitLinksEditor? linksEditor;
     
@@ -128,6 +129,17 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 dirty |= linksEditor.Draw(outfitName.OrDefault("This Outfit"));
             }
             
+            if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
+                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing into this outfit.");
+                
+                ImGui.Spacing();
+                
+                using (ImRaii.PushId("autoCommands")) {
+                    dirty |= CommandEditor.Show(autoCommands);
+                }
+            }
+
+            
             if (ImGui.CollapsingHeader("Details")) {
                 ImGui.Text($"GUID: {Outfit.Guid}");
                 dirty |= ImGui.InputTextWithHint("Custom Sort Name", outfitName, ref sortName, 128);
@@ -150,6 +162,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 Outfit.Appearance = appearance ?? Outfit.Appearance;
                 Outfit.ApplyBefore = linkBefore;
                 Outfit.ApplyAfter = linkAfter;
+                Outfit.AutoCommands = autoCommands;
                 Outfit.Save(true);
                 MainWindow.PopPage();
             }

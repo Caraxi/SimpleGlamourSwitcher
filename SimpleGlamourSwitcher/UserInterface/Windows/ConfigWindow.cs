@@ -4,6 +4,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ECommons;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Components;
 using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
@@ -39,6 +40,14 @@ public class ConfigWindow : Window {
         
         
         PluginConfig.Dirty |= ImGui.Checkbox("Close window after applying outfit", ref PluginConfig.AutoCloseAfterApplying);
+        PluginConfig.Dirty |= ImGui.Checkbox("Enable Outfit Commands", ref PluginConfig.EnableOutfitCommands);
+        if (PluginConfig.EnableOutfitCommands) {
+            using (ImRaii.PushIndent()) {
+                PluginConfig.Dirty |= ImGui.Checkbox("Dry Run", ref PluginConfig.DryRunOutfitCommands);
+                ImGui.SameLine();
+                ImGuiComponents.HelpMarker("When enabled, commands will instead be printed to chatlog without being used.");
+            }
+        }
         PluginConfig.Dirty |= ImGui.Checkbox("Log actions to chat", ref PluginConfig.LogActionsToChat);
         PluginConfig.Dirty |= ImGui.Checkbox("Show current character on character list", ref PluginConfig.ShowActiveCharacterInCharacterList);
         PluginConfig.Dirty |= ImGui.Checkbox("Show icons on buttons", ref PluginConfig.ShowButtonIcons);

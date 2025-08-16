@@ -27,6 +27,9 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public Guid? CustomizePlusProfile;
     public (string Name, uint World) HonorificIdentity = (string.Empty, 0);
     public (string Name, uint World) HeelsIdentity = (string.Empty, 0);
+
+    public List<AutoCommandEntry> AutoCommandBeforeOutfit = new();
+    public List<AutoCommandEntry> AutoCommandAfterOutfit = new();
     
     public bool Deleted;
     

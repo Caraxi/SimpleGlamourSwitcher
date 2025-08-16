@@ -7,7 +7,7 @@ namespace SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 public record TextInputStyle : StyleProvider<TextInputStyle> {
     public ShadowTextStyle ErrorMessage = new() { TextColour = ImGuiColors.DalamudRed };
     public ShadowTextStyle Label = new();
-
+    public Colour TextColour = ImGui.GetColorU32(ImGuiCol.Text);
     public Colour BorderColour = ImGui.GetColorU32(ImGuiCol.Border);
     public float BorderSize = 3;
     public Vector2 FramePadding = new Vector2(32, 16);

@@ -32,7 +32,10 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
     private HashSet<AppearanceParameterKind>? defaultParameterToggles = editFolder?.CustomDefaultEnabledParameterKinds.Clone();
     private HashSet<ToggleType>? defaultToggleTypes = editFolder?.CustomDefaultEnabledToggles.Clone();
     private CharacterFolder.DefaultLinks? defaultLinks = editFolder?.CustomDefaultLinks.Clone();
-
+    private List<AutoCommandEntry> autoCommandBeforeOutfit = editFolder?.AutoCommandBeforeOutfit.Clone() ?? [];
+    private List<AutoCommandEntry> autoCommandAfterOutfit = editFolder?.AutoCommandAfterOutfit.Clone() ?? [];
+    private bool autoCommandsSkipCharacter = editFolder?.AutoCommandsSkipCharacter ?? false;
+    
     private bool hidden = editFolder?.Hidden ?? false;
     private CharacterFolder? folder = editFolder;
 
@@ -228,6 +231,27 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 }
             }
             
+            if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
+                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit from this folder is applied.");
+                
+                ImGui.Spacing();
+                
+                ImGui.TextDisabled("Before Outfit Commands:");
+                using (ImRaii.PushIndent()) {
+                    using (ImRaii.PushId("autoCommandBeforeOutfit")) {
+                        dirty |= CommandEditor.Show(autoCommandBeforeOutfit, down: autoCommandAfterOutfit);
+                    }
+                }
+                
+                ImGui.TextDisabled("After Outfit Commands:");
+                using (ImRaii.PushIndent()) {
+                    using (ImRaii.PushId("autoCommandAfterOutfit")) {
+                        dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
+                    }
+                }
+
+
+            }
             
             if (ImGui.CollapsingHeader("Image")) {
                 var f = folder ?? newFolder;
@@ -288,6 +312,9 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.CustomDefaultEnabledParameterKinds = defaultParameterToggles;
         folder.CustomDefaultEnabledToggles = defaultToggleTypes;
         folder.CustomDefaultLinks = defaultLinks;
+        folder.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
+        folder.AutoCommandAfterOutfit = autoCommandAfterOutfit;
+        folder.AutoCommandsSkipCharacter = autoCommandsSkipCharacter;
 
         if (ActiveCharacter == null) return;
         ActiveCharacter.Dirty = true;

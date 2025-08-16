@@ -11,6 +11,7 @@ using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -55,6 +56,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private List<Guid> linkBefore = character?.DefaultLinkBefore ?? [];
     private List<Guid> linkAfter = character?.DefaultLinkAfter ?? [];
+
+    private List<AutoCommandEntry> autoCommandBeforeOutfit = character?.AutoCommandBeforeOutfit.Clone() ?? [];
+    private List<AutoCommandEntry> autoCommandAfterOutfit = character?.AutoCommandAfterOutfit.Clone() ?? [];
 
     private OutfitLinksEditor? OutfitLinksEditor;
     
@@ -371,7 +375,24 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 }
             }
             
-
+            if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
+                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit is applied with this character.");
+                ImGui.Spacing();
+                ImGui.TextDisabled("Before Outfit Commands:");
+                using (ImRaii.PushIndent()) {
+                    using (ImRaii.PushId("autoCommandBeforeOutfit")) {
+                        dirty |= CommandEditor.Show(autoCommandBeforeOutfit, down: autoCommandAfterOutfit);
+                    }
+                }
+                
+                ImGui.TextDisabled("After Outfit Commands:");
+                using (ImRaii.PushIndent()) {
+                    using (ImRaii.PushId("autoCommandAfterOutfit")) {
+                        dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
+                    }
+                }
+            }
+            
             if (ImGui.CollapsingHeader("Image")) {
                 var style = (PluginConfig.CustomStyle ?? Style.Default).CharacterPolaroid;
                 ImageEditor.Draw(Character, style, characterName, ref controlFlags);
@@ -395,6 +416,11 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.FolderPolaroidStyle = folderStyle;
                     Character.DefaultLinkBefore = linkBefore;
                     Character.DefaultLinkAfter = linkAfter;
+
+                    autoCommandBeforeOutfit.Cleanup();
+                    Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
+                    autoCommandAfterOutfit.Cleanup();
+                    Character.AutoCommandAfterOutfit = autoCommandAfterOutfit;
 
                     Character.ApplyOnLogin = applyOnLogin;
                     Character.ApplyOnPluginReload = applyOnPluginReload;

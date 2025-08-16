@@ -16,6 +16,7 @@ public static class CustomInput {
         using (ImRaii.PushId(label))
         using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, style.BorderSize))
         using(ImRaii.PushColor(ImGuiCol.Border, style.BorderColour.U32))
+        using(ImRaii.PushColor(ImGuiCol.Text, style.TextColour.U32))
         using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, style.FramePadding)) {
             try {
                 if (style.PadTop) {

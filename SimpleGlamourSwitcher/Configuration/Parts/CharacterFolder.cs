@@ -47,6 +47,10 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     public HashSet<HumanSlot>? CustomDefaultDisabledEquipmentSlots;
     public HashSet<AppearanceParameterKind>? CustomDefaultEnabledParameterKinds;
     public HashSet<ToggleType>? CustomDefaultEnabledToggles;
+    
+    public List<AutoCommandEntry> AutoCommandBeforeOutfit = new();
+    public List<AutoCommandEntry> AutoCommandAfterOutfit = new();
+    public bool AutoCommandsSkipCharacter;
 
     public DefaultLinks? CustomDefaultLinks;
     

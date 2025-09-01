@@ -212,6 +212,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                 var fullNameCollapse = string.Join('/', character.ParseFolderPath(o.Folder, false).Split('/', StringSplitOptions.TrimEntries)) + "/" + o.Name;
                 if (!(fullName.Contains(search, StringComparison.InvariantCultureIgnoreCase) || fullNameCollapse.Contains(search, StringComparison.InvariantCultureIgnoreCase))) continue;
                 
+                using (ImRaii.Group())
                 using (ImRaii.PushId(o.Guid.ToString())) {
                     using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get(), o.Folder != Guid.Empty)) {
                         if (ImGui.Selectable(o.Folder == Guid.Empty ? o.Name : character.ParseFolderPath(o.Folder, false) + " /", guid == outfitGuid)) {
@@ -226,6 +227,12 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                     }
                 }
 
+                if (ImGui.IsItemHovered()) {
+                    var hasImage = o.TryGetImage(out var wrap);
+                    using (ImRaii.Tooltip()) {
+                        Polaroid.Draw(hasImage ? wrap : null, o.ImageDetail, o.Name, character.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle);
+                    }
+                }
             }
 
             return modified;
@@ -237,6 +244,14 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
             picked = guid;
             return true;
         }
+        
+        if (ImGui.IsItemHovered() && otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(picked, out var o)) {
+            var hasImage = o.TryGetImage(out var wrap);
+            using (ImRaii.Tooltip()) {
+                Polaroid.Draw(hasImage ? wrap : null, o.ImageDetail, o.Name, character.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle);
+            }
+        }
+        
 
         return false;
     }

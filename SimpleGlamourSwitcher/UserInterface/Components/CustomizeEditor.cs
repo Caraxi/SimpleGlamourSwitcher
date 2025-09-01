@@ -331,11 +331,11 @@ public static class CustomizeEditor {
         edited |= ShowApplyEnableCheckbox(label, ref appearance.Hairstyle.Apply, ref appearance.Apply);
         var cbSize = ImGui.GetItemRectSize();
         
-        
         var hairstyles = DataCache.GetHairstyles(appearance.Clan.Value, appearance.Gender.Value);
         
         var activeHairstyle = hairstyles.FirstOrNull(c => c.FeatureID == appearance.Hairstyle.Value);
-        
+
+        using var _g = ImRaii.Group();
         if (ImGui.BeginChildFrame(ImGui.GetID("hairPickerPreview"), new Vector2((ImGui.GetContentRegionAvail().X * EditorInputScale) - (cbSize.X * 3 + ImGui.GetStyle().ItemInnerSpacing.X * 3), 48 * ImGuiHelpers.GlobalScale))) {
             if (activeHairstyle.HasValue) {
                 var icon = TextureProvider.GetFromGameIcon(activeHairstyle.Value.Icon).GetWrapOrEmpty();
@@ -444,6 +444,8 @@ public static class CustomizeEditor {
             ImGui.Text(label.RemoveImGuiId());
             ImGui.Text("& Colours");
         }
+
+        edited |= ModListDisplay.Show(appearance.Hairstyle, "Hairstyle");
         
         return edited;
     }

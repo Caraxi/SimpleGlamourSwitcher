@@ -3,6 +3,10 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.1.3.2", () => {
+            Change("Added images when hovering outfit links.");
+            Change("Fixed display of hairstyle mods in outfit editor.");
+        });
         ChangelogFor("1.1.3.0", () => {
             Change("Added ability to automatically use commands when switching outfits.");
         });

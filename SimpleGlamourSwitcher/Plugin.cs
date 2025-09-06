@@ -15,9 +15,7 @@ public class Plugin : IDalamudPlugin {
     private static readonly WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
     public static readonly MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
     public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
-#if DEBUG
-    public static readonly DebugWindow DebugWindow = new DebugWindow { IsOpen = true }.Enroll(WindowSystem);
-#endif
+    public static readonly DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
     public Plugin(IDalamudPluginInterface pluginInterface) {
         (pluginInterface.Create<PluginService>() ?? throw new Exception("Failed to initialize PluginService")).Initialize();
 #if DEBUG
@@ -54,6 +52,9 @@ public class Plugin : IDalamudPlugin {
                 case "config":
                     ConfigWindow.Toggle();
                     break;
+                case "debug":
+                    DebugWindow.Toggle();
+                    break;
                 default:
                     MainWindow.IsOpen = true;
                     break;
@@ -67,6 +68,10 @@ public class Plugin : IDalamudPlugin {
                 OpenOnStartup();
             } else {
                 ClientState.Login += OpenOnStartup;
+            }
+
+            if (PluginConfig.OpenDebugOnStartup) {
+                DebugWindow.IsOpen = true;
             }
 #endif
         }, delayTicks: 3);

@@ -31,6 +31,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public bool AllowHotkeyInGpose = true;
     public bool EnableOutfitCommands = false;
     public bool DryRunOutfitCommands = false;
+    public bool OpenDebugOnStartup = false;
 
     public static FileInfo GetFile(Guid? guid = null) {
         if (guid != null) throw new Exception($"{nameof(PluginConfigFile)} does not support GUID");

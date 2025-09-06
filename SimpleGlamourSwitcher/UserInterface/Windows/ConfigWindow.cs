@@ -63,6 +63,9 @@ public class ConfigWindow : Window {
             PluginConfig.Dirty = true;
             PluginConfig.DebugDefaultPage = debugPages[debugPage];
         }
+        
+        PluginConfig.Dirty |= ImGui.Checkbox("Open Debug Window at Startup", ref PluginConfig.OpenDebugOnStartup);
+        
         #endif
         
     }

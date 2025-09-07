@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Plugin;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
@@ -19,7 +20,9 @@ public static class ImageEditor {
     static ImageEditor() {
         PluginInterface.UiBuilder.Draw += _fileDialogManager.Draw;
     }
-    
+
+
+    private static readonly bool NoScreenshot = typeof(IDalamudPlugin).Assembly.GetName().Version <= new Version(13, 0, 0, 3);
     
     public static void Draw(IImageProvider imageProvider, PolaroidStyle style, string previewName, ref WindowControlFlags controlFlags) {
         
@@ -53,7 +56,15 @@ public static class ImageEditor {
                 buttonSize = new Vector2(ImGui.GetItemRectSize().X, ImGui.GetTextLineHeightWithSpacing() * 2);
             }
             
+            using (ImRaii.Disabled(NoScreenshot && !ImGui.GetIO().KeyAlt)) {
+                if (ImGuiExt.ButtonWithIcon("Take Screenshot", FontAwesomeIcon.Image, buttonSize)) {
+                    Plugin.ScreenshotWindow.BeginScreenshot(style, imageProvider);
+                }
+            }
 
+            if (NoScreenshot && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+                ImGui.SetTooltip("Not available in current dalamud version. Please wait for an update.");
+            }
 
             if (ImGuiExt.ButtonWithIcon("Load Image", FontAwesomeIcon.FileUpload, buttonSize)) {
                 controlFlags |= WindowControlFlags.PreventClose;

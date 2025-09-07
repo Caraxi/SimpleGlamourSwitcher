@@ -25,6 +25,7 @@ public class PluginService {
     [PluginService] public static IKeyState KeyState { get; private set; } = null!;
     [PluginService] public static IObjectTable Objects { get; private set; } = null!;
     [PluginService] public static ITextureProvider TextureProvider { get; private set; } = null!;
+    [PluginService] public static ITextureReadbackProvider TextureReadbackProvider { get; private set; } = null!;
     [PluginService] public static IPluginLog PluginLog { get; private set; } = null!;
     [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
     public static IUiBuilder UiBuilder => PluginInterface.UiBuilder;

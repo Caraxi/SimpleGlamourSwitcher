@@ -185,6 +185,9 @@ public class GlamourListPage : Page {
         var character = ActiveCharacter;
 
         var drag = dragItem;
+        if (drag != null) {
+            controlFlags |= WindowControlFlags.PreventMove;
+        }
         
         if (character == null) {
             ImGuiExt.CenterText("No Character Selected", centerHorizontally: true, centerVertically: true, shadowed: true);
@@ -259,8 +262,12 @@ public class GlamourListPage : Page {
                                 MainWindow?.OpenPage(new GlamourListPage(folderGuid));
                             }
                         }
+
+                        if (ImGui.IsItemHovered()) {
+                            controlFlags |= WindowControlFlags.PreventMove;
+                        }
                         
-                        if (ImGui.IsItemHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 50) && characterFolder is not PreviousCharacterFolder) {
+                        if (ImGui.IsItemHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 10) && characterFolder is not PreviousCharacterFolder) {
                             dragItem = (ItemType.Folder, folderGuid);
                         }
                         
@@ -378,6 +385,10 @@ public class GlamourListPage : Page {
                         }
                     }
 
+                    if (ImGui.IsItemHovered()) {
+                        controlFlags |= WindowControlFlags.PreventMove;
+                    }
+
                     if (!outfit.IsValid) {
                         using (PluginService.UiBuilder.IconFontHandle.Push()) {
                             ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExclamationTriangle.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = ImGuiColors.DalamudRed });
@@ -394,7 +405,7 @@ public class GlamourListPage : Page {
                         }
                     }
                     
-                    if (ImGui.IsItemHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 50)) {
+                    if (ImGui.IsItemHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 10)) {
                         dragItem = (ItemType.Outfit, outfitGuid);
                     }
                     

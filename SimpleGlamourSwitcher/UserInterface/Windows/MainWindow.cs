@@ -4,6 +4,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
+using OtterGuiInternal;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.UserInterface.Page;
 
@@ -12,9 +13,11 @@ namespace SimpleGlamourSwitcher.UserInterface.Windows;
 public class MainWindow : Window {
 
     public bool IsFullscreen { get; private set; }
-    
-    
-    
+
+    public override bool DrawConditions() {
+        return !Plugin.ScreenshotWindow.IsOpen ||  !Plugin.ScreenshotWindow.DrawConditions();
+    }
+
     private bool allowAutoClose = true;
     private bool allowAutoCloseWaitForFocus;
     public bool AllowAutoClose {

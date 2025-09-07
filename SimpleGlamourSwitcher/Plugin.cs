@@ -16,6 +16,9 @@ public class Plugin : IDalamudPlugin {
     public static readonly MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
     public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
     public static readonly DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
+    public static readonly ScreenshotWindow ScreenshotWindow = new ScreenshotWindow() { IsOpen = true}.Enroll(WindowSystem);
+    
+    
     public Plugin(IDalamudPluginInterface pluginInterface) {
         (pluginInterface.Create<PluginService>() ?? throw new Exception("Failed to initialize PluginService")).Initialize();
 #if DEBUG

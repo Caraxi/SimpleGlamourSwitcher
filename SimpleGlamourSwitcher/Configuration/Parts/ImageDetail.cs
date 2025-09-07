@@ -186,9 +186,6 @@ public record ImageDetail {
             var ratio2 = outfitStyle.ImageSize.X / outfitStyle.ImageSize.Y;
 
             var ratioDiff = ratio2 - ratio;
-            
-            
-            ImGui.Text($"{ratio} / {ratio2} / {ratioDiff}");
 
             if (ratioDiff < 0) {
                 return new ImageDetail() {

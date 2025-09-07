@@ -34,13 +34,17 @@ public static class Polaroid {
     }
 
     public static void Draw(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
+        DrawDummy(style);
+        DrawPolaroid(image, imageDetail, text, style);
+    }
+
+    public static void DrawDummy(PolaroidStyle? style = null) {
         style ??= PolaroidStyle.Default;
         var totalSize = GetActualSize(style);
         ImGui.Dummy(totalSize);
-        DrawPolaroid(image, imageDetail, text, style);
     }
-    
-    private static void DrawPolaroid(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
+
+    public static void DrawPolaroid(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
         style ??= PolaroidStyle.Default;
         var tl = ImGui.GetItemRectMin();
         var br = ImGui.GetItemRectMax();

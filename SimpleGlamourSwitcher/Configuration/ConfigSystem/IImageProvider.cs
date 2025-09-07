@@ -62,4 +62,16 @@ public interface IImageProvider {
             File.Delete(tempImagePath);
         });
     }
+
+    public void LoadImage(IDalamudTextureWrap clipImage) {
+        var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");
+        if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
+        var tempImagePath = Path.Join(tempDir, $"Image_{new Random().Next()}.png");
+        TextureReadbackProvider.SaveToFileAsync(clipImage, TextureReadbackProvider.GetSupportedImageEncoderInfos().First().ContainerGuid, tempImagePath).Wait();
+        LoadFile(true, [tempImagePath]);
+        Task.Run(async () => {
+            await Task.Delay(15000);
+            File.Delete(tempImagePath);
+        });
+    }
 }

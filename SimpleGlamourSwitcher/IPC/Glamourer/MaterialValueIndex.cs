@@ -54,7 +54,10 @@ public readonly record struct MaterialValueIndex(MaterialValueIndex.DrawObjectTy
         };
     }
 
-    public HumanSlot ToHumanSlot() => ToEquipSlot().ToHumanSlot();
+    public HumanSlot ToHumanSlot() {
+        if (DrawObject is DrawObjectType.Human && SlotIndex == 16) return HumanSlot.Face;
+        return ToEquipSlot().ToHumanSlot();
+    }
 
     public unsafe bool TryGetModel(Actor actor, out Model model) {
         if (!actor.Valid) {

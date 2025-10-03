@@ -211,7 +211,7 @@ public class MainWindow : Window {
             }
         }
         
-        if (!ImGui.IsWindowAppearing() && !IsFocused && AllowAutoClose && IsFullscreen) {
+        if (!ImGui.IsWindowAppearing() && !IsFocused && AllowAutoClose && IsFullscreen && !controlFlags.HasFlag(WindowControlFlags.PreventClose)) {
             IsOpen = false;
             ActivePage = null;
             previousPageStack.Clear();

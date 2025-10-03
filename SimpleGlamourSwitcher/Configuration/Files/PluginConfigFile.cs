@@ -4,6 +4,7 @@ using Dalamud.Game.ClientState.Keys;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.UserInterface.Components;
+using SimpleGlamourSwitcher.UserInterface.Enums;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
@@ -32,6 +33,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public bool EnableOutfitCommands = false;
     public bool DryRunOutfitCommands = false;
     public bool OpenDebugOnStartup = false;
+    public GridlineStyle ScreenshotGridlineStyle;
 
     public static FileInfo GetFile(Guid? guid = null) {
         if (guid != null) throw new Exception($"{nameof(PluginConfigFile)} does not support GUID");

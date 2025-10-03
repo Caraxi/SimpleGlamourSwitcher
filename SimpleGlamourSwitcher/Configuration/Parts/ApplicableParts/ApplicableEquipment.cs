@@ -33,6 +33,10 @@ public record ApplicableEquipment : ApplicableItem {
         } else {
             PluginLog.Error($"Failed to apply item: {ec}");
         }
+        
+        if (ActiveCharacter?.CustomizePlusProfile != null) {
+            CustomizePlus.ApplyTemplateConfig(ActiveCharacter.CustomizePlusProfile.Value, CustomizePlusTemplateConfigs, slot);
+        }
     }
 
     public static ApplicableEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, HumanSlot slot, GlamourerItem item, Dictionary<MaterialValueIndex, GlamourerMaterial>? materials, Guid penumbraCollection) {

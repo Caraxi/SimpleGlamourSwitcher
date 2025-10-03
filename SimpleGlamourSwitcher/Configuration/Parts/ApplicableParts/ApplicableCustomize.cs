@@ -6,15 +6,19 @@ using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
-public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs {
+public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs, IHasCustomizePlusTemplateConfigs {
     public List<OutfitModConfig> ModConfigs { get; set; } = new();
-    
+    public List<CustomizeTemplateConfig> CustomizePlusTemplateConfigs { get; set; } = new();
         
     public override void ApplyToCharacter(CustomizeIndex slot, ref bool requestRedraw) {
         if (!Apply) return;
         Notice.Show($"Applying mods for {slot}");
         requestRedraw = true;
         ModManager.ApplyMods(slot, ModConfigs);
+        
+        if (ActiveCharacter?.CustomizePlusProfile != null) {
+            CustomizePlus.ApplyTemplateConfig(ActiveCharacter.CustomizePlusProfile.Value, CustomizePlusTemplateConfigs, slot);
+        }
     }
     
     public static ApplicableCustomizeModable FromExistingState(CustomizeIndex slot, GlamourerCustomize? customize, Guid penumbraCollectionId, IDefaultOutfitOptionsProvider defaultOptionsProvider) {
@@ -32,6 +36,10 @@ public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs {
 
 public interface IHasModConfigs {
     public List<OutfitModConfig> ModConfigs { get; set; }
+}
+
+public interface IHasCustomizePlusTemplateConfigs {
+    public List<CustomizeTemplateConfig> CustomizePlusTemplateConfigs { get; set; }
 }
 
 public record ApplicableCustomize : Applicable<CustomizeIndex> {

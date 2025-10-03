@@ -36,10 +36,18 @@ public static class ModListDisplay {
         var p = ImGui.GetItemRectMax();
         var s = new Vector2(ImGui.CalcItemWidth(), ImGui.GetTextLineHeightWithSpacing());
         var configs = modable.ModConfigs;
+
+        var extraButtons = 1;
+
+        if (modable is IHasCustomizePlusTemplateConfigs) {
+            extraButtons++;
+        }
+        
         
         var modName = "Vanilla";
         Vector2 popupPosition;
         if (configs.Count > 0) {
+            extraButtons++;
             bool modExists;
 
             if (configs.Count == 1) {
@@ -49,7 +57,7 @@ public static class ModListDisplay {
                 modExists = configs.All(m => TryParseModName(m.ModDirectory, out _));
             }
 
-            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * 2 - _buttonSize.X * 2);
+            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
             using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, !modExists)) {
                 ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
             }
@@ -111,7 +119,7 @@ public static class ModListDisplay {
             }
             
         } else {
-            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * 1 - _buttonSize.X * 1);
+            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
             ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
             popupPosition = ImGui.GetItemRectMin();
         }
@@ -126,7 +134,7 @@ public static class ModListDisplay {
         
         ImGui.SetNextWindowPos(popupPosition);
         if (ImGui.BeginPopup(id, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Modal)) {
-            ImGui.Text($"Locating: {_locatingMod}");
+            if (!string.IsNullOrEmpty(_locatingMod)) ImGui.Text($"Locating: {_locatingMod}");
             if (ImGui.IsWindowAppearing()) {
                 _locatingMod = string.Empty;
             }
@@ -298,7 +306,12 @@ public static class ModListDisplay {
             
             ImGui.EndPopup();
         }
-
+        
+        if (modable is IHasCustomizePlusTemplateConfigs cPlusTemplateConfig && ActiveCharacter?.CustomizePlusProfile != null && ActiveCharacter.CustomizePlusProfile != Guid.Empty) {
+            ImGui.SameLine();
+            edited |= CustomizePlusTemplateEditor.ShowButton(cPlusTemplateConfig, slotName, _buttonSize, popupPosition, s.X);
+        }
+        
         return edited;
     }
 

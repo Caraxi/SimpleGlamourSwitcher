@@ -154,6 +154,10 @@ public static class GlamourSystem {
                             am.ModConfigs.Add(modConfig with { });
                         }
                     }
+                    
+                    if (outfit.Appearance[e] is IHasCustomizePlusTemplateConfigs c1 && appearance[e] is IHasCustomizePlusTemplateConfigs c2) {
+                        c2.CustomizePlusTemplateConfigs = c1.CustomizePlusTemplateConfigs;
+                    }
                 }
 
                 foreach (var e in Enum.GetValues<AppearanceParameterKind>()) {
@@ -210,6 +214,8 @@ public static class GlamourSystem {
                     } else if (i is ApplicableBonus b1 && equipment[s] is ApplicableBonus b2) {
                         b2.BonusItemId = b1.BonusItemId;
                     }
+
+                    equipment[s].CustomizePlusTemplateConfigs = i.CustomizePlusTemplateConfigs;
                 }
 
                 foreach (var t in Enum.GetValues<ToggleType>()) {

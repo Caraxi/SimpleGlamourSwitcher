@@ -7,9 +7,20 @@
     int Priority,
     bool IsEnabled
 );
+
+global using CustomizePlusTemplateStatusTuple = (
+    System.Guid UniqueId,
+    string Name,
+    System.Collections.Generic.List<(string Name, System.Numerics.Vector3 Translation, System.Numerics.Vector3 Rotation, System.Numerics.Vector3 Scale, bool PropagateTranslation, bool PropagateRotation, bool PropagateScale)> Bones,
+    bool IsEnabled);
+
+
 using System.Diagnostics.CodeAnalysis;
 using ECommons.EzIpcManager;
 using OtterGui.Extensions;
+using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.IPC;
 
@@ -63,6 +74,15 @@ public static class CustomizePlus {
 
         [EzIPC("Profile.RemovePlayerCharacter")]
         public static readonly Func<Guid, string, ushort, int> RemovePlayerCharacter = null!;
+
+        [EzIPC("Profile.GetTemplates")]
+        public static readonly Func<Guid, (int errorCode, List<CustomizePlusTemplateStatusTuple> templates)> GetTemplates = null!;
+
+        [EzIPC("Profile.DisableTemplateByUniqueId")]
+        public static readonly Func<Guid, Guid, int> DisableTemplate = null!;
+        
+        [EzIPC("Profile.EnableTemplateByUniqueId")]
+        public static readonly Func<Guid, Guid, int> EnableTemplate = null!;
     }
 
     public static bool IsReady() {
@@ -130,5 +150,66 @@ public static class CustomizePlus {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(worldId, ushort.MaxValue);
         var errorCode = (ErrorCode)Api.RemovePlayerCharacter(profile, characterName, (ushort)worldId);
         return errorCode == ErrorCode.Success;
+    }
+
+    public static bool TryGetTemplatesFromProfile(Guid profile, out List<CustomizePlusTemplateStatusTuple> templates) {
+        if (!IsReady()) {
+            templates = [];
+            return false;
+        }
+
+        var getTemplates= Api.GetTemplates(profile);
+        if ((ErrorCode) getTemplates.errorCode != ErrorCode.Success) {
+            templates = [];
+            return false;
+        }
+
+        templates = getTemplates.templates;
+        return true;
+    }
+
+    private static readonly Dictionary<(Guid, int), List<CustomizeTemplateConfig>> RevertLists = [];
+    public static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> customizePlusTemplateConfigs, HumanSlot slot) => ApplyTemplateConfig(profile, customizePlusTemplateConfigs, slot.TempIdentificationKey());
+    public static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> customizePlusTemplateConfigs, CustomizeIndex slot)  => ApplyTemplateConfig(profile, customizePlusTemplateConfigs, slot.TempIdentificationKey());
+    private static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> templates, int slotId, bool isRevert = false) {
+        if (profile == Guid.Empty) return;
+        
+        if (!isRevert) {
+            if (RevertLists.TryGetValue((profile, slotId), out var revertList)) {
+                RevertLists.Remove((profile, slotId));
+                if (revertList.Count > 0) {
+                    ApplyTemplateConfig(profile, revertList, slotId, true);
+                }
+            }
+        }
+
+        if (templates.Count == 0) return;
+        if (TryGetTemplatesFromProfile(profile, out var templateList)) {
+            foreach (var templateConfig in templates) {
+                if (!templateList.FindFirst(t => t.UniqueId == templateConfig.TemplateId, out var template)) continue;
+
+                if (template.IsEnabled == templateConfig.Enable) {
+                    Notice.Show($"Skip C+ Template - {template.Name} - Already Correct");
+                } else {
+                    Notice.Show($"{(templateConfig.Enable ? "Enable" : "Disable")} C+ Template - {template.Name}");
+                    var errorCode = (ErrorCode)(templateConfig.Enable ? Api.EnableTemplate(profile, templateConfig.TemplateId) :  Api.DisableTemplate(profile, templateConfig.TemplateId));
+
+                    if (errorCode == ErrorCode.Success) {
+                        if (!isRevert) {
+                            RevertLists.TryAdd((profile, slotId), []);
+                            RevertLists.TryGetValue((profile, slotId), out var revertList);
+                            if (revertList != null) {
+                                revertList.Add(new CustomizeTemplateConfig() {
+                                    TemplateId = template.UniqueId,
+                                    Enable = template.IsEnabled
+                                });
+                            }
+                        }
+                    } else {
+                        PluginLog.Warning($"Failed to toggle C+ Template - {errorCode} ({profile}, {template.UniqueId})");
+                    }
+                }
+            }
+        }
     }
 }

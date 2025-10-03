@@ -239,7 +239,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             ItemIcon.Draw(slot, equipItem);
             ImGui.SameLine();
 
-            var s = new Vector2(280 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
+            var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
 
             using (ImRaii.Group()) {
                 ImGui.SetNextItemWidth(s.X - (equipment.Materials is { Count: > 0 } ? s.Y + ImGui.GetStyle().ItemSpacing.X : 0) - (equipment is ApplicableEquipment ? s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2 : 0));

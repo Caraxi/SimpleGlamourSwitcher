@@ -336,116 +336,124 @@ public static class CustomizeEditor {
         var activeHairstyle = hairstyles.FirstOrNull(c => c.FeatureID == appearance.Hairstyle.Value);
 
         using var _g = ImRaii.Group();
-        if (ImGui.BeginChildFrame(ImGui.GetID("hairPickerPreview"), new Vector2((ImGui.GetContentRegionAvail().X * EditorInputScale) - (cbSize.X * 3 + ImGui.GetStyle().ItemInnerSpacing.X * 3), 48 * ImGuiHelpers.GlobalScale))) {
-            if (activeHairstyle.HasValue) {
-                var icon = TextureProvider.GetFromGameIcon(activeHairstyle.Value.Icon).GetWrapOrEmpty();
-                ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
-            } else {
-                ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
+        using (ImRaii.Group()) {
+            if (ImGui.BeginChildFrame(ImGui.GetID("hairPickerPreview"), new Vector2((ImGui.GetContentRegionAvail().X * EditorInputScale) - (cbSize.X * 3 + ImGui.GetStyle().ItemInnerSpacing.X * 3), 48 * ImGuiHelpers.GlobalScale))) {
+                if (activeHairstyle.HasValue) {
+                    var icon = TextureProvider.GetFromGameIcon(activeHairstyle.Value.Icon).GetWrapOrEmpty();
+                    ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
+                } else {
+                    ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
+                }
+               
+                ImGui.SameLine();
+                ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
+                var name = $"Hairstyle#{appearance.Hairstyle.Value}";
+                if (activeHairstyle?.HintItem.RowId > 0) {
+                    name += $" ({activeHairstyle.Value.HintItem.Value.Name.ExtractText().Split('-', 2, StringSplitOptions.TrimEntries)[1]})";
+                }
+                ImGui.Text(name);
+            }
+            ImGui.EndChildFrame();
+
+            var s = ImGui.GetItemRectSize();
+            
+            if (ImGui.IsItemClicked()) {
+                ImGui.OpenPopup("hairPicker");
+            }
+            
+            ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * Vector2.UnitY);
+            ImGui.SetNextWindowSize(new Vector2(ImGui.GetItemRectSize().X, 500 * ImGuiHelpers.GlobalScale));
+            
+            if (ImGui.BeginPopup("hairPicker")) {
+                var dl = ImGui.GetWindowDrawList();
+                
+                foreach (var cmc in hairstyles) {
+                    
+                    IDalamudTextureWrap icon;
+                    try {
+                        icon = TextureProvider.GetFromGameIcon(cmc.Icon).GetWrapOrEmpty();
+                    } catch {
+                        continue;
+                    }
+
+                    var active = cmc.FeatureID == appearance.Hairstyle.Value;
+
+                    if (ImGui.IsWindowAppearing() && active) {
+                        ImGui.SetScrollHereY();
+                    }
+                    
+                    if (ImGui.BeginChildFrame(ImGui.GetID($"hairstyle_{cmc.FeatureID}"), new Vector2(ImGui.GetContentRegionAvail().X, 48 * ImGuiHelpers.GlobalScale), ImGuiWindowFlags.NoBackground)) {
+                        try {
+                            ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
+                        } catch {
+                            ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
+                        }
+                        
+                        ImGui.SameLine();
+                        var name = $"Hairstyle#{cmc.FeatureID}";
+                        if (cmc.HintItem.RowId != 0) {
+                            name += $"\n{cmc.HintItem.Value.Name.ExtractText().Split('-', 2, StringSplitOptions.TrimEntries)[1]}";
+                        }
+                        
+
+                        ImGui.SetCursorPosY(ImGui.GetContentRegionAvail().Y / 2 - ImGui.CalcTextSize(name).Y / 2);
+                        ImGui.Text(name);
+                        
+                    }
+                    ImGui.EndChildFrame();
+                    
+                    
+                    dl.AddRectFilled(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), ImGui.GetColorU32(ImGui.IsItemHovered() ? ImGuiCol.FrameBgHovered : active ? ImGuiCol.FrameBgActive : ImGuiCol.FrameBg), ImGui.GetStyle().FrameRounding);
+                    
+                    if (ImGui.IsItemClicked()) {
+                        edited = true;
+                        appearance.Hairstyle.Value = cmc.FeatureID;
+                        ImGui.CloseCurrentPopup();
+                    }
+                }
+                
+                ImGui.EndCombo();
+            }
+            
+            ImGuiExt.SameLineInner();
+
+            using (ImRaii.Group()) {
+                edited |= ShowApplyEnableCheckbox(CustomizeIndex.HairColor.PrettyName(), ref appearance.HairColor.Apply, ref appearance.Apply);
+                ImGuiExt.SameLineInner();
+                edited |= ShowApplyEnableCheckbox(CustomizeIndex.Highlights.PrettyName(), ref appearance.Highlights.Apply, ref appearance.Apply);
+                ImGuiExt.SameLineInner();
+                edited |= ShowApplyEnableCheckbox(CustomizeIndex.HighlightsColor.PrettyName(), ref appearance.HighlightsColor.Apply, ref appearance.Apply);
+                
+                ImGui.NewLine();
+                edited |= ColorPicker(appearance, CustomizeIndex.HairColor);
+                ImGuiExt.SameLineInner();
+
+                var highlightsEnable = appearance.Highlights.Value > 0;
+                if (ImGui.Checkbox("##enableHighlights", ref highlightsEnable)) {
+                    appearance.Highlights.Value = (byte) (highlightsEnable ? 128 : 0);
+                    edited = true;
+                }
+
+                if (ImGui.IsItemHovered()) {
+                    ImGui.SetTooltip("Enable Highlights");
+                }
+                
+                ImGuiExt.SameLineInner();
+                edited |= ColorPicker(appearance, CustomizeIndex.HighlightsColor);
             }
            
-            ImGui.SameLine();
-            ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
-            var name = $"Hairstyle#{appearance.Hairstyle.Value}";
-            if (activeHairstyle?.HintItem.RowId > 0) {
-                name += $" ({activeHairstyle.Value.HintItem.Value.Name.ExtractText().Split('-', 2, StringSplitOptions.TrimEntries)[1]})";
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(1))) {
+                ImGui.SetNextItemWidth(ImGui.GetItemRectSize().X);
+                edited |= ModListDisplay.Show(appearance.Hairstyle, "Hairstyle");
             }
-            ImGui.Text(name);
-        }
-        ImGui.EndChildFrame();
-        if (ImGui.IsItemClicked()) {
-            ImGui.OpenPopup("hairPicker");
+
         }
         
-        ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * Vector2.UnitY);
-        ImGui.SetNextWindowSize(new Vector2(ImGui.GetItemRectSize().X, 500 * ImGuiHelpers.GlobalScale));
-        
-        if (ImGui.BeginPopup("hairPicker")) {
-            var dl = ImGui.GetWindowDrawList();
-            
-            foreach (var cmc in hairstyles) {
-                
-                IDalamudTextureWrap icon;
-                try {
-                    icon = TextureProvider.GetFromGameIcon(cmc.Icon).GetWrapOrEmpty();
-                } catch {
-                    continue;
-                }
-
-                var active = cmc.FeatureID == appearance.Hairstyle.Value;
-
-                if (ImGui.IsWindowAppearing() && active) {
-                    ImGui.SetScrollHereY();
-                }
-                
-                if (ImGui.BeginChildFrame(ImGui.GetID($"hairstyle_{cmc.FeatureID}"), new Vector2(ImGui.GetContentRegionAvail().X, 48 * ImGuiHelpers.GlobalScale), ImGuiWindowFlags.NoBackground)) {
-                    try {
-                        ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
-                    } catch {
-                        ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
-                    }
-                    
-                    ImGui.SameLine();
-                    var name = $"Hairstyle#{cmc.FeatureID}";
-                    if (cmc.HintItem.RowId != 0) {
-                        name += $"\n{cmc.HintItem.Value.Name.ExtractText().Split('-', 2, StringSplitOptions.TrimEntries)[1]}";
-                    }
-                    
-
-                    ImGui.SetCursorPosY(ImGui.GetContentRegionAvail().Y / 2 - ImGui.CalcTextSize(name).Y / 2);
-                    ImGui.Text(name);
-                    
-                }
-                ImGui.EndChildFrame();
-                
-                
-                dl.AddRectFilled(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), ImGui.GetColorU32(ImGui.IsItemHovered() ? ImGuiCol.FrameBgHovered : active ? ImGuiCol.FrameBgActive : ImGuiCol.FrameBg), ImGui.GetStyle().FrameRounding);
-                
-                if (ImGui.IsItemClicked()) {
-                    edited = true;
-                    appearance.Hairstyle.Value = cmc.FeatureID;
-                    ImGui.CloseCurrentPopup();
-                }
-            }
-            
-            ImGui.EndCombo();
-        }
-        
-        ImGuiExt.SameLineInner();
-
-        using (ImRaii.Group()) {
-            edited |= ShowApplyEnableCheckbox(CustomizeIndex.HairColor.PrettyName(), ref appearance.HairColor.Apply, ref appearance.Apply);
-            ImGuiExt.SameLineInner();
-            edited |= ShowApplyEnableCheckbox(CustomizeIndex.Highlights.PrettyName(), ref appearance.Highlights.Apply, ref appearance.Apply);
-            ImGuiExt.SameLineInner();
-            edited |= ShowApplyEnableCheckbox(CustomizeIndex.HighlightsColor.PrettyName(), ref appearance.HighlightsColor.Apply, ref appearance.Apply);
-            
-            ImGui.NewLine();
-            edited |= ColorPicker(appearance, CustomizeIndex.HairColor);
-            ImGuiExt.SameLineInner();
-
-            var highlightsEnable = appearance.Highlights.Value > 0;
-            if (ImGui.Checkbox("##enableHighlights", ref highlightsEnable)) {
-                appearance.Highlights.Value = (byte) (highlightsEnable ? 128 : 0);
-                edited = true;
-            }
-
-            if (ImGui.IsItemHovered()) {
-                ImGui.SetTooltip("Enable Highlights");
-            }
-            
-            ImGuiExt.SameLineInner();
-            edited |= ColorPicker(appearance, CustomizeIndex.HighlightsColor);
-        }
-       
-
         ImGuiExt.SameLineInner();
         using (ImRaii.Group()) {
             ImGui.Text(label.RemoveImGuiId());
             ImGui.Text("& Colours");
         }
-
-        edited |= ModListDisplay.Show(appearance.Hairstyle, "Hairstyle");
         
         return edited;
     }

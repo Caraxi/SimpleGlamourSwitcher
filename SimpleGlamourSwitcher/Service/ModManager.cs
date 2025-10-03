@@ -9,9 +9,9 @@ public static class ModManager {
 
     private static readonly Dictionary<int, List<OutfitModConfig>> AppliedMods = new();
 
-    private static int TempIdentificationKey(this HumanSlot slot) => TempIdentificationKey(0x100 + (int) slot);
-    private static int TempIdentificationKey(this CustomizeIndex customizeIndex) => TempIdentificationKey(0x200 + (int) customizeIndex);
-    private static int TempIdentificationKey(int @base) => (int)(@base | 0x85357000);
+    public static int TempIdentificationKey(this HumanSlot slot) => TempIdentificationKey(0x100 + (int) slot);
+    public static int TempIdentificationKey(this CustomizeIndex customizeIndex) => TempIdentificationKey(0x200 + (int) customizeIndex);
+    public static int TempIdentificationKey(int @base) => (int)(@base | 0x85357000);
     
     public static void Dispose() {
        RemoveAllMods();

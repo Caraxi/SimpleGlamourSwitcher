@@ -3,6 +3,10 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.1.5.0", () => {
+            Change("Added ability to enable or disable Customize+ templates when equipping outfits.");
+            Change("Added gridline options for outfit screenshots");
+        });
         ChangelogFor("1.1.4.0", () => {
             Change("Added ability to take automatically cropped screenshots from the outfit creator.");
             Change("Fixed issue causing custom material colours on glasses to be lost.");

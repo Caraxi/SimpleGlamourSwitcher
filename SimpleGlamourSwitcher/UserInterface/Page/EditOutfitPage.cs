@@ -230,6 +230,15 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 dirty |= equipment.VisorToggle.ShowToggleEditor("Visor Toggle");
             }
         }
+
+        if (slot == HumanSlot.Body) {
+            ImGui.SameLine();
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
+            using (ImRaii.Group()) {
+                dirty |= equipment.VieraEarsVisible.ShowToggleEditor("Ears Visible");
+                dirty |= equipment.WeaponVisible.ShowToggleEditor("Weapon Visible");
+            }
+        }
     }
     
     private void ShowSlot(HumanSlot slot, ApplicableItem equipment) {

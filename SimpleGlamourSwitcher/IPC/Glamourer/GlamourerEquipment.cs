@@ -20,6 +20,7 @@ public class GlamourerEquipment {
     public GlamourerVisibility Hat = new();
     public GlamourerVisorState Visor = new();
     public GlamourerVisibility Weapon = new();
+    public GlamourerVisibility VieraEars = new();
 
     public IEnumerable<(EquipSlot slot, GlamourerItem)> Items {
         get {

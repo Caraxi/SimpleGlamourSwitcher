@@ -103,6 +103,14 @@ public static class GlamourerIpc {
                 equipment["Visor"] = new JObject { { "Apply", true }, { "IsToggled", outfitEquipment.VisorToggle.Toggle } };
             }
             
+            if (outfitEquipment.WeaponVisible.Apply) {
+                equipment["Weapon"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.WeaponVisible.Toggle } };
+            }
+            
+            if (outfitEquipment.VieraEarsVisible.Apply) {
+                equipment["VieraEars"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.VieraEarsVisible.Toggle } };
+            }
+            
             var revertMaterial = new JObject {
                 { "Revert", true },
                 { "Enabled", true }

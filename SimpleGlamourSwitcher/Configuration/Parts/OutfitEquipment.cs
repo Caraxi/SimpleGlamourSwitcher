@@ -25,6 +25,8 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
     public ApplicableBonus Face = new();
     public ApplicableToggle HatVisible = new();
     public ApplicableToggle VisorToggle = new();
+    public ApplicableToggle WeaponVisible = new();
+    public ApplicableToggle VieraEarsVisible = new();
     
     public ApplicableItem this[HumanSlot slot] {
         get {
@@ -52,6 +54,8 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
             switch (toggleType) {
                 case ToggleType.HatVisible: return HatVisible;
                 case ToggleType.VisorToggle: return VisorToggle;
+                case ToggleType.WeaponVisible: return WeaponVisible;
+                case ToggleType.VieraEarsVisible: return VieraEarsVisible;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(toggleType), toggleType, "Unsupported toggle type.");
             }
@@ -94,6 +98,8 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
             
             HatVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.HatVisible, glamourerEquipment.Hat.Apply, glamourerEquipment.Hat.Show),
             VisorToggle = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.VisorToggle, glamourerEquipment.Visor.Apply, glamourerEquipment.Visor.IsToggled),
+            WeaponVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.WeaponVisible, glamourerEquipment.Weapon.Apply, glamourerEquipment.Weapon.Show),
+            VieraEarsVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.VieraEarsVisible, glamourerEquipment.VieraEars.Apply, glamourerEquipment.VieraEars.Show),
         };
     }
 
@@ -111,6 +117,8 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
         yield return ("Glasses", Face);
         yield return ("Hat Visible Toggle", HatVisible);
         yield return ("Visor Toggle", VisorToggle);
+        yield return ("Weapon Visible Toggle", WeaponVisible);
+        yield return ("Ears Visible Toggle", VieraEarsVisible);
     }
 
     IEnumerator IEnumerable.GetEnumerator() {

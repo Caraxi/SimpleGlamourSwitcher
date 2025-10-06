@@ -6,7 +6,9 @@ namespace SimpleGlamourSwitcher.Configuration.Enum;
 
 public enum ToggleType {
     [JsonPropertyName("Show")] HatVisible,
-    [JsonPropertyName("IsToggled")] VisorToggle
+    [JsonPropertyName("IsToggled")] VisorToggle,
+    [JsonPropertyName("Show")] WeaponVisible,
+    [JsonPropertyName("Show")] VieraEarsVisible,
 }
 
 public static class ToggleTypeExtensions {
@@ -14,6 +16,8 @@ public static class ToggleTypeExtensions {
         return tt switch {
             ToggleType.HatVisible => MetaFlag.HatState,
             ToggleType.VisorToggle => MetaFlag.VisorState,
+            ToggleType.WeaponVisible => MetaFlag.WeaponState,
+            ToggleType.VieraEarsVisible => MetaFlag.EarState,
             _ => 0
         };
     }

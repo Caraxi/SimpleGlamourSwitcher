@@ -62,10 +62,10 @@ public class MainWindow : Window {
     
     public override void PreDraw() {
         if (IsFullscreen) {
-            Position = ImGuiHelpers.MainViewport.Pos + PluginConfig.FullscreenOffset + PluginConfig.FullscreenPadding;
+            Position = (ImGuiHelpers.MainViewport.Pos / ImGuiHelpers.GlobalScale) + PluginConfig.FullscreenOffset + PluginConfig.FullscreenPadding;
             PositionCondition = ImGuiCond.Always;
             
-            Size = ImGuiHelpers.MainViewport.Size - PluginConfig.FullscreenPadding * 2;
+            Size = (ImGuiHelpers.MainViewport.Size / ImGuiHelpers.GlobalScale) - PluginConfig.FullscreenPadding * 2;
             SizeCondition = ImGuiCond.Always;
 
             SizeConstraints = null;

@@ -2,8 +2,10 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Bindings.ImGui;
+using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.UserInterface.Components;
+using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
@@ -11,7 +13,6 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParentConfig<PluginConfigFile>, INamedConfigFile {
     public HashSet<VirtualKey> Hotkey = [];
     public Vector4 BackgroundColour = ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.WindowBg));
-    public Vector2 CharacterListImageSize = new(128, 128);
     public float SidebarSize = 280f;
     public bool ShowActiveCharacterInCharacterList = true;
     public Dictionary<ulong, Guid> SelectedCharacter = new();
@@ -24,7 +25,19 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public Vector2 FullscreenPadding = new(0, 0);
     public string DebugDefaultPage = string.Empty;
     
-    public Style? CustomStyle;
+    [JsonIgnore]
+    public Style? CustomStyle {
+        get {
+            if (CustomCharacterPolaroidStyle == null) return null;
+            return Style.Default with {
+                CharacterPolaroid = CustomCharacterPolaroidStyle ?? Style.Default.CharacterPolaroid
+            };
+        }
+
+        set => CustomCharacterPolaroidStyle = value?.CharacterPolaroid;
+    }
+    
+    public PolaroidStyle? CustomCharacterPolaroidStyle = null;
     
     public bool ShowHiddenCharacters;
     public bool LogActionsToChat;

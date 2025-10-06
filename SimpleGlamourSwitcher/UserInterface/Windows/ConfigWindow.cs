@@ -5,6 +5,8 @@ using Dalamud.Interface.Windowing;
 using ECommons;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
+using SimpleGlamourSwitcher.UserInterface.Components;
+using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
@@ -51,7 +53,41 @@ public class ConfigWindow : Window {
         PluginConfig.Dirty |= ImGui.Checkbox("Log actions to chat", ref PluginConfig.LogActionsToChat);
         PluginConfig.Dirty |= ImGui.Checkbox("Show current character on character list", ref PluginConfig.ShowActiveCharacterInCharacterList);
         PluginConfig.Dirty |= ImGui.Checkbox("Show icons on buttons", ref PluginConfig.ShowButtonIcons);
+
+        var useCustomFolderPolaroid = PluginConfig.CustomCharacterPolaroidStyle != null;
+
+        using (ImRaii.Disabled(useCustomFolderPolaroid && !ImGui.GetIO().KeyShift)) {
+            if (ImGui.Checkbox(useCustomFolderPolaroid ? "##useCustomCharacterPolaroid" : "Use custom character image style", ref useCustomFolderPolaroid)) {
+                if (useCustomFolderPolaroid) {
+                    PluginConfig.CustomCharacterPolaroidStyle = (PluginConfig.CustomStyle?.CharacterPolaroid ?? Style.Default.CharacterPolaroid).Clone();
+                } else {
+                    PluginConfig.CustomCharacterPolaroidStyle = null;
+                }
+
+                PluginConfig.Dirty = true;
+            }
+        }
+
+        if (useCustomFolderPolaroid && !ImGui.GetIO().KeyShift && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+            ImGui.SetTooltip("Custom style will be lost if disabled.\nHold SHIFT to confirm.");
+        }
         
+        if (PluginConfig.CustomCharacterPolaroidStyle != null) {
+            ImGui.SameLine();
+            if (ImGui.CollapsingHeader("Custom Character Image Style")) {
+
+                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                    ImGui.TextWrapped("Customize the display of the character switcher preview images. Changing this will cause all existing images to be stretched to the new size.");
+                }
+               
+                using (ImRaii.PushIndent()) {
+                    if (PolaroidStyle.DrawEditor("Character", PluginConfig.CustomCharacterPolaroidStyle)) {
+                        PluginConfig.Dirty = true;
+                    }
+                }
+            }
+        }
+
         #if DEBUG
         var debugPages = new[] { "none", "automation", "outfit" };
         var debugPage = debugPages.IndexOf(PluginConfig.DebugDefaultPage);

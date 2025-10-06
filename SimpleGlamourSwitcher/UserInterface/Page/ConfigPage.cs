@@ -17,6 +17,7 @@ public class ConfigPage : Page {
 
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
 
+        controlFlags |= WindowControlFlags.PreventClose;
 
         var maxW = Plugin.ConfigWindow.SizeConstraints?.MaximumSize.X ?? 640;
         

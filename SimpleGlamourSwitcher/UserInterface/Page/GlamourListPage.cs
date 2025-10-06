@@ -378,7 +378,7 @@ public class GlamourListPage : Page {
                 if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(outfitStyle).X) ImGui.NewLine();
                 
                 if (drag == null) {
-                    if (Polaroid.Button((outfit as IImageProvider).GetImage(), outfit.ImageDetail, outfit.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(character, outfit) })) {
+                    if (Polaroid.Button((outfit as IImageProvider).GetImage(), outfit.ImageDetail, outfit.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, outfit) })) {
                         outfit.Apply().ConfigureAwait(false);
                         if (PluginConfig.AutoCloseAfterApplying) {
                             MainWindow!.IsOpen = false;
@@ -568,7 +568,7 @@ public class GlamourListPage : Page {
         base.DrawCenter(ref controlFlags);
     }
 
-    private Colour GetOutfitFrameColour(CharacterConfigFile character, OutfitConfigFile outfit) {
+    private Colour GetOutfitFrameColour(PolaroidStyle? polaroidStyle, CharacterConfigFile character, OutfitConfigFile outfit) {
         var style = PluginConfig.CustomStyle ?? Style.Default;
         var anyAutomation = character.Automation.Login == outfit.Guid || character.Automation.CharacterSwitch == outfit.Guid || character.Automation.DefaultGearset == outfit.Guid;
 
@@ -578,7 +578,7 @@ public class GlamourListPage : Page {
         }
         
         
-        return anyAutomation ? style.OutfitList.DefaultOutfitColour : style.OutfitList.OutfitColour;
+        return anyAutomation ? style.OutfitList.DefaultOutfitColour : polaroidStyle?.FrameColour ?? PolaroidStyle.Default.FrameColour;
     }
 
     public override void DrawRight(ref WindowControlFlags controlFlags) {

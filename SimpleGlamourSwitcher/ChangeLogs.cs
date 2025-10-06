@@ -3,6 +3,13 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.1.6.0", () => {
+            Change("Added ability to configure display of Character List images.");
+            Change("Added ability to edit the colours of image displays.");
+            Change("Added ability to modify weapon visibility with outfits.");
+            Change("Added ability to modify viera ear visibility with outfits.");
+            Change("Fixed full screen display mode on UI scales other than 100%");
+        });
         ChangelogFor("1.1.5.0", () => {
             Change("Added ability to enable or disable Customize+ templates when equipping outfits.");
             Change("Added gridline options for outfit screenshots");

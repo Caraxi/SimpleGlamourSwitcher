@@ -40,6 +40,9 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
         ImageSize = 1U << 0,
         FramePadding = 1U << 1,
         FrameRounding = 1U << 2,
+        TextColour = 1U << 3,
+        FrameColour = 1U << 4,
+        ActiveFrameColours = 1U << 5,
         ShowPreview  = 1U << 31,
         All = uint.MaxValue
     }
@@ -56,7 +59,14 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
             ImRaii.IEndObject? group = null;
             
             if (flags.HasFlag(PolaroidStyleEditorFlags.ShowPreview)) {
-                Polaroid.Draw(null, ImageDetail.Default, $"{header} Preview", style);
+                if (flags.HasFlag(PolaroidStyleEditorFlags.ActiveFrameColours)) {
+                    ImGui.Dummy(Polaroid.GetActualSize(style));
+                    Polaroid.DrawPolaroid(null, ImageDetail.Default, $"{header} Preview", style with {
+                        FrameColour = ImGui.IsItemHovered() ? ImGui.IsMouseDown(ImGuiMouseButton.Left) ? style.FrameActiveColour : style.FrameHoveredColour : style.FrameColour
+                    });
+                } else {
+                    Polaroid.DrawPolaroid(null, ImageDetail.Default, $"{header} Preview", style);
+                }
                 
                 ImGui.SameLine();
 
@@ -82,12 +92,44 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
                 edited |= ImGui.DragFloat($"Frame Rounding##{header}", ref style.FrameRounding, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
             }
 
-            group?.Dispose();
+            if (flags.HasFlag(PolaroidStyleEditorFlags.TextColour)) {
+                edited |= ColourEdit4($"Text Colour##{header}", ref style.LabelColour);
+                edited |= ColourEdit4($"Text Shadow Colour##{header}", ref style.LabelShadowColour);
+                using (ImRaii.PushIndent()) {
+                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
+                    edited |= ImGui.DragFloat2($"Shadow Offset##{header}", ref style.LabelShadowOffset, 1, -30, 30, "%.0f", ImGuiSliderFlags.AlwaysClamp);
+                    ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
+                    edited |= ImGui.SliderInt($"Shadow Size##{header}", ref style.LabelShadowSize, 0, 5, "%.0f", ImGuiSliderFlags.AlwaysClamp);
+                }
+            }
+            
+            if (flags.HasFlag(PolaroidStyleEditorFlags.FrameColour)) {
+                edited |= ColourEdit4($"Frame Colour##{header}", ref style.FrameColour);
+                edited |= ColourEdit4($"Image Area Colour##{header}", ref style.BlankImageColour);
+            }
 
+            if (flags.HasFlag(PolaroidStyleEditorFlags.ActiveFrameColours)) {
+                edited |= ColourEdit4($"Active Frame Colour##{header}", ref style.FrameActiveColour);
+                edited |= ColourEdit4($"Hovered Frame Colour##{header}", ref style.FrameHoveredColour);
+            }
+            
+            group?.Dispose();
         }
 
         return edited;
     }
+
+    private static bool ColourEdit4(string name, ref Colour colour) {
+        var c = colour.Float4;
+        
+        if (ImGui.ColorEdit4(name, ref c, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop | ImGuiColorEditFlags.NoTooltip)) {
+            colour.Float4 =  c;
+            return true;
+        }
+
+        return false;
+    }
+    
     
     
 }

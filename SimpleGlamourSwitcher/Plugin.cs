@@ -84,8 +84,6 @@ public class Plugin : IDalamudPlugin {
         }, delayTicks: 3);
         
     }
-    
-    #if DEBUG
 
     private async Task ProcessApplyCommand(string[] args) {
         if (args.Length == 0) {
@@ -114,6 +112,7 @@ public class Plugin : IDalamudPlugin {
         }
     }
     
+    #if DEBUG
     private void OpenOnStartup() {
         ClientState.Login -= OpenOnStartup;
         Framework.RunOnTick(() => {

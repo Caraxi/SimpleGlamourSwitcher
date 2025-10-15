@@ -5,13 +5,14 @@ using Dalamud.Interface.Windowing;
 using Glamourer.Api.Enums;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
 public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
-    private OrderedDictionary<Guid, OutfitConfigFile> outfits = new();
+    private OrderedDictionary<Guid, IListEntry> entries = new();
     private List<OutfitConfigFile> stack = new();
     public override void Draw() {
 
@@ -23,8 +24,8 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
         }
 
         if (ImGui.Button("Fetch Outfits")) {
-            outfits = new OrderedDictionary<Guid, OutfitConfigFile>();
-            ActiveCharacter?.GetOutfits().ContinueWith((t) => {
+            entries = new OrderedDictionary<Guid, IListEntry>();
+            ActiveCharacter?.GetEntries().ContinueWith((t) => {
 
                 var outfitEntries = t.Result.Select((kvp) => {
                     var fullPath = ActiveCharacter.ParseFolderPath(kvp.Value.Folder) + " / " + kvp.Value.Name;
@@ -32,7 +33,7 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                 });
                 
                 foreach (var (guid, outfit, fullPathName) in outfitEntries.OrderBy(outfitEntry => outfitEntry.fullPath)) {
-                    outfits.TryAdd(guid, outfit);    
+                    entries.TryAdd(guid, outfit);    
                 }
             });
         }
@@ -41,20 +42,23 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
 
 
             if (ImGui.BeginTable("outfits", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders)) {
-                foreach (var (guid, outfit) in outfits) {
+                foreach (var (guid, entry) in entries) {
                     using (ImRaii.PushId($"{guid}")) {
                         ImGui.TableNextColumn();
                         ImGui.Text($"{guid}");
                         ImGui.TableNextColumn();
-                        ImGui.Text($"{ActiveCharacter?.ParseFolderPath(outfit.Folder)} / {outfit.Name}");
+                        ImGui.Text($"{ActiveCharacter?.ParseFolderPath(entry.Folder)} / {entry.Name}");
                         ImGui.TableNextColumn();
-                        if (ImGui.SmallButton("Copy Appearance JSON")) {
-                            var a = GlamourerIpc.GetCustomizationJObject(outfit.Appearance, outfit.Equipment);
-                            ImGui.SetClipboardText(a?.ToString() ?? "null");
-                        }
-                        ImGui.SameLine();
-                        if (ImGui.SmallButton("+ Stack")) {
-                            stack.Add(outfit);
+                        
+                        if (entry is OutfitConfigFile outfit) {
+                            if (ImGui.SmallButton("Copy Appearance JSON")) {
+                                var a = GlamourerIpc.GetCustomizationJObject(outfit.Appearance, outfit.Equipment);
+                                ImGui.SetClipboardText(a?.ToString() ?? "null");
+                            }
+                            ImGui.SameLine();
+                            if (ImGui.SmallButton("+ Stack")) {
+                                stack.Add(outfit);
+                            }
                         }
                     }
                 

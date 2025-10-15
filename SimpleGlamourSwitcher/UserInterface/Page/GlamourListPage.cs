@@ -8,6 +8,7 @@ using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -29,6 +30,11 @@ public class GlamourListPage : Page {
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Outfit", () => {
             if (ActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(ActiveCharacter,  ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Outfit"} );
+        
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Minion", () => {
+            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(ActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Minion"} );
+        
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
             MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Folder" } );
@@ -41,7 +47,7 @@ public class GlamourListPage : Page {
 
         scrollTop = true;
         if (character != null) {
-            Task.Run(() => character.GetOutfits(ActiveFolder)).ContinueWith(t => {
+            Task.Run(() => character.GetEntries(ActiveFolder)).ContinueWith(t => {
                 outfits = t.Result;
                 scrollTop = true;
             });
@@ -59,7 +65,7 @@ public class GlamourListPage : Page {
 
     private (ItemType Type, Guid Guid)? dragItem;
     
-    private OrderedDictionary<Guid, OutfitConfigFile>? outfits;
+    private OrderedDictionary<Guid, IListEntry>? outfits;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
 
@@ -292,7 +298,7 @@ public class GlamourListPage : Page {
                                 if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
 
                                     Task.Run(async () => {
-                                        var moveOutfits = await character.GetOutfits(folderGuid);
+                                        var moveOutfits = await character.GetEntries(folderGuid);
                                         foreach (var o in moveOutfits.Values.Where(o => o.Folder == folderGuid)) {
                                             o.Folder = characterFolder.Parent;
                                             o.Dirty = true;
@@ -373,13 +379,19 @@ public class GlamourListPage : Page {
         } else {
 
            
-            foreach (var (outfitGuid, outfit) in outfits) {
+            foreach (var (outfitGuid, entry) in outfits) {
+                
+                var icon = entry switch {
+                    MinionConfigFile => FontAwesomeIcon.Cat,
+                    OutfitConfigFile => FontAwesomeIcon.PersonHalfDress,
+                    _ => FontAwesomeIcon.ExclamationTriangle
+                };
                 
                 if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(outfitStyle).X) ImGui.NewLine();
                 
                 if (drag == null) {
-                    if (Polaroid.Button((outfit as IImageProvider).GetImage(), outfit.ImageDetail, outfit.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, outfit) })) {
-                        outfit.Apply().ConfigureAwait(false);
+                    if (Polaroid.Button((entry as IImageProvider).GetImage(), entry.ImageDetail, entry.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, entry) })) {
+                        entry.Apply().ConfigureAwait(false);
                         if (PluginConfig.AutoCloseAfterApplying) {
                             MainWindow!.IsOpen = false;
                         }
@@ -389,7 +401,7 @@ public class GlamourListPage : Page {
                         controlFlags |= WindowControlFlags.PreventMove;
                     }
 
-                    if (!outfit.IsValid) {
+                    if (!entry.IsValid) {
                         using (PluginService.UiBuilder.IconFontHandle.Push()) {
                             ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExclamationTriangle.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = ImGuiColors.DalamudRed });
                         }
@@ -398,10 +410,15 @@ public class GlamourListPage : Page {
                             using (ImRaii.Tooltip()) {
                                 ImGui.Text("Issues Detected");
                                 ImGui.Separator();
-                                foreach (var err in outfit.ValidationErrors) {
+                                foreach (var err in entry.ValidationErrors) {
                                     ImGui.Text($" - {err}");
                                 }
                             }
+                        }
+                    }
+                    else {
+                        using (PluginService.UiBuilder.IconFontHandle.Push()) {
+                            ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, icon.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = 0xFFFFFFFF });
                         }
                     }
                     
@@ -414,14 +431,15 @@ public class GlamourListPage : Page {
                         controlFlags |= WindowControlFlags.PreventClose;
 
                         using (ImRaii.PushFont(UiBuilder.IconFont)) {
-                            ImGui.Text(FontAwesomeIcon.PersonHalfDress.ToIconString());
+                            
+                            ImGui.Text(icon.ToIconString());
                             ImGui.SameLine();
                         }
-                        ImGuiExt.CenterText(outfit.Name, centerVertically: true, centerHorizontally: false, size: ImGui.GetItemRectSize() + ImGui.GetStyle().ItemSpacing);
+                        ImGuiExt.CenterText(entry.Name, centerVertically: true, centerHorizontally: false, size: ImGui.GetItemRectSize() + ImGui.GetStyle().ItemSpacing);
                         ImGui.Separator();
 
 
-                        if (ImGui.BeginMenu("Automation")) {
+                        if (entry is OutfitConfigFile && ImGui.BeginMenu("Automation")) {
 
                             bool AutomationOption(string name, ref Guid? setValue) {
                                 if (setValue == outfitGuid) {
@@ -459,37 +477,54 @@ public class GlamourListPage : Page {
                             
                             ImGui.EndMenu();
                         }
-                    
-
-
-                        if (ImGui.MenuItem("Edit Outfit")) {
-                            MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, outfit));
+                        
+                        if (entry is OutfitConfigFile outfit)
+                        {
+                            if (ImGui.MenuItem("Edit Outfit")) {
+                            
+                                MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, outfit));
+                            }
+                        
+                            if (ImGui.MenuItem("Clone Outfit")) {
+                                outfit.CreateClone().ContinueWith(task => {
+                                    if (task.IsCompletedSuccessfully) {
+                                        MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, task.Result));
+                                    }
+                                });
+                            }
                         }
                         
-                        if (ImGui.MenuItem("Clone Outfit")) {
-                            outfit.CreateClone().ContinueWith(task => {
-                                if (task.IsCompletedSuccessfully) {
-                                    MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, task.Result));
-                                }
-                            });
+                        if (entry is MinionConfigFile minion)
+                        {
+                            if (ImGui.MenuItem("Edit Minion")) {
+                            
+                                MainWindow?.OpenPage(new EditMinionPage(character, ActiveFolder, minion));
+                            }
+                        
+                            if (ImGui.MenuItem("Clone Minion")) {
+                                minion.CreateClone().ContinueWith(task => {
+                                    if (task.IsCompletedSuccessfully) {
+                                        MainWindow?.OpenPage(new EditMinionPage(character, ActiveFolder, task.Result));
+                                    }
+                                });
+                            }
                         }
-
+                        
                         if (ImGui.MenuItem("Open File")) {
                             var file = OutfitConfigFile.GetConfigPath(character, outfitGuid);
                             file.OpenWithDefaultApplication();
                         }
                         
                         if (ImGui.BeginMenu($"Delete")) {
-                                
                             ImGui.Text("Hold SHIFT and ALT to confirm.");
-                                
                             if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
+                                PluginLog.Debug("Try Delete?");
                                 Task.Run(() => {
                                     try {
-                                        outfit.GetImageFile()?.Delete();
-                                        OutfitConfigFile.GetConfigPath(character, outfit.Guid).Delete();
+                                        entry.GetImageFile()?.Delete();
+                                        entry.Delete();
                                     } catch (Exception ex) {
-                                        PluginLog.Error(ex, "Error deleting outfit.");
+                                        PluginLog.Error(ex, "Error deleting file.");
                                     }
                                    
                                     Refresh();
@@ -499,10 +534,6 @@ public class GlamourListPage : Page {
                             ImGui.EndMenu();
                         }
                         
-                        
-                        
-                        
-
                         ImGui.EndPopup();
                     }
                         
@@ -513,7 +544,7 @@ public class GlamourListPage : Page {
                     
                 } else {
                     var dragging = drag.Value;
-                    Polaroid.Draw((outfit as IImageProvider).GetImage(), outfit.ImageDetail, outfit.Name, outfitStyle with {
+                    Polaroid.Draw((entry as IImageProvider).GetImage(), entry.ImageDetail, entry.Name, outfitStyle with {
                         FrameColour = outfitGuid == dragging.Guid && dragging.Type == ItemType.Outfit ? (0x8040FFFF) : (0x40FFFFFF & outfitStyle.FrameColour),
                         BlankImageColour = 0x40FFFFFF & outfitStyle.BlankImageColour
                     });
@@ -542,7 +573,9 @@ public class GlamourListPage : Page {
                         break;
                     case ItemType.Outfit:
                         if (outfits?.TryGetValue(dragItem.Value.Guid, out var dragOutfit) ?? false) {
-                            Polaroid.Draw((dragOutfit as IImageProvider).GetImage(), dragOutfit.ImageDetail, dragOutfit.Name, outfitStyle with { ImageSize = outfitStyle.ImageSize.FitTo(72) });
+                            if (dragOutfit is IImageProvider imgProvider) {
+                                Polaroid.Draw(imgProvider.GetImage(), dragOutfit.ImageDetail, dragOutfit.Name, outfitStyle with { ImageSize = outfitStyle.ImageSize.FitTo(72) });
+                            }
                         }
                         break;
                     default:
@@ -568,7 +601,7 @@ public class GlamourListPage : Page {
         base.DrawCenter(ref controlFlags);
     }
 
-    private Colour GetOutfitFrameColour(PolaroidStyle? polaroidStyle, CharacterConfigFile character, OutfitConfigFile outfit) {
+    private Colour GetOutfitFrameColour(PolaroidStyle? polaroidStyle, CharacterConfigFile character, IListEntry outfit) {
         var style = PluginConfig.CustomStyle ?? Style.Default;
         var anyAutomation = character.Automation.Login == outfit.Guid || character.Automation.CharacterSwitch == outfit.Guid || character.Automation.DefaultGearset == outfit.Guid;
 

@@ -1,4 +1,5 @@
-﻿using Penumbra.GameData.Enums;
+﻿using Lumina.Excel.Sheets;
+using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.IPC;
 
@@ -11,6 +12,9 @@ public static class ModManager {
 
     public static int TempIdentificationKey(this HumanSlot slot) => TempIdentificationKey(0x100 + (int) slot);
     public static int TempIdentificationKey(this CustomizeIndex customizeIndex) => TempIdentificationKey(0x200 + (int) customizeIndex);
+    
+    public static int TempIdentificationKey(this Companion companion) => TempIdentificationKey(0x300 + (int) companion.RowId);
+    
     public static int TempIdentificationKey(int @base) => (int)(@base | 0x85357000);
     
     public static void Dispose() {
@@ -43,6 +47,11 @@ public static class ModManager {
     public static void ApplyMods(CustomizeIndex customizeIndex, IEnumerable<OutfitModConfig> outfitModConfigs) {
         PluginLog.Debug($"Applying mods for {customizeIndex}");
         ApplyMods(customizeIndex.TempIdentificationKey(), outfitModConfigs);
+    }
+
+    public static void ApplyMods(Companion companion, IEnumerable<OutfitModConfig> outfitModConfigs) {
+        PluginLog.Debug($"Applying mods for companion - {companion.Singular.ExtractText()}");
+        ApplyMods(companion.TempIdentificationKey(), outfitModConfigs);
     }
 
     private static void ApplyMods(int key, IEnumerable<OutfitModConfig> outfitModConfigs) {

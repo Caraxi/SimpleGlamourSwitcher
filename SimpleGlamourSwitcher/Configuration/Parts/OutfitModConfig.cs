@@ -1,9 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using Dalamud.Game.ClientState.Objects.Enums;
+using Lumina.Excel.Sheets;
+using Newtonsoft.Json;
 using Penumbra.Api.Enums;
 using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.IPC.Glamourer;
+using CustomizeIndex = Penumbra.GameData.Enums.CustomizeIndex;
+using Race = Penumbra.GameData.Enums.Race;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts;
 
@@ -65,6 +69,25 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
         
         
 
+        return list;
+    }
+    
+    public static List<OutfitModConfig> GetModListFromMinion(uint minionId, Guid penumbraCollection) {
+        
+        var list = new List<OutfitModConfig>();
+        if (minionId == 0) return list;
+        var name = SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, minionId);
+        if (string.IsNullOrWhiteSpace(name)) return list;
+
+        var mods = PenumbraIpc.CheckCurrentChangedItem($"{name} (Companion)");
+        
+        foreach (var mod in mods) {
+            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
+            if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+            var modSettings = getModSettings.Item2.Value;
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+        }
+        
         return list;
     }
     

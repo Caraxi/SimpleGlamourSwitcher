@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json;

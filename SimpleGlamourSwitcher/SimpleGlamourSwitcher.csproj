@@ -1,11 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Dalamud.Net.SDK/13.1.0">
     <PropertyGroup>
-        <TargetFramework>net9.0-windows</TargetFramework>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev</DalamudLibPath>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>preview</LangVersion>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -13,42 +11,6 @@
         <UserSecretsId>4104b294-8575-4480-8e71-9418b1ce5962</UserSecretsId>
         <Version>1.1.6.1</Version>
     </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="13.1.0" />
-        <PackageReference Include="SharpClipboard" Version="3.5.2" />
-        <Reference Include="Dalamud">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
-        </Reference>
-        <Reference Include="Dalamud.Bindings.ImGui">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImGui.dll</HintPath>
-        </Reference>
-        <Reference Include="Dalamud.Bindings.ImPlot">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImPlot.dll</HintPath>
-        </Reference>
-        <Reference Include="Lumina">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\Lumina.dll</HintPath>
-        </Reference>
-        <Reference Include="Lumina.Excel">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\Lumina.Excel.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.JSON">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\Newtonsoft.JSON.dll</HintPath>
-        </Reference>
-        <Reference Include="FFXIVClientStructs">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
-        </Reference>
-        <Reference Include="InteropGenerator.Runtime">
-            <Private>false</Private>
-            <HintPath>$(DalamudLibPath)\InteropGenerator.Runtime.dll</HintPath>
-        </Reference>
-    </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\ECommons\ECommons\ECommons.csproj" />
       <ProjectReference Include="..\Glamourer.Api\Glamourer.Api.csproj" />

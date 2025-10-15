@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Reflection;
-using System.Windows.Forms;
+
 using Dalamud.Interface.Textures;
 using Penumbra.GameData.Enums;
 
@@ -37,7 +37,7 @@ public static class Common {
         yield return HumanSlot.Face;
     }
 
-
+/*
 
     private enum ClipboardType {
         Other,
@@ -93,26 +93,32 @@ public static class Common {
             image = GetClipboard(out var t) as Image;
             return t == ClipboardType.Image && image != null;
         }
-        
+
         public static bool TryGetFiles([NotNullWhen(true)] out string[]? files) {
             files = GetClipboard(out var t) as string[];
             return t == ClipboardType.Files && files != null;
         }
 
-        
+
     }
-    
-    
-    public static bool TryGetClipboardImage([NotNullWhen(true)] out Image? image) {
-        return ClipboardCache.TryGetImage(out image);
+
+    */
+    public static bool TryGetClipboardImage([NotNullWhen(true)] out object? image)
+    {
+        image = null;
+        return false;
+        // return ClipboardCache.TryGetImage(out image);
     }
 
     public static bool TryGetClipboardFile([NotNullWhen(true)] out string? file) {
         file = null;
+        return false;
+        /*
         if (!ClipboardCache.TryGetFiles(out var files)) return false;
         if (files.Length != 1) return false;
         file = files[0];
         return true;
+        */
     }
 
     public static IEnumerable<T> Concat<T>(params IEnumerable<T>[] sources) {

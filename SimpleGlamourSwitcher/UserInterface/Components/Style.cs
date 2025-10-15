@@ -6,16 +6,15 @@ namespace SimpleGlamourSwitcher.UserInterface.Components;
 
 public record Style {
     public static Style Default { get; } = new();
-    
-    public Colour Text = ImGui.GetColorU32(ImGuiCol.Text);
-    public Colour TextShadow = 0x80000000;
+
+    public Colour Text = 0xFFFFFFFF;
 
     public PolaroidStyle CharacterPolaroid = new() { ImageSize = PolaroidStyle.Default.ImageSize * new Vector2(0.5f, 1f) };
     public PolaroidStyle FolderPolaroid = new() { ImageSize = GetDefaultFolderSize() };
     
     public OutfitListStyle OutfitList = new();
     
-    public ShadowTextStyle ShadowTextText = new();
+    public ShadowTextStyle ShadowText = new();
     public TextInputStyle TextInput = new();
     public ComboStyle Combo = new();
 

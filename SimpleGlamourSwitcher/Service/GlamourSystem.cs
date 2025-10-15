@@ -84,7 +84,7 @@ public static class GlamourSystem {
         List<OutfitConfigFile> outfitList = [];
         HashSet<Guid> guids = [];
         
-        var outfits = await outfit.ConfigFile.GetOutfits();
+        var outfits = await outfit.ConfigFile.GetEntries<OutfitConfigFile>();
         
         void AddOutfit(OutfitConfigFile addOutfit) {
             if (guids.Contains(addOutfit.Guid)) return;

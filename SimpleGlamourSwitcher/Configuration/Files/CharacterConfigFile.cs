@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Interface.Textures.TextureWraps;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
@@ -9,7 +8,6 @@ using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
-using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
@@ -141,27 +139,49 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         base.Setup();
     }
 
+
+    public async Task<OrderedDictionary<Guid, T>> GetEntries<T>() where T : IListEntry {
+        var l = await GetEntries();
+        var dict = new OrderedDictionary<Guid, T>();
+        foreach (var e in l) {
+            if (e.Value is T eT) {
+                dict.TryAdd(e.Key, eT);
+            }
+        }
+        
+        return dict;
+    }
     
-    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits() => await GetOutfits(null, CancellationToken.None);
-    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(CancellationToken cancellationToken) => await GetOutfits(null, cancellationToken);
-    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder) => await GetOutfits(folder, CancellationToken.None);
-    public async Task<OrderedDictionary<Guid, OutfitConfigFile>> GetOutfits(Guid? folder, CancellationToken cancellationToken) {
+    public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries() => await GetEntries(null, CancellationToken.None);
+    public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries(CancellationToken cancellationToken) => await GetEntries(null, cancellationToken);
+    public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries(Guid? folder) => await GetEntries(folder, CancellationToken.None);
+    public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries(Guid? folder, CancellationToken cancellationToken) {
         return await Task.Run(() => {
-            var outfits = new List<OutfitConfigFile>();
+            var entries = new List<IListEntry>();
             
             PluginLog.Verbose($"Getting Outfits from {OutfitDirectory.FullName}");
-            
             foreach (var f in OutfitDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
+                
                 var outfitCfg = OutfitConfigFile.Load(guid, this);
                 if (outfitCfg == null) continue;
                 var outfitFolder = Folders.ContainsKey(outfitCfg.Folder) ? outfitCfg.Folder : Guid.Empty;
                 if (folder != null && outfitFolder != folder) continue;
-                outfits.Add(outfitCfg);
+                entries.Add(outfitCfg);
             }
             
-            var dict = new OrderedDictionary<Guid, OutfitConfigFile>();
-            foreach (var outfit in outfits.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name  : o.SortName)) {
+            PluginLog.Verbose($"Getting Minions from {MinionDirectory.FullName}");
+            foreach (var f in MinionDirectory.GetFiles("*.json")) {
+                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
+                var minionCfg = MinionConfigFile.Load(guid, this);
+                if (minionCfg == null) continue;
+                var outfitFolder = Folders.ContainsKey(minionCfg.Folder) ? minionCfg.Folder : Guid.Empty;
+                if (folder != null && outfitFolder != folder) continue;
+                entries.Add(minionCfg);
+            }
+            
+            var dict = new OrderedDictionary<Guid, IListEntry>();
+            foreach (var outfit in entries.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name  : o.SortName)) {
                 dict.Add(outfit.Guid, outfit);
             }
 
@@ -182,6 +202,16 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             PluginLog.Debug($"Character Outfit Directory [{Guid}] is {dir.FullName}");
             
             
+            return dir;
+        }
+    }
+    
+    [JsonIgnore]
+    public DirectoryInfo MinionDirectory {
+        get {
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, "minions"));
+            if (!dir.Exists) dir.Create();
+            PluginLog.Debug($"Character Minion Directory [{Guid}] is {dir.FullName}");
             return dir;
         }
     }
@@ -246,14 +276,16 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     
     
     public async Task ApplyAutomation(bool isLogin = false, bool isCharacterSwitch = false, bool isGearsetSwitch = false) {
-        var outfits = await GetOutfits();
+        var outfits = await GetEntries();
 
         var currentGearset = GameHelper.GetActiveGearset();
         if (currentGearset != null) {
             if (Automation.Gearsets.TryGetValue(currentGearset.Value.Id, out var guid)) {
                 if (guid != null) {
-                    if (outfits.TryGetValue(guid.Value, out var outfit)) {
-                        await outfit.Apply();
+                    if (outfits.TryGetValue(guid.Value, out var entry)) {
+                        if (entry is OutfitConfigFile outfit) {
+                            await outfit.Apply();
+                        }
                     } else {
                         Chat.PrintError($"Failed to find outfit configured for Gearset '{currentGearset.Value.Name}'.", "Simple Glamour Switcher", 500);
                     }
@@ -265,8 +297,11 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
 
         if (isGearsetSwitch && Automation.DefaultGearset != null) {
-            if (outfits.TryGetValue(Automation.DefaultGearset.Value, out var outfit)) {
-                await outfit.Apply();
+            if (outfits.TryGetValue(Automation.DefaultGearset.Value, out var entry)) {
+                if (entry is OutfitConfigFile outfit) {
+                    await outfit.Apply();
+                }
+                
             } else {
                 Chat.PrintError($"Failed to find outfit configured for 'Any Gearset'.", "Simple Glamour Switcher", 500);
             }
@@ -274,8 +309,10 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
         
         if (isCharacterSwitch && Automation.CharacterSwitch != null) {
-            if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var outfit)) {
-                await outfit.Apply();
+            if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var entry)) {
+                if (entry is OutfitConfigFile outfit) {
+                    await outfit.Apply();
+                }
             } else {
                 Chat.PrintError($"Failed to find outfit configured for Character Switch", "Simple Glamour Switcher", 500);
             }
@@ -283,8 +320,10 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
         
         if (isLogin && Automation.Login != null) {
-            if (outfits.TryGetValue(Automation.Login.Value, out var outfit)) {
-                await outfit.Apply();
+            if (outfits.TryGetValue(Automation.Login.Value, out var entry)) {
+                if (entry is OutfitConfigFile outfit) {
+                    await outfit.Apply();
+                }
             } else {
                 Chat.PrintError($"Failed to find outfit configured for Login.", "Simple Glamour Switcher", 500);
             }

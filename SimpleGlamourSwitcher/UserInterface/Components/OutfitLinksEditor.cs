@@ -16,7 +16,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
     }
     
     
-    private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> otherOutfits = new(character.GetOutfits);
+    private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> otherOutfits = new(character.GetEntries<OutfitConfigFile>);
 
     [Flags]
     private enum Button : uint  {

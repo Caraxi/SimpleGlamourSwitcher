@@ -50,6 +50,7 @@ public interface IImageProvider {
         }
     }
 
+    /*
     public void LoadImage(Image clipImage) {
         var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");
         if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
@@ -62,6 +63,7 @@ public interface IImageProvider {
             File.Delete(tempImagePath);
         });
     }
+    */
 
     public void LoadImage(IDalamudTextureWrap clipImage) {
         var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");

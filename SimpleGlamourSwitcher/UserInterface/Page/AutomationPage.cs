@@ -18,7 +18,7 @@ namespace SimpleGlamourSwitcher.UserInterface.Page;
 public unsafe class AutomationPage(CharacterConfigFile character) : Page {
     private bool dirty;
     private readonly AutomationConfig automationConfig = character.Automation.Clone();
-    private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> outfits = new(character.GetOutfits);
+    private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> outfits = new(character.GetEntries<OutfitConfigFile>);
     private const float Width = 600;
     private int selectedGearset = RaptureGearsetModule.Instance()->CurrentGearsetIndex;
 

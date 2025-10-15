@@ -3,6 +3,11 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.2.0.0", () => {
+            Change("Added ability to switch minions, along with associated mods.");
+            Change("Added ability to switch emotes, along with associated mods.");
+            Change("Fixed some issues with the UI.");
+        });
         ChangelogFor("1.1.6.0", () => {
             Change("Added ability to configure display of Character List images.");
             Change("Added ability to edit the colours of image displays.");

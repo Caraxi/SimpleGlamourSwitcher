@@ -96,6 +96,15 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
             }
         }
         
+        if (ImGui.CollapsingHeader("Emotes")) {
+            var activeEmote = EmoteIdentifier.Get(ClientState.LocalPlayer);
+            foreach (var e in EmoteIdentifier.List) {
+                using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.HealerGreen, activeEmote == e)) {
+                    ImGui.Text($"{nameof(EmoteIdentifier)}({nameof(EmoteIdentifier.EmoteModeId)} = {e.EmoteModeId}, {nameof(EmoteIdentifier.EmoteId)} = {e.EmoteId}, {nameof(EmoteIdentifier.CPoseState)} = {e.CPoseState}): {e.Name}");
+                }
+            }
+        }
+        
         if (ImGui.CollapsingHeader("Customize+")) {
 
             if (CustomizePlus.IsReady()) {

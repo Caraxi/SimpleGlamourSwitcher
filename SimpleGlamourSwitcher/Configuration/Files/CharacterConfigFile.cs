@@ -180,6 +180,16 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 entries.Add(minionCfg);
             }
             
+            PluginLog.Verbose($"Getting Emotes from {EmoteDirectory.FullName}");
+            foreach (var f in EmoteDirectory.GetFiles("*.json")) {
+                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
+                var emoteCfg = EmoteConfigFile.Load(guid, this);
+                if (emoteCfg == null) continue;
+                var outfitFolder = Folders.ContainsKey(emoteCfg.Folder) ? emoteCfg.Folder : Guid.Empty;
+                if (folder != null && outfitFolder != folder) continue;
+                entries.Add(emoteCfg);
+            }
+            
             var dict = new OrderedDictionary<Guid, IListEntry>();
             foreach (var outfit in entries.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name  : o.SortName)) {
                 dict.Add(outfit.Guid, outfit);
@@ -216,6 +226,16 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
     }
     
+    [JsonIgnore]
+    public DirectoryInfo EmoteDirectory {
+        get {
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, "emotes"));
+            if (!dir.Exists) dir.Create();
+            PluginLog.Debug($"Character Emote Directory [{Guid}] is {dir.FullName}");
+            return dir;
+        }
+    }
+
     [JsonIgnore]
     public DirectoryInfo ImagesDirectory {
         get {

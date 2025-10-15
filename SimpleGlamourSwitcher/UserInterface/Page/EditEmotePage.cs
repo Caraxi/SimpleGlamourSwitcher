@@ -4,48 +4,31 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Interface.Components;
-using Lumina.Excel.Sheets;
-using Penumbra.GameData.Enums;
-using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
-using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
+using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
-using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
-using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
-public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, MinionConfigFile? minion) : Page {
-    
-    public bool IsNewMinion { get; } = minion == null;
-    public MinionConfigFile Minion { get; } = minion ?? MinionConfigFile.CreateFromLocalPlayer(character, folderGuid);
-
+public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, EmoteConfigFile? emote) : Page {
+    public bool IsNewEmote { get; } = emote == null;
+    public EmoteConfigFile Emote { get; } = emote ?? EmoteConfigFile.CreateFromLocalPlayer(character, folderGuid);
     private readonly string folderPath = character.ParseFolderPath(folderGuid);
     private const float SubWindowWidth = 600f;
-
     private readonly FileDialogManager fileDialogManager = new();
-
-
-    private string minionName = minion?.Name ?? string.Empty;
-    private string? sortName = minion?.SortName ?? string.Empty;
-    
-    private List<AutoCommandEntry> autoCommands = minion?.AutoCommands ?? [];
-
-    private uint? minionId;
-    private bool resummon = minion?.Resummon ?? false;
-    
-    
+    private string emoteName = emote?.Name ?? string.Empty;
+    private string? sortName = emote?.SortName ?? string.Empty;
+    private List<AutoCommandEntry> autoCommands = emote?.AutoCommands ?? [];
+    private EmoteIdentifier? emoteId;
     private bool dirty;
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
-        ImGuiExt.CenterText(IsNewMinion ? "Creating" : "Editing Minion", shadowed: true);
-        ImGuiExt.CenterText(IsNewMinion ? $"New Minion in {folderPath}" : $"{folderPath} / {Minion.Name}", shadowed: true);
+        ImGuiExt.CenterText(IsNewEmote ? "Creating" : "Editing Emote", shadowed: true);
+        ImGuiExt.CenterText(IsNewEmote ? $"New Emote in {folderPath}" : $"{folderPath} / {Emote.Name}", shadowed: true);
     }
     
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
@@ -65,11 +48,9 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
             ImGui.SetTooltip("Hold SHIFT to confirm.");
         }
     }
-
-
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
-        minionId ??= Minion.MinionId;
+        emoteId ??= Emote.EmoteIdentifier;
         
         fileDialogManager.Draw();
         controlFlags |= WindowControlFlags.PreventClose;
@@ -86,7 +67,7 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
         
         using (ImRaii.Group())
         using (ImRaii.ItemWidth(subWindowWidth * ImGuiHelpers.GlobalScale)) {
-            dirty |= CustomInput.InputText("Minion Name", ref minionName, 100, errorMessage: minionName.Length == 0 ? "Please enter a name" : string.Empty);
+            dirty |= CustomInput.InputText("Emote Name", ref emoteName, 100, errorMessage: emoteName.Length == 0 ? "Please enter a name" : string.Empty);
             CustomInput.ReadOnlyInputText("Path", folderPath);
         }
         
@@ -95,21 +76,16 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();
         
-        if (ImGui.BeginChild("minion", new Vector2(subWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {
-
-
-            DrawMinion();
-            
-            
-            
+        if (ImGui.BeginChild("emote", new Vector2(subWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {
+            DrawEmote();
             if (ImGui.CollapsingHeader("Image")) {
                 var folder = character.Folders.GetValueOrDefault(folderGuid);
-                var minionStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-                ImageEditor.Draw(Minion, minionStyle, Minion.Name, ref controlFlags);
+                var emoteStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+                ImageEditor.Draw(Emote, emoteStyle, Emote.Name, ref controlFlags);
             }
             
             if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
-                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing into this minion.");
+                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing into this emote.");
                 
                 ImGui.Spacing();
                 
@@ -119,9 +95,11 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
             }
             
             if (ImGui.CollapsingHeader("Details")) {
-                var guid = Minion.Guid.ToString();
+
+                var guid = Emote.Guid.ToString();
                 ImGui.InputText("GUID", ref guid, 128, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
-                dirty |= ImGui.InputTextWithHint("Custom Sort Name", minionName, ref sortName, 128);
+
+                dirty |= ImGui.InputTextWithHint("Custom Sort Name", emoteName, ref sortName, 128);
             }
             
         }
@@ -134,47 +112,43 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
         using (ImRaii.Group())
         using (ImRaii.ItemWidth(subWindowWidth * ImGuiHelpers.GlobalScale)) {
 
-            if (ImGuiExt.ButtonWithIcon("Save Minion", FontAwesomeIcon.Save, new Vector2(subWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-                Minion.Name = minionName;
-                Minion.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();
-                Minion.AutoCommands = autoCommands;
-                Minion.MinionId = minionId ?? 0;
-                Minion.Resummon = resummon;
-                Minion.Save(true);
+            if (ImGuiExt.ButtonWithIcon("Save Emote", FontAwesomeIcon.Save, new Vector2(subWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+                Emote.Name = emoteName;
+                Emote.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();
+                Emote.AutoCommands = autoCommands;
+                Emote.EmoteIdentifier = emoteId;
+                Emote.Save(true);
                 MainWindow.PopPage();
             }
         }
     }
 
-    private void DrawMinion() {
-        var minionData = DataManager.GetExcelSheet<Companion>().GetRowOrDefault(minionId ?? 0);
-        var minionDataName = minionId is null or 0 ? "Not Selected" : SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, minionId.Value);
+    private void DrawEmote() {
+        var selectedEmoteName = emoteId == null ? "Not Selected" : emoteId.Name;
         ImGui.Spacing();
         ImGui.Spacing();
-        GameIcon.Draw(minionData?.Icon ?? 0);
+        GameIcon.Draw(emoteId?.Icon ?? 0);
         ImGui.SameLine();
         var s = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
         using (ImRaii.Group()) {
             ImGui.SetNextItemWidth(s.X - s.Y);
-            dirty |= CustomInput.Combo("Minion Selection", minionDataName, DrawMinionSearch, style: Style.Default.Combo with { PadTop = false });
-            dirty |= ModListDisplay.Show(Minion, $"{minionDataName}");
+            dirty |= CustomInput.Combo("Emote Selection", selectedEmoteName, DrawEmoteSearch, style: Style.Default.Combo with { PadTop = false });
+            dirty |= ModListDisplay.Show(Emote, selectedEmoteName);
         }
-        
-        ImGui.Checkbox("Resummon Minion", ref resummon);
-        
-        ImGui.SameLine();
-        ImGuiComponents.HelpMarker("If enabled, the minion will be resummoned if it was already summoned.\nHolding SHIFT when selecting this minion will also force a resummon.");
     }
 
-    private bool DrawMinionSearch(string arg) {
-        foreach (var m in DataManager.GetExcelSheet<Companion>()) {
-            var name = SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, m.RowId);
+    private bool DrawEmoteSearch(string arg) {
+        foreach (var m in EmoteIdentifier.List) {
+            var name = m.Name;
             if (string.IsNullOrWhiteSpace(name)) continue;
             if (!(string.IsNullOrWhiteSpace(arg) || name.Contains(arg, StringComparison.CurrentCultureIgnoreCase))) continue;
-            if (ImGui.Selectable(name, m.RowId == minionId)) {
-                minionId = m.RowId;
+            if (ImGui.Selectable($"{name}##{m}", m == emoteId)) {
+                emoteId = m;
                 return true;
             }
+            
+            ImGui.SameLine();
+            ImGui.TextDisabled($"{m}");
         }
         
         return false;

@@ -5,6 +5,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ECommons;
 using Dalamud.Bindings.ImGui;
+using Lumina.Excel.Sheets;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Files;
@@ -31,9 +32,13 @@ public class GlamourListPage : Page {
             if (ActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(ActiveCharacter,  ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Outfit"} );
         
-        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Minion", () => {
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cat, "Create Minion", () => {
             if (ActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(ActiveCharacter,  ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Minion"} );
+        
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Kiss, "Create Emote", () => {
+            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditEmotePage(ActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Emote"} );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
             MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null));
@@ -384,6 +389,7 @@ public class GlamourListPage : Page {
                 var icon = entry switch {
                     MinionConfigFile => FontAwesomeIcon.Cat,
                     OutfitConfigFile => FontAwesomeIcon.PersonHalfDress,
+                    EmoteConfigFile => FontAwesomeIcon.KissWinkHeart,
                     _ => FontAwesomeIcon.ExclamationTriangle
                 };
                 
@@ -508,6 +514,25 @@ public class GlamourListPage : Page {
                                     }
                                 });
                             }
+                        }
+                        
+                        if (entry is EmoteConfigFile emote)
+                        {
+                            if (ImGui.MenuItem("Edit Emote")) {
+                                MainWindow?.OpenPage(new EditEmotePage(character, ActiveFolder, emote));
+                            }
+                        
+                            if (ImGui.MenuItem("Clone Emote")) {
+                                emote.CreateClone().ContinueWith(task => {
+                                    if (task.IsCompletedSuccessfully) {
+                                        MainWindow?.OpenPage(new EditEmotePage(character, ActiveFolder, task.Result));
+                                    }
+                                });
+                            }
+                        }
+                        
+                        if (ImGui.MenuItem("Copy Command")) {
+                            ImGui.SetClipboardText($"/sgs apply {outfitGuid}");
                         }
                         
                         if (ImGui.MenuItem("Open File")) {

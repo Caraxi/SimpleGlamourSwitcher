@@ -1,4 +1,5 @@
-﻿using Lumina.Excel.Sheets;
+﻿using ECommons;
+using Lumina.Excel.Sheets;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.IPC;
@@ -12,9 +13,8 @@ public static class ModManager {
 
     public static int TempIdentificationKey(this HumanSlot slot) => TempIdentificationKey(0x100 + (int) slot);
     public static int TempIdentificationKey(this CustomizeIndex customizeIndex) => TempIdentificationKey(0x200 + (int) customizeIndex);
-    
     public static int TempIdentificationKey(this Companion companion) => TempIdentificationKey(0x300 + (int) companion.RowId);
-    
+    public static int TempIdentificationKey(this EmoteIdentifier emote) => TempIdentificationKey(0x1000 + EmoteIdentifier.List.IndexOf(emote));
     public static int TempIdentificationKey(int @base) => (int)(@base | 0x85357000);
     
     public static void Dispose() {
@@ -34,6 +34,7 @@ public static class ModManager {
     }
 
     private static void RemoveMods(int key) {
+        PluginLog.Debug($"Removing mods for Key: {key}");
         AppliedMods.Remove(key);
         PenumbraIpc.RemoveAllTemporaryModSettingsPlayer.Invoke(0, key);
     }
@@ -52,6 +53,11 @@ public static class ModManager {
     public static void ApplyMods(Companion companion, IEnumerable<OutfitModConfig> outfitModConfigs) {
         PluginLog.Debug($"Applying mods for companion - {companion.Singular.ExtractText()}");
         ApplyMods(companion.TempIdentificationKey(), outfitModConfigs);
+    }
+    
+    public static void ApplyMods(EmoteIdentifier emote, List<OutfitModConfig> outfitModConfigs) {
+        PluginLog.Debug($"Applying mods for emote - {emote.Name}");
+        ApplyMods(emote.TempIdentificationKey(), outfitModConfigs);
     }
 
     private static void ApplyMods(int key, IEnumerable<OutfitModConfig> outfitModConfigs) {

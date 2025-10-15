@@ -231,7 +231,7 @@ public class MainWindow : Window {
                 PluginConfig.WindowPosition = ImGui.GetWindowPos();
             }
             
-            PluginConfig.WindowSize = ImGui.GetWindowSize();
+            PluginConfig.WindowSize = ImGui.GetWindowSize() / MathF.Max(0.01f, ImGuiHelpers.GlobalScale);
         }
     }
 

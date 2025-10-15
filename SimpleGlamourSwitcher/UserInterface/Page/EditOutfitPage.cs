@@ -141,7 +141,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
             
             if (ImGui.CollapsingHeader("Details")) {
-                ImGui.Text($"GUID: {Outfit.Guid}");
+                var guid = Outfit.Guid.ToString();
+                ImGui.InputText("GUID", ref guid, 128, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
                 dirty |= ImGui.InputTextWithHint("Custom Sort Name", outfitName, ref sortName, 128);
             }
             

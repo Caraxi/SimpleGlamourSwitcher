@@ -50,13 +50,17 @@ public class Plugin : IDalamudPlugin {
         UiBuilder.Draw += WindowSystem.Draw;
 
         Commands.AddHandler("/sgs", new CommandInfo((_, args) => {
-            switch (args.ToLowerInvariant()) {
+            var splitArgs = args.Split(' ', StringSplitOptions.TrimEntries);
+            switch (splitArgs[0].ToLowerInvariant()) {
                 case "c":
                 case "config":
                     ConfigWindow.Toggle();
                     break;
                 case "debug":
                     DebugWindow.Toggle();
+                    break;
+                case "apply":
+                    ProcessApplyCommand(splitArgs[1..]).ConfigureAwait(false);
                     break;
                 default:
                     MainWindow.IsOpen = true;
@@ -82,6 +86,34 @@ public class Plugin : IDalamudPlugin {
     }
     
     #if DEBUG
+
+    private async Task ProcessApplyCommand(string[] args) {
+        if (args.Length == 0) {
+            Chat.PrintError("/sgs apply [GUID]", "SimpleGlamourSwitcher");
+            return;
+        }
+
+        if (ActiveCharacter == null) {
+            Chat.PrintError("No Character Active", "SimpleGlamourSwitcher");
+            return;
+        }
+
+
+        if (!Guid.TryParse(args[0], out var guid)) {
+            Chat.PrintError($"[{args[0]}] is not a valid GUID", "SimpleGlamourSwitcher");
+            return;
+        }
+        
+        var entries = await ActiveCharacter.GetEntries();
+
+        if (entries.TryGetValue(guid, out var entry)) {
+            await entry.Apply();
+        }
+        else {
+            Chat.PrintError($"[{args[0]}] was not found.", "SimpleGlamourSwitcher");
+        }
+    }
+    
     private void OpenOnStartup() {
         ClientState.Login -= OpenOnStartup;
         Framework.RunOnTick(() => {

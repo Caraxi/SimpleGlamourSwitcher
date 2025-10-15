@@ -6,6 +6,7 @@ using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.IPC.Glamourer;
+using SimpleGlamourSwitcher.Service;
 using CustomizeIndex = Penumbra.GameData.Enums.CustomizeIndex;
 using Race = Penumbra.GameData.Enums.Race;
 
@@ -89,6 +90,11 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
         }
         
         return list;
+    }
+    
+    public static List<OutfitModConfig> GetModListFromEmote(EmoteIdentifier emoteIdentifier, Guid effectiveCollectionId) {
+        // TODO:
+        return new List<OutfitModConfig>();
     }
     
 

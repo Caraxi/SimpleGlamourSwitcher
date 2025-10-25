@@ -5,6 +5,8 @@ using Dalamud.Interface.Windowing;
 using ECommons;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
+using ECommons.ImGuiMethods;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
@@ -30,7 +32,7 @@ public class ConfigWindow : Window {
         ImGui.TextDisabled("Set a hotkey to open the main UI.");
 
         PluginConfig.Dirty |= ImGui.Checkbox("Allow Hotkey in GPose", ref PluginConfig.AllowHotkeyInGpose);
-        
+        PluginConfig.Dirty |= ImGuiEx.EnumCombo("Folder Display Order", ref PluginConfig.FolderSortStrategy, (e) => e != FolderSortStrategy.Inherit);
         PluginConfig.Dirty |= ImGui.Checkbox("Fullscreen", ref PluginConfig.FullScreenMode);
 
         if (PluginConfig.FullScreenMode) {

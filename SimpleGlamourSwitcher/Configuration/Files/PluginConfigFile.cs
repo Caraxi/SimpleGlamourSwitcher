@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Keys;
 using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
@@ -23,6 +24,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public Vector2 FullscreenOffset = new(0, 0);
     public Vector2 FullscreenPadding = new(0, 0);
     public string DebugDefaultPage = string.Empty;
+    public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Manual;
     
     [JsonIgnore]
     public Style? CustomStyle {

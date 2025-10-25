@@ -54,6 +54,8 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
 
     public bool? CustomDefaultRevertEquip;
     public bool? CustomDefaultRevertCustomize;
+    
+    public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Inherit;
 
     public DefaultLinks? CustomDefaultLinks;
     
@@ -161,6 +163,19 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
 
     public bool IsUsingDefaultImage() {
         return usingDefaultTexture;
+    }
+
+    public FolderSortStrategy GetFolderSortStrategy() {
+        if (FolderSortStrategy != FolderSortStrategy.Inherit) return FolderSortStrategy;
+        if (ConfigFile == null) return PluginConfig.FolderSortStrategy;
+
+        if (Parent == Guid.Empty) return ConfigFile.GetFolderSortStrategy();
+        
+        if (ConfigFile.Folders.TryGetValue(Parent, out var parentFolder)) {
+            return parentFolder.GetFolderSortStrategy();
+        }
+
+        return PluginConfig.FolderSortStrategy;
     }
 }
 

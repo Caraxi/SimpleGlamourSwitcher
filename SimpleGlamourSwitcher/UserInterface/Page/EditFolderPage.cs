@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
+using ECommons.ImGuiMethods;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Parts;
@@ -41,6 +42,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
     
     private bool hidden = editFolder?.Hidden ?? false;
     private CharacterFolder? folder = editFolder;
+
+    private FolderSortStrategy folderSortStrategy = editFolder?.FolderSortStrategy ?? FolderSortStrategy.Inherit;
 
     private OutfitLinksEditor? outfitLinksEditor;
 
@@ -145,7 +148,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             
             if (useCustomDefaultParameterToggles && defaultParameterToggles != null) {
                 ImGui.SameLine();
-                if (ImGui.CollapsingHeader("Custom Default Advanced Apperance Toggles")) {
+                if (ImGui.CollapsingHeader("Custom Default Advanced Appearance Toggles")) {
                     ImGui.Columns(3, "defaultParameterToggles", false);
                     foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
                         var v = defaultParameterToggles.Contains(ci);
@@ -239,6 +242,10 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 }
             }
             
+            ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string>() {
+                { FolderSortStrategy.Inherit, $"Inherit ({folder?.GetFolderSortStrategy()})" }
+            });
+            
             if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
                 ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit from this folder is applied.");
                 
@@ -327,7 +334,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.AutoCommandAfterOutfit = autoCommandAfterOutfit;
         folder.AutoCommandsSkipCharacter = autoCommandsSkipCharacter;
         folder.CustomDefaultRevertEquip = defaultRevertEquip;
-        folder.CustomDefaultRevertCustomize =  defaultRevertCustomize;
+        folder.CustomDefaultRevertCustomize = defaultRevertCustomize;
+        folder.FolderSortStrategy = folderSortStrategy;
 
         if (ActiveCharacter == null) return;
         ActiveCharacter.Dirty = true;

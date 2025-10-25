@@ -38,9 +38,11 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
     public ImageDetail ImageDetail { get; set; } = new();
     
-    public Dictionary<Guid, CharacterFolder> Folders = new();
+    public OrderedDictionary<Guid, CharacterFolder> Folders = new();
     
     public AutomationConfig Automation = new();
+
+    public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Inherit;
 
     public List<Guid> DefaultLinkBefore { get; set; } = [];
     public List<Guid> DefaultLinkAfter { get; set; } = [];
@@ -351,5 +353,9 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             }
             return;
         }
+    }
+
+    public FolderSortStrategy GetFolderSortStrategy() {
+        return FolderSortStrategy == FolderSortStrategy.Inherit ? PluginConfig.FolderSortStrategy : FolderSortStrategy;
     }
 }

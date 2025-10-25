@@ -5,9 +5,11 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ECommons;
 using Dalamud.Bindings.ImGui;
+using ECommons.ImGuiMethods;
 using Lumina.Excel.Sheets;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
@@ -27,6 +29,8 @@ public class GlamourListPage : Page {
     private bool showHiddenFolders;
 
     private bool hideBackButton;
+
+    private FolderSortStrategy folderSortStrategy;
     
     public GlamourListPage(Guid folderGuid = default, bool hideBackButton = false) {
         this.hideBackButton = hideBackButton;
@@ -55,6 +59,9 @@ public class GlamourListPage : Page {
 
         scrollTop = true;
         if (character != null) {
+            folderSortStrategy = PluginConfig.FolderSortStrategy;
+            folderSortStrategy = character.Folders.TryGetValue(ActiveFolder, out var folder) ? folder.GetFolderSortStrategy() : character.GetFolderSortStrategy();
+
             Task.Run(() => character.GetEntries(ActiveFolder)).ContinueWith(t => {
                 outfits = t.Result;
                 scrollTop = true;
@@ -239,9 +246,11 @@ public class GlamourListPage : Page {
         }
         */
         
-        var folders = character.Folders.Where(f => f.Value.Parent == ActiveFolder || (ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent))).ToList();
+        var folders = character.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || (ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent)))).ToList();
 
-        
+        if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
+            folders = folders.OrderBy(kvp => kvp.Value.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
+        }
         
         if (ActiveFolder != Guid.Empty && folder != null && hideBackButton == false) {
             var parentGuid = Guid.Empty;
@@ -297,6 +306,25 @@ public class GlamourListPage : Page {
 
                             if (characterFolder is not PreviousCharacterFolder && ImGui.MenuItem("Edit Folder")) {
                                 MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, characterFolder));
+                            }
+
+                            if (folderSortStrategy == FolderSortStrategy.Manual) {
+                                var displayIndex = folders.FindIndex(f => f.Key ==  folderGuid);
+                                var offset = folders[0].Value is PreviousCharacterFolder ? 1 : 0;
+                                var folderCount = folders.Count(f => f.Value is not PreviousCharacterFolder);
+                                displayIndex -= offset;
+                                
+                                if (ImGui.MenuItem($"Move Up", false, displayIndex > 0)) {
+                                    var prevRealIndex = character.Folders.IndexOf(folders[displayIndex + offset - 1].Key);
+                                    character.Folders.Remove(folderGuid);
+                                    character.Folders.Insert(prevRealIndex,  folderGuid, characterFolder);
+                                }
+                                
+                                if (ImGui.MenuItem($"Move Down", false, displayIndex < folderCount - 1)) {
+                                    var nextRealIndex = character.Folders.IndexOf(folders[displayIndex + offset + 1].Key);
+                                    character.Folders.Remove(folderGuid);
+                                    character.Folders.Insert(nextRealIndex, folderGuid, characterFolder);
+                                }
                             }
 
                             if (characterFolder is not PreviousCharacterFolder && ImGui.MenuItem("Copy Command")) {

@@ -6,6 +6,7 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Dalamud.Bindings.ImGui;
+using ECommons.ImGuiMethods;
 using Lumina.Excel.Sheets;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration;
@@ -64,6 +65,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     
     private bool defaultRevertEquip = character?.DefaultRevertEquip ?? false;
     private bool defaultRevertCustomize =  character?.DefaultRevertCustomize ?? false;
+
+    private FolderSortStrategy folderSortStrategy = character?.FolderSortStrategy ?? FolderSortStrategy.Inherit;
     
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
@@ -382,6 +385,10 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     }
                 }
             }
+
+            ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string>() {
+                { FolderSortStrategy.Inherit, $"Inherit ({PluginConfig.FolderSortStrategy})" }
+            });
             
             if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
                 ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit is applied with this character.");
@@ -426,6 +433,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.DefaultLinkAfter = linkAfter;
                     Character.DefaultRevertCustomize = defaultRevertCustomize;
                     Character.DefaultRevertEquip =  defaultRevertEquip;
+                    Character.FolderSortStrategy = folderSortStrategy;
 
                     autoCommandBeforeOutfit.Cleanup();
                     Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;

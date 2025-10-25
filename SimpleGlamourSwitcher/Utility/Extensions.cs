@@ -78,6 +78,7 @@ public static class Extensions {
     public static string PrettyName(this CustomizeIndex cIndex) {
         return cIndex switch {
             CustomizeIndex.BustSize => "Bust Size",
+            CustomizeIndex.EyeShape => "Eye Shape",
             _ => cIndex.ToDefaultName()
         };
     }

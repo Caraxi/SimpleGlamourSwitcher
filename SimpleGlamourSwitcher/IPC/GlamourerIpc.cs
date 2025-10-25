@@ -152,7 +152,17 @@ public static class GlamourerIpc {
         return obj;
     }
 
-    public static void ApplyOutfit(OutfitAppearance appearance, OutfitEquipment equipment) {
+    public static async Task ApplyOutfit(OutfitAppearance appearance, OutfitEquipment equipment) {
+        if (appearance is { RevertToGame: true, Apply: true } || equipment is { RevertToGame: true, Apply: true }) {
+            ApplyFlag flags = 0;
+            if (appearance is { RevertToGame: true, Apply: true }) flags |= ApplyFlag.Customization;
+            if (equipment is { RevertToGame: true, Apply: true }) flags |= ApplyFlag.Equipment;
+            await Framework.RunOnTick(() => {
+                RevertState.Invoke(0, flags: flags);
+            });
+            await Framework.DelayTicks(1);
+        }
+        
         var obj = GetCustomizationJObject(appearance, equipment);
         if (obj == null) return;
 

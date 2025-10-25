@@ -287,6 +287,8 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public HashSet<HumanSlot> DefaultDisabledEquipmentSlots { get; set; } = new();
     public HashSet<AppearanceParameterKind> DefaultEnabledParameterKinds { get; set; } = new();
     public HashSet<ToggleType> DefaultEnabledToggles { get; set; } = new();
+    public bool DefaultRevertEquip { get; set; } = false;
+    public bool DefaultRevertCustomize { get; set; } = false;
 
     public IDefaultOutfitOptionsProvider GetOptionsProvider(Guid folderGuid) {
         if (folderGuid == Guid.Empty) return this;

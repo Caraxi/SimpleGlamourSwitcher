@@ -14,6 +14,7 @@ namespace SimpleGlamourSwitcher.Configuration.Parts;
 
 [JsonObject]
 public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
+    public bool RevertToGame;
     
     public ApplicableCustomize Race = new();
     public ApplicableCustomize Gender = new();
@@ -150,6 +151,7 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
         var parameter = glamourerState.Parameters;
 
         return new OutfitAppearance {
+            RevertToGame = defaultOptionsProvider.DefaultRevertCustomize,
             Apply = defaultOptionsProvider.DefaultEnabledCustomizeIndexes.Count > 0,
             Race = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.Race, customize.Race),
             Gender = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.Gender, customize.Gender),

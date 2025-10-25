@@ -12,6 +12,7 @@ namespace SimpleGlamourSwitcher.Configuration.Parts;
 
 [JsonObject]
 public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applicable SlotData)> {
+    public bool RevertToGame;
     public ApplicableEquipment Head = new();
     public ApplicableEquipment Body = new();
     public ApplicableEquipment Hands = new();
@@ -83,6 +84,7 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
     public static OutfitEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, GlamourerState glamourerState, Guid effectiveCollectionId) {
         var glamourerEquipment = glamourerState.Equipment;
         return new OutfitEquipment {
+            RevertToGame = defaultOptionsProvider.DefaultRevertEquip,
             Apply = defaultOptionsProvider.DefaultDisabledEquipmentSlots.Count < 11,
             Head = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Head, glamourerEquipment.Head, glamourerState.Materials, effectiveCollectionId),
             Body = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Body, glamourerEquipment.Body, glamourerState.Materials,effectiveCollectionId),

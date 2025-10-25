@@ -161,6 +161,8 @@ public static class GlamourSystem {
             if (outfit.Appearance.Apply) {
                 appearance.Apply = true;
 
+                appearance.RevertToGame |= outfit.Appearance.RevertToGame;
+
                 foreach (var e in Enum.GetValues<CustomizeIndex>()) {
                     if (!outfit.Appearance[e].Apply) continue;
                     
@@ -210,6 +212,8 @@ public static class GlamourSystem {
             if (outfit.Equipment.Apply) {
                 equipment.Apply = true;
 
+                equipment.RevertToGame |= outfit.Equipment.RevertToGame;
+                
                 foreach (var s in Common.GetGearSlots()) {
                     var i = outfit.Equipment[s];
                     if (!i.Apply) continue;

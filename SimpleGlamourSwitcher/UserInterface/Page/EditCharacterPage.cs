@@ -62,6 +62,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private OutfitLinksEditor? OutfitLinksEditor;
     
+    private bool defaultRevertEquip = character?.DefaultRevertEquip ?? false;
+    private bool defaultRevertCustomize =  character?.DefaultRevertCustomize ?? false;
+    
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -250,6 +253,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                     ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
                 }
+
+                dirty |= ImGui.Checkbox("Revert to Game", ref defaultRevertCustomize);
                 
                 ImGui.Columns(3, "defaultAppearanceToggles", false);
                 foreach (var ci in Enum.GetValues<CustomizeIndex>()) {
@@ -293,6 +298,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                     ImGui.TextWrapped("Set to have outfits created for this character apply their equipment. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
                 }
+                
+                dirty |= ImGui.Checkbox("Revert to Game", ref defaultRevertEquip);
+                
                 ImGui.Columns(2, "defaultEquipmentToggles", false);
                 foreach (var hs in Common.GetGearSlots()) {
                     var v = !defaultDisableEquipSlots.Contains(hs);
@@ -416,6 +424,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.FolderPolaroidStyle = folderStyle;
                     Character.DefaultLinkBefore = linkBefore;
                     Character.DefaultLinkAfter = linkAfter;
+                    Character.DefaultRevertCustomize = defaultRevertCustomize;
+                    Character.DefaultRevertEquip =  defaultRevertEquip;
 
                     autoCommandBeforeOutfit.Cleanup();
                     Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;

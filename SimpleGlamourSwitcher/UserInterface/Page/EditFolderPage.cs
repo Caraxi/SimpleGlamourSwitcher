@@ -35,6 +35,9 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
     private List<AutoCommandEntry> autoCommandBeforeOutfit = editFolder?.AutoCommandBeforeOutfit.Clone() ?? [];
     private List<AutoCommandEntry> autoCommandAfterOutfit = editFolder?.AutoCommandAfterOutfit.Clone() ?? [];
     private bool autoCommandsSkipCharacter = editFolder?.AutoCommandsSkipCharacter ?? false;
+
+    private bool? defaultRevertEquip = editFolder?.CustomDefaultRevertEquip;
+    private bool? defaultRevertCustomize = editFolder?.CustomDefaultRevertCustomize;
     
     private bool hidden = editFolder?.Hidden ?? false;
     private CharacterFolder? folder = editFolder;
@@ -161,6 +164,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 }
             }
             
+            dirty |= ImGuiExt.CheckboxTriState("Revert Appearance State", ref defaultRevertCustomize, true);
+            
             if (ImGui.Checkbox(useCustomDefaultEquipmentToggles ? "##useCustomDefaultEquipToggles" : "Use Custom Default Equipment Toggles", ref useCustomDefaultEquipmentToggles)) {
                 dirty = true;
                 defaultEquipmentToggles = useCustomDefaultEquipmentToggles ? ActiveCharacter.DefaultDisabledEquipmentSlots.Clone() : null;
@@ -186,6 +191,9 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                     ImGui.Columns(1);
                 }
             }
+
+            dirty |= ImGuiExt.CheckboxTriState("Revert Equipment State", ref defaultRevertEquip, true);
+
             
             if (ImGui.Checkbox(useCustomDefaultToggles ? "##useCustomDefaultToggles" : "Use Custom Defaults for Other Toggles", ref useCustomDefaultToggles)) {
                 dirty = true;
@@ -318,6 +326,8 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
         folder.AutoCommandAfterOutfit = autoCommandAfterOutfit;
         folder.AutoCommandsSkipCharacter = autoCommandsSkipCharacter;
+        folder.CustomDefaultRevertEquip = defaultRevertEquip;
+        folder.CustomDefaultRevertCustomize =  defaultRevertCustomize;
 
         if (ActiveCharacter == null) return;
         ActiveCharacter.Dirty = true;

@@ -63,7 +63,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
         await Framework.RunOnTick(async () => {
 
-            GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment);
+            await GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment);
             
             stack.Appearance.ApplyToCharacter(ref redraw);
             await Framework.RunOnTick(async () => {

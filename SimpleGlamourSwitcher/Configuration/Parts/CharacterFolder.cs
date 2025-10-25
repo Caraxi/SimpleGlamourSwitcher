@@ -52,6 +52,9 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     public List<AutoCommandEntry> AutoCommandAfterOutfit = new();
     public bool AutoCommandsSkipCharacter;
 
+    public bool? CustomDefaultRevertEquip;
+    public bool? CustomDefaultRevertCustomize;
+
     public DefaultLinks? CustomDefaultLinks;
     
     public class DefaultLinks {
@@ -70,6 +73,9 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     
     [JsonIgnore]
     public HashSet<ToggleType> DefaultEnabledToggles => CustomDefaultEnabledToggles ?? ConfigFile?.DefaultEnabledToggles ?? [];
+
+    [JsonIgnore] public bool DefaultRevertEquip => CustomDefaultRevertEquip ?? ConfigFile?.DefaultRevertEquip  ?? false;
+    [JsonIgnore] public bool DefaultRevertCustomize => CustomDefaultRevertCustomize ?? ConfigFile?.DefaultRevertCustomize  ?? false;
     
     [JsonIgnore]
     public List<Guid> DefaultLinkBefore => CustomDefaultLinks?.Before ?? ConfigFile?.DefaultLinkBefore ?? [];

@@ -116,13 +116,18 @@ public class MainWindow : Window {
     
     public Page.Page? ActivePage { get; private set; }
 
+    public Page.Page? RootPage;
     public Page.Page? PreviousPage => previousPageStack.Count == 0 ? null : previousPageStack.Peek();
     
     private readonly Stack<Page.Page> previousPageStack = new();
 
     public void OpenPage(Page.Page page, bool cleanStack = false) {
+
+        RootPage ??= page;
+        
         if (ActivePage == page) return;
         if (cleanStack) {
+            RootPage = page;
             previousPageStack.Clear();
         } else {
             if (ActivePage is { AllowStack: true }) previousPageStack.Push(ActivePage);
@@ -148,6 +153,7 @@ public class MainWindow : Window {
 
     public override void OnClose() {
         ActivePage = null;
+        RootPage = null;
         previousPageStack.Clear();
     }
 
@@ -161,15 +167,9 @@ public class MainWindow : Window {
 
     private void DrawContent() {
         ImGui.GetWindowDrawList().AddRectFilled(ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize(), ImGui.ColorConvertFloat4ToU32(PluginConfig.BackgroundColour));
-
         ActivePage ??= new GlamourListPage();
-
-
         var controlFlags = WindowControlFlags.None;
-        
-        
         var page = ActivePage;
-        
         using(ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, ImGui.GetStyle().ItemSpacing)) {
             
             if (ImGui.BeginChild("top", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 3 + ImGui.GetStyle().WindowPadding.Y * 2), true, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {

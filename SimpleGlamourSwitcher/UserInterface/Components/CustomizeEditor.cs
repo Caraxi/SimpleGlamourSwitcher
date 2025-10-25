@@ -520,7 +520,7 @@ public static class CustomizeEditor {
 
                 foreach (var tribe in DataManager.GetExcelSheet<Tribe>()) {
                     if (tribe.RowId == 0) continue;
-                    using (PluginService.UiBuilder.MonoFontHandle.Push()) {
+                    using (PluginService.PluginUi.MonoFontHandle.Push()) {
                         if (ImGui.Selectable(GetGenderRaceClanName(0, tribe, true), gender == 0 && clan == tribe.RowId)) {
                             appearance.Clan.Value = (byte) tribe.RowId;
                             appearance.Race.Value = (byte) GetRaceId(tribe.RowId);
@@ -620,7 +620,7 @@ public static class CustomizeEditor {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * EditorInputScale);
                     ImGui.InputText(label, ref v, 4, ImGuiInputTextFlags.ReadOnly);
                     ImGui.SameLine(-48 * ImGuiHelpers.GlobalScale);
-                    using (PluginService.UiBuilder.IconFontHandle.Push()) 
+                    using (PluginService.PluginUi.IconFontHandle.Push()) 
                     using (ImRaii.PushColor(ImGuiCol.TextDisabled, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.25f))) {
                         ImGui.TextDisabled(FontAwesomeIcon.InfoCircle.ToIconString());
                     }

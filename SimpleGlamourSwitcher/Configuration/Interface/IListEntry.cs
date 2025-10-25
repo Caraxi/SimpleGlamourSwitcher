@@ -1,3 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
+using Dalamud.Interface;
+using Dalamud.Interface.Textures.TextureWraps;
 using SimpleGlamourSwitcher.Configuration.Parts;
 
 namespace SimpleGlamourSwitcher.Configuration.Interface;
@@ -16,7 +19,9 @@ public interface IListEntry {
     
     public bool IsValid { get; }
     public IReadOnlyList<string> ValidationErrors { get; }
+    FontAwesomeIcon TypeIcon { get; }
     public FileInfo? GetImageFile();
+    public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap);
     
     void Delete();
 }

@@ -117,7 +117,7 @@ public static class ImGuiExt {
             _defaultIconButtonSize = ImGui.GetItemRectSize();
             return false;
         } finally {
-            using (PluginService.UiBuilder.IconFontHandle.Push()) {
+            using (PluginService.PluginUi.IconFontHandle.Push()) {
                 ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize, ImGui.GetItemRectMin() + ImGui.GetItemRectSize() / 2 - ImGui.CalcTextSize(icon.ToIconString()) / 2, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
             }
         }

@@ -23,12 +23,4 @@ public static unsafe class GameHelper {
     public static (byte Id, string Name)? GetActiveGearset() {
         return GetGearsetByIndex(RaptureGearsetModule.Instance()->CurrentGearsetIndex);
     }
-
-
-    public static uint GetActiveCompanionId() {
-        var chr = (Character*)ClientState.LocalPlayer?.Address;
-        if (chr == null) return 0;
-        return chr->CompanionData.CompanionObject != null ? chr->CompanionData.CompanionObject->BaseId : chr->CompanionData.CompanionId;
-    }
-    
 }

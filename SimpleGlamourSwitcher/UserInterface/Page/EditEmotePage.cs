@@ -6,6 +6,8 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
+using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Enums;
@@ -13,7 +15,7 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
-public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, EmoteConfigFile? emote) : Page {
+public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, EmoteConfigFile? emote) : Page, IHasModConfigs {
     public bool IsNewEmote { get; } = emote == null;
     public EmoteConfigFile Emote { get; } = emote ?? EmoteConfigFile.CreateFromLocalPlayer(character, folderGuid);
     private readonly string folderPath = character.ParseFolderPath(folderGuid);
@@ -24,6 +26,16 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
     private List<AutoCommandEntry> autoCommands = emote?.AutoCommands ?? [];
     private EmoteIdentifier? emoteId;
     private bool dirty;
+
+    private List<OutfitModConfig>? modConfigs;
+
+    public List<OutfitModConfig> ModConfigs {
+        get {
+            modConfigs ??= Emote.ModConfigs.Clone();
+            return modConfigs;
+        } 
+        set =>  modConfigs = value;
+    }
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -51,6 +63,7 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         emoteId ??= Emote.EmoteIdentifier;
+        modConfigs ??= Emote.ModConfigs.Clone();
         
         fileDialogManager.Draw();
         controlFlags |= WindowControlFlags.PreventClose;
@@ -117,6 +130,7 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
                 Emote.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();
                 Emote.AutoCommands = autoCommands;
                 Emote.EmoteIdentifier = emoteId;
+                Emote.ModConfigs = modConfigs;
                 Emote.Save(true);
                 MainWindow.PopPage();
             }
@@ -133,7 +147,7 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
         using (ImRaii.Group()) {
             ImGui.SetNextItemWidth(s.X - s.Y);
             dirty |= CustomInput.Combo("Emote Selection", selectedEmoteName, DrawEmoteSearch, style: Style.Default.Combo with { PadTop = false });
-            dirty |= ModListDisplay.Show(Emote, selectedEmoteName);
+            dirty |= ModListDisplay.Show(this, selectedEmoteName);
         }
     }
 
@@ -144,6 +158,12 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
             if (!(string.IsNullOrWhiteSpace(arg) || name.Contains(arg, StringComparison.CurrentCultureIgnoreCase))) continue;
             if (ImGui.Selectable($"{name}##{m}", m == emoteId)) {
                 emoteId = m;
+                
+                var activeCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                if (activeCollection.ObjectValid) {
+                    modConfigs = OutfitModConfig.GetModListFromEmote(m, activeCollection.EffectiveCollection.Id);
+                }
+                
                 return true;
             }
             

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -15,8 +16,8 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs {
-
+public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs, IAdditionalLink {
+    public FontAwesomeIcon TypeIcon => FontAwesomeIcon.KissWinkHeart;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
     
@@ -138,6 +139,15 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         }
     }
 
+    public async Task<bool> ApplyMods() {
+        var activeEmote = await EmoteIdentifier.GetLocalPlayer();
+        if (EmoteIdentifier == null) return false;
+        var isActive = activeEmote == EmoteIdentifier;
+        
+        ModManager.ApplyMods(EmoteIdentifier, ModConfigs);
+        return isActive;
+    }
+    
     public void EnqueueAutoCommands() {
         if (!PluginConfig.EnableOutfitCommands) return;
         var parent = GetParent() ?? throw new Exception("Invalid EmoteConfigFile");

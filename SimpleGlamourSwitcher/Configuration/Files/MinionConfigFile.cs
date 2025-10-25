@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Newtonsoft.Json;
@@ -16,8 +17,8 @@ using Companion = Lumina.Excel.Sheets.Companion;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs {
-
+public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink {
+    public FontAwesomeIcon TypeIcon => FontAwesomeIcon.Cat;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
     
@@ -46,7 +47,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
     }
     
     public async Task Apply() {
-        var isActive = GameHelper.GetActiveCompanionId() == MinionId;
+        var isActive = await CompanionHelper.GetActiveCompanionId() == MinionId;
 
         var resummonIfActive = Resummon || KeyState[VirtualKey.SHIFT];
         
@@ -67,6 +68,20 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
                 ActionQueue.QueueCommand($"/minion \"{SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, MinionId)}");
             }
         }
+    }
+    
+    public async Task<bool> ApplyMods() {
+        var isActive = await CompanionHelper.GetActiveCompanionId() == MinionId;
+        if (DataManager.GetExcelSheet<Companion>().TryGetRow(MinionId, out var row)) {
+            ModManager.ApplyMods(row, ModConfigs);
+            EnqueueAutoCommands();
+            if (isActive) {
+                ActionQueue.QueueCommand($"/penumbra redraw {SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, MinionId)}");
+            }
+        }
+
+
+        return isActive;
     }
 
     public void EnqueueAutoCommands() {
@@ -184,7 +199,10 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
 
     public static MinionConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid) {
         var cfg = Create(character, folderGuid);
-        cfg.MinionId = GameHelper.GetActiveCompanionId();
+
+        if (CompanionHelper.GetActiveCompanionId().TryWaitResult(out var minionId)) {
+            cfg.MinionId = minionId;
+        }
         
         if (cfg.MinionId != 0) {
             var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(1);

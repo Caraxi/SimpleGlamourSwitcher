@@ -44,10 +44,10 @@ public class Plugin : IDalamudPlugin {
         ActionQueue.Initialize();
         AutomationManager.Initialize();
 
-        UiBuilder.OpenMainUi += MainWindow.Toggle;
-        UiBuilder.OpenConfigUi += ConfigWindow.Toggle;
+        PluginUi.OpenMainUi += MainWindow.Toggle;
+        PluginUi.OpenConfigUi += ConfigWindow.Toggle;
 
-        UiBuilder.Draw += WindowSystem.Draw;
+        PluginUi.Draw += WindowSystem.Draw;
 
         Commands.AddHandler("/sgs", new CommandInfo((_, args) => {
             var splitArgs = args.Split(' ', StringSplitOptions.TrimEntries);
@@ -61,6 +61,9 @@ public class Plugin : IDalamudPlugin {
                     break;
                 case "apply":
                     ProcessApplyCommand(splitArgs[1..]).ConfigureAwait(false);
+                    break;
+                case "open":
+                    ProcessOpenCommand(splitArgs[1..]).ConfigureAwait(false);
                     break;
                 default:
                     MainWindow.IsOpen = true;
@@ -83,6 +86,38 @@ public class Plugin : IDalamudPlugin {
 #endif
         }, delayTicks: 3);
         
+    }
+
+    private async Task ProcessOpenCommand(string[] args) {
+        if (args.Length == 0) {
+            Chat.PrintError("/sgs open [GUID]", "SimpleGlamourSwitcher");
+            return;
+        }
+
+        if (ActiveCharacter == null) {
+            Chat.PrintError("No Character Active", "SimpleGlamourSwitcher");
+            return;
+        }
+        
+        if (!Guid.TryParse(args[0], out var guid)) {
+            Chat.PrintError($"[{args[0]}] is not a valid GUID", "SimpleGlamourSwitcher");
+            return;
+        }
+
+        if (ActiveCharacter.Folders.ContainsKey(guid)) {
+
+            if (MainWindow is { IsOpen: true, RootPage: GlamourListPage glp } && glp.ActiveFolder == guid) {
+                MainWindow.PopPage();
+            } else {
+                MainWindow.IsOpen = true;
+                MainWindow.OpenPage(new GlamourListPage(guid, true), true);
+            }
+            
+            
+            
+        } else {
+            Chat.PrintError($"[{args[0]}] is not a valid folder.", "SimpleGlamourSwitcher");
+        }
     }
 
     private async Task ProcessApplyCommand(string[] args) {

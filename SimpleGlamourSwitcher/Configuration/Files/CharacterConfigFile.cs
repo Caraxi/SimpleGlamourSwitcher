@@ -279,7 +279,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     private string ParseFolderPath(Guid guid, HashSet<Guid> folders, bool characterName = true) {
         if (!folders.Add(guid)) throw new Exception("Folder loop caught");
         if (guid == Guid.Empty || !Folders.TryGetValue(guid, out var folder)) return characterName ? Name : string.Empty;
-        return characterName || folder.Parent != Guid.Empty ? $"{ParseFolderPath(folder.Parent, folders)} / {folder.Name}" : folder.Name;
+        return characterName || folder.Parent != Guid.Empty ? $"{ParseFolderPath(folder.Parent, folders, characterName)} / {folder.Name}" : folder.Name;
     }
 
     

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
@@ -14,7 +15,7 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry {
-
+    public FontAwesomeIcon TypeIcon => FontAwesomeIcon.PersonHalfDress;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
     string IListEntry.Name {
@@ -57,20 +58,23 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         Notice.Show($"Apply Outfit: {Name}");
 
         var stack = await GlamourSystem.HandleLinks(this);
-        var stackOutfit = new OutfitConfigFile() { Appearance = stack.Appearance, Equipment = stack.Equipment };
         
         var redraw = false;
 
-        await Framework.RunOnTick(() => {
+        await Framework.RunOnTick(async () => {
 
             GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment);
             
             stack.Appearance.ApplyToCharacter(ref redraw);
-            Framework.RunOnTick(() => {
+            await Framework.RunOnTick(async () => {
                 stack.Equipment.ApplyToCharacter(ref redraw);
 
+                foreach (var a in stack.Additionals) {
+                    redraw |= await a.ApplyMods();
+                }
+
                 if (redraw) {
-                    Framework.RunOnTick(() => {
+                    await Framework.RunOnTick(() => {
                         PenumbraIpc.RedrawObject.Invoke(0);
                     }, delayTicks: 2);
                 }

@@ -101,4 +101,17 @@ public static class Extensions {
     }
 
     public static uint Get(this ImGuiCol col) => ImGui.GetColorU32(col);
+    
+    public static bool TryWaitResult<T>(this Task<T> task, out T? result) {
+        task.Wait();
+        if (task.IsCompletedSuccessfully) {
+            result = task.Result;
+            return true;
+        }
+        
+        result = default;
+        return false;
+        
+    }
+    
 }

@@ -4,6 +4,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
 
@@ -16,7 +17,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
     }
     
     
-    private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> otherOutfits = new(character.GetEntries<OutfitConfigFile>);
+    private readonly LazyAsync<OrderedDictionary<Guid, IListEntry>> otherOutfits = new(character.GetEntries);
 
     [Flags]
     private enum Button : uint  {
@@ -62,11 +63,20 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
         return $"{outfitGuid}";
     }
     
+    private FontAwesomeIcon OutfitTypeIcon(Guid guid) {
+        if (otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(guid, out var o)) {
+            return o.TypeIcon;
+        }
+        
+        return FontAwesomeIcon.Question;
+    }
+    
+    
     public bool Draw(string outfitName) {
         otherOutfits.CreateValueIfNotCreated();
         var modified = false;
          using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get())) {
-            ImGui.TextWrapped("Outfit links allow other outfits to be applied before or after an outfit.");
+            ImGui.TextWrapped("Outfit links allow other outfits, emotes or minions to be applied before or after an outfit. Emotes and Minions will not be executed or summoned when applied using an outfit link.");
         }
 
 
@@ -74,7 +84,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
             DrawButtons(Button.Delete | Button.Down | Button.Up);
             ImGui.SameLine();
             var insertBefore = Guid.Empty;
-            if (DrawOutfitPicker("##insertBefore", "Add Outfit...", ref insertBefore, outfit?.Guid ?? Guid.Empty) && insertBefore != Guid.Empty) {
+            if (DrawOutfitPicker("##insertBefore", "Add Outfit...", FontAwesomeIcon.Plus, ref insertBefore, outfit?.Guid ?? Guid.Empty) && insertBefore != Guid.Empty) {
                 linkBefore.Insert(0, insertBefore);
                 modified = true;
             }
@@ -111,7 +121,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                 
-                if (DrawOutfitPicker(string.Empty, OutfitName(link), ref link) && link != Guid.Empty) {
+                if (DrawOutfitPicker(string.Empty, OutfitName(link), OutfitTypeIcon(link), ref link) && link != Guid.Empty) {
                     linkBefore[b] = link;
                     modified = true;
                 }
@@ -139,7 +149,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
             
             ImGui.SameLine();
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-            CustomInput.ReadOnlyInputText("##currentOutfit", outfitName, style: new TextInputStyle() { BorderSize = 2, PadTop = false, FramePadding = new Vector2(16, 8), BorderColour = ImGuiColors.DalamudOrange});
+            CustomInput.ReadOnlyInputText("##currentOutfit", outfitName, style: new TextInputStyle() { BorderSize = 2, PadTop = false, FramePadding = new Vector2(16, 8), BorderColour = ImGuiColors.DalamudOrange}, icon: FontAwesomeIcon.PersonHalfDress);
         }
         
         for (var a = 0; a < linkAfter.Count; a++) {
@@ -175,7 +185,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                     
                     
-                    if (DrawOutfitPicker(string.Empty, OutfitName(link), ref link, outfit?.Guid ?? Guid.Empty) && link != Guid.Empty) {
+                    if (DrawOutfitPicker(string.Empty, OutfitName(link), OutfitTypeIcon(link), ref link, outfit?.Guid ?? Guid.Empty) && link != Guid.Empty) {
                         linkAfter[a] = link;
                         modified = true;
                     }
@@ -186,7 +196,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
             DrawButtons(Button.Delete | Button.Down | Button.Up);
             ImGui.SameLine();
             var insertAfter = Guid.Empty;
-            if (DrawOutfitPicker("##insertAfter", "Add Outfit...", ref insertAfter, outfit?.Guid ?? Guid.Empty) && insertAfter != Guid.Empty) {
+            if (DrawOutfitPicker("##insertAfter", "Add Outfit...", FontAwesomeIcon.Plus, ref insertAfter, outfit?.Guid ?? Guid.Empty) && insertAfter != Guid.Empty) {
                 linkAfter.Add(insertAfter);
                 modified = true;
             }
@@ -194,8 +204,10 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
 
         return modified;
     }
-    
-    private bool DrawOutfitPicker(string label, string previewText, ref Guid picked, params Guid[] exclude) {
+
+
+
+    private bool DrawOutfitPicker(string label, string previewText, FontAwesomeIcon previewIcon, ref Guid picked, params Guid[] exclude) {
         var guid = picked;
 
         bool DrawComboContents(string search) {
@@ -240,7 +252,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
 
 
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-        if (CustomInput.Combo(label, previewText, DrawComboContents, style: new ComboStyle() { FramePadding = new Vector2(16, 8), PadTop = false})) {
+        if (CustomInput.Combo(label, previewText, DrawComboContents, style: new ComboStyle() { FramePadding = new Vector2(16, 8), PadTop = false}, icon: previewIcon)) {
             picked = guid;
             return true;
         }

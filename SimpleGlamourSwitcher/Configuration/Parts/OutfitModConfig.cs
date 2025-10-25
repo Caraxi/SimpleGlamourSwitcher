@@ -92,9 +92,39 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
         return list;
     }
     
-    public static List<OutfitModConfig> GetModListFromEmote(EmoteIdentifier emoteIdentifier, Guid effectiveCollectionId) {
-        // TODO:
-        return new List<OutfitModConfig>();
+    public static List<OutfitModConfig> GetModListFromEmote(EmoteIdentifier emoteIdentifier, Guid penumbraCollection) {
+        var list = new List<OutfitModConfig>();
+        
+        if (emoteIdentifier is { EmoteModeId: 0, EmoteId: 0 }) {
+            // Idle (Not Currently Supported)
+        } else if (emoteIdentifier is { EmoteModeId: 1 or 2 or 3 }) {
+            // Sitting or Sleeping (Not Currently Supported)
+        } else {
+            var emoteId = emoteIdentifier.EmoteId;
+            if (emoteIdentifier.EmoteModeId > 0) {
+                var emoteMode = DataManager.GetExcelSheet<EmoteMode>().GetRowOrDefault(emoteIdentifier.EmoteModeId);
+                if (emoteMode != null) {
+                    emoteId = emoteMode.Value.StartEmote.RowId;
+                }
+            }
+            if (emoteId > 0) {
+                var emote = DataManager.GetExcelSheet<Emote>().GetRowOrDefault(emoteId);
+                if (emote != null) {
+                    var emoteName = emote.Value.Name.ExtractText();
+                    if (!string.IsNullOrWhiteSpace(emoteName)) {
+                        var mods = PenumbraIpc.CheckCurrentChangedItem($"Emote: {emote.Value.Name.ExtractText()}");
+                        foreach (var mod in mods) {
+                            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
+                            if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+                            var modSettings = getModSettings.Item2.Value;
+                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+                        }
+                    }
+                }
+            }
+        }
+
+        return list;
     }
     
 

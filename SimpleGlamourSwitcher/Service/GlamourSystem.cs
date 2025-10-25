@@ -2,6 +2,7 @@
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.IPC;
@@ -78,13 +79,13 @@ public static class GlamourSystem {
         });
     }
     
-    public static async Task<List<OutfitConfigFile>> GetOutfitLinks(OutfitConfigFile outfit, bool throwOnCircular = true) {
+    public static async Task<List<IListEntry>> GetOutfitLinks(OutfitConfigFile outfit, bool throwOnCircular = true) {
         if (outfit.ConfigFile == null) return [];
         
-        List<OutfitConfigFile> outfitList = [];
+        List<IListEntry> outfitList = [];
         HashSet<Guid> guids = [];
         
-        var outfits = await outfit.ConfigFile.GetEntries<OutfitConfigFile>();
+        var outfits = await outfit.ConfigFile.GetEntries();
         
         void AddOutfit(OutfitConfigFile addOutfit) {
             if (guids.Contains(addOutfit.Guid)) return;
@@ -95,8 +96,13 @@ public static class GlamourSystem {
                     continue;
                 }
 
-                if (outfits.TryGetValue(pre, out var preOutfit)) {
-                    AddOutfit(preOutfit);
+                if (outfits.TryGetValue(pre, out var preEntry)) {
+                    if (preEntry is OutfitConfigFile preOutfit) {
+                        AddOutfit(preOutfit);
+                    } else {
+                        outfitList.Add(preEntry);
+                        guids.Add(preEntry.Guid);
+                    }
                 }
             }
 
@@ -115,8 +121,13 @@ public static class GlamourSystem {
                     continue;
                 }
                 
-                if (outfits.TryGetValue(post, out var postOutfit)) {
-                    AddOutfit(postOutfit);
+                if (outfits.TryGetValue(post, out var postEntry)) {
+                    if (postEntry is OutfitConfigFile postOutfit) {
+                        AddOutfit(postOutfit);
+                    } else {
+                        outfitList.Add(postEntry);
+                        guids.Add(postEntry.Guid);
+                    }
                 }
             }
         }
@@ -127,18 +138,26 @@ public static class GlamourSystem {
     }
     
     
-    public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment)> HandleLinks(OutfitConfigFile outfit) {
-        if (outfit.ConfigFile == null) return (outfit.Appearance, outfit.Equipment);
+    public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment, List<IAdditionalLink> Additionals)> HandleLinks(OutfitConfigFile outfit) {
+        if (outfit.ConfigFile == null) return (outfit.Appearance, outfit.Equipment, []);
         var outfitList = await GetOutfitLinks(outfit);
         return StackOutfits(outfitList.ToArray());
     }
     
-    public static (OutfitAppearance Appearance, OutfitEquipment Equipment) StackOutfits(params OutfitConfigFile[] outfits) {
+    public static (OutfitAppearance Appearance, OutfitEquipment Equipment, List<IAdditionalLink> Additionals) StackOutfits(params IListEntry[] entries) {
         var appearance = new OutfitAppearance();
         var equipment = new OutfitEquipment();
+        var additionals = new List<IAdditionalLink>();
         
-        foreach (var outfit in outfits) {
-
+        foreach (var entry in entries) {
+            if (entry is not OutfitConfigFile outfit) {
+                if (entry is IAdditionalLink additionalLink) {
+                    additionals.Add(additionalLink);
+                }
+                
+                continue;
+            }
+            
             if (outfit.Appearance.Apply) {
                 appearance.Apply = true;
 
@@ -227,7 +246,7 @@ public static class GlamourSystem {
             }
         }
         
-        return (appearance, equipment);
+        return (appearance, equipment, additionals);
     } 
     
 }

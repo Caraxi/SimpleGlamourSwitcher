@@ -262,8 +262,11 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
                 }
             }
             
-            
-            
+            if (ImGui.CollapsingHeader("Details")) {
+                var guid = folder?.FolderGuid?.ToString() ?? string.Empty;
+                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
+                ImGui.InputText("GUID", ref guid, 128, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
+            }
             
             if (folder == null) {
                 if (ImGuiExt.ButtonWithIcon("Create Folder", FontAwesomeIcon.FolderPlus, inputSize)) {

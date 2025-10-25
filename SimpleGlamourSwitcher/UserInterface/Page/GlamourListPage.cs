@@ -31,6 +31,8 @@ public class GlamourListPage : Page {
     private bool hideBackButton;
 
     private FolderSortStrategy folderSortStrategy;
+
+    private Dictionary<Guid, CharacterConfigFile>? characterCloneTargets;
     
     public GlamourListPage(Guid folderGuid = default, bool hideBackButton = false) {
         this.hideBackButton = hideBackButton;
@@ -560,6 +562,30 @@ public class GlamourListPage : Page {
                         
                         if (ImGui.MenuItem("Copy Command")) {
                             ImGui.SetClipboardText($"/sgs apply {outfitGuid}");
+                        }
+                        
+                        if (characterCloneTargets == null) {
+                            characterCloneTargets = [];
+                            CharacterConfigFile.GetCharacterConfigurations(fc => {
+                                if (ActiveCharacter?.Guid == fc.Guid) return false;
+                                if (string.IsNullOrWhiteSpace(fc.Name)) return false;
+                                return fc is { Hidden: false, Deleted: false };
+                            }).ContinueWith((c) => {
+                                characterCloneTargets = c.Result;
+                            });
+                        }
+                        
+                        if (entry is ConfigFile && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
+                            foreach (var c in characterCloneTargets) {
+                                if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
+                                
+                                var clone = entry.CloneTo(c.Value);
+                                if (clone == null) continue;
+                                var image = entry.GetImageFile();
+                                if (image != null) clone.SetImage(image);
+                            }
+
+                            ImGui.EndMenu();
                         }
                         
                         if (ImGui.MenuItem("Open File")) {

@@ -226,6 +226,8 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         PluginLog.Warning($"Deleting Outfit: {Name}");
         GetConfigPath(GetParent(), Guid).Delete();
     }
+    
+    public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
 }
 
 

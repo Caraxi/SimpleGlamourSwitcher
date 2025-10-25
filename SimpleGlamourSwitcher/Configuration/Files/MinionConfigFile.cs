@@ -220,6 +220,8 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         PluginLog.Warning($"Deleting: {path}");
         GetConfigPath(GetParent(), Guid).Delete();
     }
+    
+    public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
 }
 
 

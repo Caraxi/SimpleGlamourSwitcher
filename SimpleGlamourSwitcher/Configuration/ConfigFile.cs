@@ -2,6 +2,7 @@
 using System.Reflection;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Configuration.Files;
 
 namespace SimpleGlamourSwitcher.Configuration;
 
@@ -126,6 +127,22 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
                 this.Guid = originalGuid;
             }
         }
+    }
+
+    public T? SaveTo(TParent newParent) {
+        var originalGuid = this.Guid;
+        var originalParent = this.parent;
+        var newGuid = Guid.NewGuid();
+        try {
+            this.parent = newParent;
+            this.Guid = newGuid;
+            Save(true);
+        } finally {
+            this.Guid = originalGuid;
+            this.parent = originalParent;
+        }
+
+        return Load(newGuid, newParent);
     }
     
     public void Save(bool force = false) {

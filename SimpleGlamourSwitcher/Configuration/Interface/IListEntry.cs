@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
+using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 
 namespace SimpleGlamourSwitcher.Configuration.Interface;
@@ -24,4 +25,7 @@ public interface IListEntry {
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap);
     
     void Delete();
+
+    IListEntry? CloneTo(CharacterConfigFile characterConfigFile);
+    public void SetImage(FileInfo fileInfo);
 }

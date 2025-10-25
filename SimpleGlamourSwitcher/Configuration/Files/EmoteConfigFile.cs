@@ -238,8 +238,6 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
 
         TempImagePath[Guid] = (fileInfo.FullName, Stopwatch.StartNew());
         fileInfo.CopyTo(fileName + Path.GetExtension(fileInfo.FullName));
-        
-        return;
     }
 
     public void SetImageDetail(ImageDetail imageDetail) {
@@ -281,5 +279,7 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         PluginLog.Warning($"Deleting: {path}");
         GetConfigPath(GetParent(), Guid).Delete();
     }
+
+    public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
 }
 

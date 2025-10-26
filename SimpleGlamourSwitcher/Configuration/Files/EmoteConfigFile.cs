@@ -264,7 +264,7 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         cfg.EmoteIdentifier = EmoteIdentifier.Get(ClientState.LocalPlayer);
         
         if (cfg.EmoteIdentifier != null) {
-            var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(1);
+            var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
             if (penumbraCollection.ObjectValid) {
                 cfg.ModConfigs = OutfitModConfig.GetModListFromEmote(cfg.EmoteIdentifier, penumbraCollection.EffectiveCollection.Id);
             }

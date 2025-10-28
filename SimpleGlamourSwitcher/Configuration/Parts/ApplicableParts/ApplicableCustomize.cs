@@ -30,6 +30,18 @@ public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs, 
             ModConfigs = OutfitModConfig.GetModListFromCustomize(slot, customize, penumbraCollectionId),
         };
     }
+    // public static ApplicableCustomize FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, CustomizeIndex slot, GlamourerCustomizeOption? customize) {
+
+    public static ApplicableCustomizeModable FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, CustomizeIndex slot, GlamourerCustomize? customize, Guid penumbraCollectionId) {
+        if (customize?[slot] == null) return new ApplicableCustomizeModable();
+        
+        return new ApplicableCustomizeModable {
+            Apply = customize[slot]!.Apply && defaultOptionsProvider.DefaultEnabledCustomizeIndexes.Contains(slot),
+            Value = customize[slot]!.Value,
+            ModConfigs = OutfitModConfig.GetModListFromCustomize(slot, customize, penumbraCollectionId),
+        };
+    }
+    
     
     
 }
@@ -50,12 +62,12 @@ public record ApplicableCustomize : Applicable<CustomizeIndex> {
     }
     
     
-    public static ApplicableCustomize FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, CustomizeIndex slot, GlamourerCustomizeOption? customize) {
+    public static ApplicableCustomize FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, CustomizeIndex slot, GlamourerCustomize? customize) {
         if (customize == null) return new ApplicableCustomize();
         
         return new ApplicableCustomize {
-            Apply = customize.Apply && defaultOptionsProvider.DefaultEnabledCustomizeIndexes.Contains(slot),
-            Value = customize.Value,
+            Apply = (customize[slot]?.Apply ?? false) && defaultOptionsProvider.DefaultEnabledCustomizeIndexes.Contains(slot),
+            Value = customize[slot]?.Value ?? 0,
         };
     }
     

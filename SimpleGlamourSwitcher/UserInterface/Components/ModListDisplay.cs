@@ -31,9 +31,10 @@ public static class ModListDisplay {
         return modable.ModConfigs.Count == 0 || modable.ModConfigs.All(m => TryParseModName(m.ModDirectory, out _));
     }
     
-    public static bool Show(IHasModConfigs modable, string slotName) {
+    public static bool Show(IHasModConfigs modable, string slotName, float width = -1) {
         var edited = false;
         var p = ImGui.GetItemRectMax();
+        if (width <= 0) width = p.X - ImGui.GetCursorScreenPos().X;
         var s = new Vector2(ImGui.CalcItemWidth(), ImGui.GetTextLineHeightWithSpacing());
         var configs = modable.ModConfigs;
 
@@ -43,8 +44,7 @@ public static class ModListDisplay {
             extraButtons++;
         }
         
-        
-        var modName = "Vanilla";
+        var modName = "No Associated Mods";
         Vector2 popupPosition;
         if (configs.Count > 0) {
             extraButtons++;
@@ -57,7 +57,7 @@ public static class ModListDisplay {
                 modExists = configs.All(m => TryParseModName(m.ModDirectory, out _));
             }
 
-            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
+            ImGui.SetNextItemWidth(width - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
             using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, !modExists)) {
                 ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
             }
@@ -119,8 +119,11 @@ public static class ModListDisplay {
             }
             
         } else {
-            ImGui.SetNextItemWidth(p.X - ImGui.GetCursorScreenPos().X - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
-            ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
+            ImGui.SetNextItemWidth(width - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
+            using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
+            }
+            
             popupPosition = ImGui.GetItemRectMin();
         }
         

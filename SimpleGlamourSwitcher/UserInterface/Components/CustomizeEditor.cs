@@ -22,6 +22,7 @@ namespace SimpleGlamourSwitcher.UserInterface.Components;
 
 public static class CustomizeEditor {
     private const float EditorInputScale = 0.7f;
+    private static Vector2 checkboxSize = Vector2.Zero;
     
     private static IEnumerable<(CustomizeIndex, string)> GetCustomizeTypes(byte gender, byte clan) {
         var race = GetRaceId(clan);
@@ -89,6 +90,15 @@ public static class CustomizeEditor {
                 
                 _ => ShowCustomize(outfitAppearance, outfitAppearance[v], v, label)
             };
+            
+            if (outfitAppearance[v] is IHasModConfigs modable) {
+                ImGui.Dummy(checkboxSize);
+                ImGui.SameLine();
+                using (ImRaii.PushId($"customizeModEditor_{v}"))
+                using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(1))) {
+                    edited |= ModListDisplay.Show(modable, label, ImGui.GetContentRegionAvail().X * EditorInputScale);
+                }
+            }
         }
         
 
@@ -203,6 +213,8 @@ public static class CustomizeEditor {
         using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), !parentEnabled)) {
             edited |= ImGui.Checkbox($"##enableCustomize_{label}", ref apply);
         }
+
+        checkboxSize = ImGui.GetItemRectSize();
         
         if (ImGui.IsItemHovered()) {
             using (ImRaii.Tooltip()) {
@@ -520,12 +532,6 @@ public static class CustomizeEditor {
                 ImGuiExt.SameLineInner();
                 edited |= ColorPicker(appearance, CustomizeIndex.HighlightsColor);
             }
-           
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(1))) {
-                ImGui.SetNextItemWidth(ImGui.GetItemRectSize().X);
-                edited |= ModListDisplay.Show(appearance.Hairstyle, "Hairstyle");
-            }
-
         }
         
         ImGuiExt.SameLineInner();

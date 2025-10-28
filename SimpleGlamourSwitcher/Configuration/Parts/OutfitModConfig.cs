@@ -42,18 +42,50 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
 
 
         List<(string ModDirectory, string ModName)> mods = [];
+        
+        var modelRaceName = customize.Race.Value == 1 ? customize.Clan.Value == 2 ? ModelRace.Highlander.ToName() : ModelRace.Midlander.ToName() : ((Race)customize.Race.Value).ToName();
+        
+        var gender = customize.Gender.Value switch {
+            0 => Gender.Male.ToName(),
+            1 => Gender.Female.ToName(),
+            _ => Gender.Unknown.ToName(),
+        };
+
+        var clan = (SubRace)customize.Clan.Value;
+        var clanName = clan.ToName();
+        
         switch (slot) {
             case CustomizeIndex.Hairstyle:
-                var modelRaceName = customize.Race.Value == 1 ? customize.Clan.Value == 2 ? ModelRace.Highlander.ToName() : ModelRace.Midlander.ToName() : ((Race)customize.Race.Value).ToName();
-
-                var gender = customize.Gender.Value switch {
-                    0 => Gender.Male.ToName(),
-                    1 => Gender.Female.ToName(),
-                    _ => Gender.Unknown.ToName(),
-                };
-                
                 mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: {modelRaceName} {gender} Hair {customize.Hairstyle.Value}"));
                 mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: {gender} {modelRaceName} Hair {customize.Hairstyle.Value}"));
+                break;
+            case CustomizeIndex.TailShape:
+                if (customize.TailShape == null) break;
+                mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: {modelRaceName} {gender} Tail {customize.TailShape.Value}"));
+                break;
+            case CustomizeIndex.Height:
+                mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"{clanName} {gender} Maximum Size"));
+                mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"{clanName} {gender} Minimum Size"));
+                break;
+            case CustomizeIndex.Face:
+                if (customize.Face == null) break;
+                var faceIndex = customize.Face?.Value;
+                if (clan is SubRace.Duskwight or SubRace.Dunesfolk or SubRace.KeeperOfTheMoon or SubRace.Hellsguard or SubRace.Xaela or SubRace.Lost or SubRace.Veena) {
+                    faceIndex += 100;
+                }
+                
+                mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: {modelRaceName} {gender} Face {faceIndex}"));
+                
+                break;
+            case CustomizeIndex.FacePaint:
+                if (customize.FacePaint == null) break;
+                mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: Face Decal {customize.FacePaint.Value}"));
+                break;
+            case CustomizeIndex.Clan:
+                // Automatic detection not supported
+                break;
+            default:
+                Chat.PrintError($"Invalid Customize Index for GetModListFromCustomize: {slot}");
                 break;
         }
         

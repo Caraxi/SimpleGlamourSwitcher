@@ -39,6 +39,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
         set => CustomCharacterPolaroidStyle = value?.CharacterPolaroid;
     }
     
+    public Dictionary<string, int> ModSlotIdentifier = [];
     public PolaroidStyle? CustomCharacterPolaroidStyle = null;
     
     public bool ShowHiddenCharacters;

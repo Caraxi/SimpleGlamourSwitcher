@@ -111,7 +111,7 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
 
                 var guid = Emote.Guid.ToString();
                 ImGui.InputText("GUID", ref guid, 128, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
-
+                sortName ??= emoteName;
                 dirty |= ImGui.InputTextWithHint("Custom Sort Name", emoteName, ref sortName, 128);
             }
             

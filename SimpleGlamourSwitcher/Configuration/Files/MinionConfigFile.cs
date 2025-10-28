@@ -28,7 +28,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
 
     public string Description = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
-    public string? SortName { get; set; }
+    public string? SortName { get; set; } = string.Empty;
 
     public List<AutoCommandEntry> AutoCommands = new();
 
@@ -124,7 +124,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
     */
 
     public static string GetFileName(Guid? guid) {
-        return $"minions/{guid}.json";
+        return $"{CharacterDirectory.Minions}/{guid}.json";
     }
 
 

@@ -188,7 +188,7 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
     */
 
     public static string GetFileName(Guid? guid) {
-        return $"emotes/{guid}.json";
+        return $"{CharacterDirectory.Emotes}/{guid}.json";
     }
 
 

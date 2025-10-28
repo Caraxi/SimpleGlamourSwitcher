@@ -109,7 +109,6 @@ public static class CommandEditor {
         using (ImRaii.PushId(commandList.Count)) {
             DrawButtons(Button.Up | Button.Down | Button.Delete);
             ImGuiExt.SameLineNoSpace();
-            var f = false;
             using (ImRaii.Disabled())
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(8, 8)))
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0))) {

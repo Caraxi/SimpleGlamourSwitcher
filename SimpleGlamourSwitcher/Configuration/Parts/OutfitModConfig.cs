@@ -69,7 +69,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                 break;
             case CustomizeIndex.Face:
                 if (customize.Face == null) break;
-                var faceIndex = customize.Face?.Value;
+                var faceIndex = customize.Face?.Value ?? 1;
                 if (clan is SubRace.Duskwight or SubRace.Dunesfolk or SubRace.KeeperOfTheMoon or SubRace.Hellsguard or SubRace.Xaela or SubRace.Lost or SubRace.Veena) {
                     faceIndex += 100;
                 }

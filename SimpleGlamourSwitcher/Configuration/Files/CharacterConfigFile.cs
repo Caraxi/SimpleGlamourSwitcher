@@ -130,14 +130,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             if (!Folders.ContainsKey(f.Parent)) f.Parent = Guid.Empty;
         }
         
-#pragma warning disable CS0612 // Type or member is obsolete
-        if (DefaultOutfit != null) {
-            Automation.Login = DefaultOutfit;
-            Automation.CharacterSwitch = DefaultOutfit;
-            DefaultOutfit = null;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-        
         base.Setup();
     }
 
@@ -192,6 +184,15 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 entries.Add(emoteCfg);
             }
             
+            PluginLog.Verbose($"Getting GenericEntries from {GenericDirectory.FullName}");
+            foreach (var f in GenericDirectory.GetFiles("*.json")) {
+                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
+                var genericCfg = GenericEntryConfigFile.Load(guid, this);
+                if (genericCfg == null) continue;
+                var outfitFolder = Folders.ContainsKey(genericCfg.Folder) ? genericCfg.Folder : Guid.Empty;
+                if (folder != null && outfitFolder != folder) continue;
+                entries.Add(genericCfg);
+            }
             var dict = new OrderedDictionary<Guid, IListEntry>();
             foreach (var outfit in entries.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name  : o.SortName)) {
                 dict.Add(outfit.Guid, outfit);
@@ -208,7 +209,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     [JsonIgnore]
     public DirectoryInfo OutfitDirectory {
         get {
-            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, "outfits"));
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Outfits));
             if (!dir.Exists) dir.Create();
             
             PluginLog.Debug($"Character Outfit Directory [{Guid}] is {dir.FullName}");
@@ -221,7 +222,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     [JsonIgnore]
     public DirectoryInfo MinionDirectory {
         get {
-            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, "minions"));
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Minions));
             if (!dir.Exists) dir.Create();
             PluginLog.Debug($"Character Minion Directory [{Guid}] is {dir.FullName}");
             return dir;
@@ -231,7 +232,17 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     [JsonIgnore]
     public DirectoryInfo EmoteDirectory {
         get {
-            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, "emotes"));
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Emotes));
+            if (!dir.Exists) dir.Create();
+            PluginLog.Debug($"Character Emote Directory [{Guid}] is {dir.FullName}");
+            return dir;
+        }
+    }    
+    
+    [JsonIgnore]
+    public DirectoryInfo GenericDirectory {
+        get {
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Generics));
             if (!dir.Exists) dir.Create();
             PluginLog.Debug($"Character Emote Directory [{Guid}] is {dir.FullName}");
             return dir;
@@ -241,7 +252,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     [JsonIgnore]
     public DirectoryInfo ImagesDirectory {
         get {
-            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, "images"));
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Images));
             if (!dir.Exists) dir.Create();
             return dir;
         }

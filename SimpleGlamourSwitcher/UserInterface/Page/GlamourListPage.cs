@@ -47,6 +47,10 @@ public class GlamourListPage : Page {
             if (ActiveCharacter != null) MainWindow?.OpenPage(new EditEmotePage(ActiveCharacter,  ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Emote"} );
         
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.KissWinkHeart, "Create Other", () => {
+            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditGenericPage(ActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Generic Mod Entry"} );
+        
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
             MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null));
         }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Folder" } );
@@ -423,7 +427,7 @@ public class GlamourListPage : Page {
                 if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(outfitStyle).X) ImGui.NewLine();
                 
                 if (drag == null) {
-                    if (Polaroid.Button((entry as IImageProvider).GetImage(), entry.ImageDetail, entry.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, entry) })) {
+                    if (Polaroid.Button((entry as IImageProvider)?.GetImage(), entry.ImageDetail, entry.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, entry) })) {
                         entry.Apply().ConfigureAwait(false);
                         if (PluginConfig.AutoCloseAfterApplying) {
                             MainWindow!.IsOpen = false;
@@ -557,6 +561,21 @@ public class GlamourListPage : Page {
                                 });
                             }
                         }
+
+                        if (entry is GenericEntryConfigFile generic)
+                        {
+                            if (ImGui.MenuItem("Edit")) {
+                                MainWindow?.OpenPage(new EditGenericPage(character, ActiveFolder, generic));
+                            }
+                        
+                            if (ImGui.MenuItem("Clone")) {
+                                generic.CreateClone().ContinueWith(task => {
+                                    if (task.IsCompletedSuccessfully) {
+                                        MainWindow?.OpenPage(new EditGenericPage(character, ActiveFolder, task.Result));
+                                    }
+                                });
+                            }
+                        }
                         
                         if (ImGui.MenuItem("Copy Command")) {
                             ImGui.SetClipboardText($"/sgs apply {outfitGuid}");
@@ -620,7 +639,7 @@ public class GlamourListPage : Page {
                     
                 } else {
                     var dragging = drag.Value;
-                    Polaroid.Draw((entry as IImageProvider).GetImage(), entry.ImageDetail, entry.Name, outfitStyle with {
+                    Polaroid.Draw((entry as IImageProvider)?.GetImage(), entry.ImageDetail, entry.Name, outfitStyle with {
                         FrameColour = outfitGuid == dragging.Guid && dragging.Type == ItemType.Outfit ? (0x8040FFFF) : (0x40FFFFFF & outfitStyle.FrameColour),
                         BlankImageColour = 0x40FFFFFF & outfitStyle.BlankImageColour
                     });

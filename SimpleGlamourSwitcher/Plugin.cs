@@ -63,7 +63,7 @@ public class Plugin : IDalamudPlugin {
                     ProcessApplyCommand(splitArgs[1..]).ConfigureAwait(false);
                     break;
                 case "open":
-                    ProcessOpenCommand(splitArgs[1..]).ConfigureAwait(false);
+                    ProcessOpenCommand(splitArgs[1..]);
                     break;
                 default:
                     MainWindow.IsOpen = true;
@@ -88,7 +88,7 @@ public class Plugin : IDalamudPlugin {
         
     }
 
-    private async Task ProcessOpenCommand(string[] args) {
+    private void ProcessOpenCommand(string[] args) {
         if (args.Length == 0) {
             Chat.PrintError("/sgs open [GUID]", "SimpleGlamourSwitcher");
             return;

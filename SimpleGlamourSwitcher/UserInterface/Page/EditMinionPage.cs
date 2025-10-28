@@ -116,6 +116,7 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
             if (ImGui.CollapsingHeader("Details")) {
                 var guid = Minion.Guid.ToString();
                 ImGui.InputText("GUID", ref guid, 128, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
+                sortName ??= minionName;
                 dirty |= ImGui.InputTextWithHint("Custom Sort Name", minionName, ref sortName, 128);
             }
             

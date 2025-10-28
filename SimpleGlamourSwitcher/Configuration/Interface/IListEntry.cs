@@ -9,7 +9,7 @@ namespace SimpleGlamourSwitcher.Configuration.Interface;
 public interface IListEntry {
     public Guid Guid { get; }
     public string Name { get; set; }
-    public string SortName { get; set; }
+    public string? SortName { get; set; }
     
     public Guid Folder { get; set; }
     

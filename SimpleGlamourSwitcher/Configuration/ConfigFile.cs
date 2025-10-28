@@ -16,8 +16,8 @@ public abstract class ConfigFile {
     
     private static Dictionary<(Type, Guid), Dictionary<Guid, Exception>> BadFiles { get; } = new();
 
-    public IReadOnlyList<string> ValidationErrors { get; private set; } = new List<string>();
-    public bool IsValid => ValidationErrors.Count == 0;
+    [JsonIgnore] public IReadOnlyList<string> ValidationErrors { get; private set; } = new List<string>();
+    [JsonIgnore] public bool IsValid => ValidationErrors.Count == 0;
 
     protected virtual void Validate(List<string> errors) { }
 

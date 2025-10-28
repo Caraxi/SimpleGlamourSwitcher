@@ -3,6 +3,17 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.3.0.0", () => {
+            Change("Added 'Generic' option.");
+            Change("Generic items load a set of mods and can be configured to have a unique or shared 'Identifier'.", 1);
+            Change("Added ability to link non-outfit files to outfits, applying their mod settings.");
+            Change("Added ability to sort folders, either alphabetically or manually.");
+            Change("Added ability to clone outfits into another character.");
+            Change("Improved the ability to edit the appearance options from within Simple Glamour Switcher.");
+            Change("Added ability to assign and automatically detect mods for Face, Face Paint, Height, and Tail.");
+            Change("Added ability to assign mods to Body Type and Skin Colour.");
+            Change("Added options to disable automatic mod detection for individual slots.");
+        });
         ChangelogFor("1.2.0.0", () => {
             Change("Added ability to switch minions, along with associated mods.");
             Change("Added ability to switch emotes, along with associated mods.");

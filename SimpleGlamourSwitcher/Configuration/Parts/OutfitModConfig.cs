@@ -22,8 +22,8 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
     }
 
     public static List<OutfitModConfig> GetModListFromEquipment(HumanSlot slot, EquipItem equipItem, Guid penumbraCollection) {
-        
         var list = new List<OutfitModConfig>();
+        if (PluginConfig.DisableAutoModsEquip.Contains(slot)) return list;
 
         var mods = PenumbraIpc.CheckCurrentChangedItem(equipItem.Name);
         
@@ -39,8 +39,8 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
     
     public static List<OutfitModConfig> GetModListFromCustomize(CustomizeIndex slot, GlamourerCustomize customize, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
-
-
+        if (PluginConfig.DisableAutoModsCustomize.Contains(slot)) return list;
+        
         List<(string ModDirectory, string ModName)> mods = [];
         
         var modelRaceName = customize.Race.Value == 1 ? customize.Clan.Value == 2 ? ModelRace.Highlander.ToName() : ModelRace.Midlander.ToName() : ((Race)customize.Race.Value).ToName();
@@ -82,6 +82,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                 mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: Face Decal {customize.FacePaint.Value}"));
                 break;
             case CustomizeIndex.Clan:
+            case CustomizeIndex.SkinColor:
                 // Automatic detection not supported
                 break;
             default:

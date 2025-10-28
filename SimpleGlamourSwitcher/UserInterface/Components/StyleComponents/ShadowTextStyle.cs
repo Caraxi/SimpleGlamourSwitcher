@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Dalamud.Bindings.ImGui;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 

@@ -6,7 +6,6 @@ using Dalamud.Interface;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
-using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components;
 

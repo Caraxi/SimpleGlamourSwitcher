@@ -1,7 +1,6 @@
 ﻿using Glamourer.Api.Enums;
 using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
-using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.IPC.Glamourer;

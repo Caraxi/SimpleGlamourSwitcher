@@ -1,7 +1,4 @@
 ﻿using Dalamud.Interface;
-using Dalamud.Interface.ManagedFontAtlas;
-using Dalamud.Bindings.ImGui;
-using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components;
 

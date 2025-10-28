@@ -2,6 +2,7 @@
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json;
+using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -49,6 +50,9 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public bool OpenDebugOnStartup = false;
     public GridlineStyle ScreenshotGridlineStyle;
 
+    public HashSet<CustomizeIndex> DisableAutoModsCustomize = [];
+    public HashSet<HumanSlot> DisableAutoModsEquip = [];
+    
     public static FileInfo GetFile(Guid? guid = null) {
         if (guid != null) throw new Exception($"{nameof(PluginConfigFile)} does not support GUID");
         return new FileInfo(Path.Join(PluginInterface.GetPluginConfigDirectory(), "config.json"));

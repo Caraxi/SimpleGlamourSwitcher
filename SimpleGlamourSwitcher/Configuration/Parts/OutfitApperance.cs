@@ -1,12 +1,9 @@
 ﻿using System.Collections;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
-using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
-using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.IPC.Glamourer;
 using SimpleGlamourSwitcher.Service;
 
@@ -24,7 +21,7 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
     public ApplicableCustomizeModable Face = new();
     public ApplicableCustomizeModable Hairstyle = new();
     public ApplicableCustomize Highlights = new();
-    public ApplicableCustomize SkinColor = new();
+    public ApplicableCustomizeModable SkinColor = new();
     public ApplicableCustomize EyeColorRight = new();
     public ApplicableCustomize HairColor = new();
     public ApplicableCustomize HighlightsColor = new();
@@ -161,7 +158,7 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
             Face = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.Face, customize, penumbraCollectionId),
             Hairstyle = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.Hairstyle, customize, penumbraCollectionId),
             Highlights = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.Highlights, customize),
-            SkinColor = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.SkinColor, customize),
+            SkinColor = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.SkinColor, customize, penumbraCollectionId),
             EyeColorRight = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.EyeColorRight, customize),
             HairColor = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.HairColor, customize),
             HighlightsColor = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.HighlightsColor, customize),

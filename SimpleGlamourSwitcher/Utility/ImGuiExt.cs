@@ -132,4 +132,10 @@ public static class ImGuiExt {
         ImGui.SameLine();
         ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() with { X = ImGui.GetItemRectMax().X });
     }
+
+    public static void TextDisabledWrapped(ImU8String text) {
+        using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+            ImGui.TextWrapped(text);
+        }
+    }
 }

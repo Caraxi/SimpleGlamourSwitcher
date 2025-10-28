@@ -4,9 +4,9 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using ECommons.ImGuiMethods;
 using Glamourer.GameData;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Components;
 using Lumina.Excel.Sheets;
 using Penumbra.GameData;
 using Penumbra.GameData.Enums;
@@ -24,29 +24,34 @@ public static class CustomizeEditor {
     private const float EditorInputScale = 0.7f;
     private static Vector2 checkboxSize = Vector2.Zero;
     
-    private static IEnumerable<(CustomizeIndex, string)> GetCustomizeTypes(byte gender, byte clan) {
+    public static IEnumerable<(CustomizeIndex, string)> GetCustomizeTypes(byte gender = 0, byte clan = 0, bool forceShowAll = false) {
         var race = GetRaceId(clan);
         var subRace = (SubRace) clan;
         
         yield return (CustomizeIndex.Clan, "Body Type");
         yield return (CustomizeIndex.Height, "Height");
-        if (gender == 1) yield return (CustomizeIndex.BustSize, "Bust Size");
+        if (forceShowAll || gender == 1) yield return (CustomizeIndex.BustSize, "Bust Size");
 
-        if (race is EnumRace.Hyur or EnumRace.Roegadyn) yield return (CustomizeIndex.MuscleMass, "Muscle Mass");
-        if (race is EnumRace.Elezen or EnumRace.Lalafell or EnumRace.Viera) yield return (CustomizeIndex.MuscleMass, "Ear Size");
-        if (race is EnumRace.Miqote or EnumRace.AuRa or EnumRace.Hrothgar) yield return (CustomizeIndex.MuscleMass, "Tail Length");
+        if (forceShowAll || race is EnumRace.Hyur or EnumRace.Roegadyn) yield return (CustomizeIndex.MuscleMass, "Muscle Mass");
+        if (forceShowAll || race is EnumRace.Elezen or EnumRace.Lalafell or EnumRace.Viera) yield return (CustomizeIndex.MuscleMass, "Ear Size");
+
         
         yield return (CustomizeIndex.Face, "Face");
         yield return (CustomizeIndex.FacialFeature1, "Facial Features");
         yield return (CustomizeIndex.Hairstyle, CustomizeIndex.Hairstyle.PrettyName());
-        if (race is EnumRace.Miqote or EnumRace.AuRa or EnumRace.Hrothgar) yield return (CustomizeIndex.TailShape, CustomizeIndex.TailShape.PrettyName());
-
+        if (forceShowAll || race is EnumRace.Miqote or EnumRace.AuRa or EnumRace.Hrothgar) {
+            yield return (CustomizeIndex.TailShape, CustomizeIndex.TailShape.PrettyName());
+            yield return (CustomizeIndex.MuscleMass, "Tail Length");
+        }
+        
         yield return (CustomizeIndex.SkinColor, CustomizeIndex.SkinColor.PrettyName());
         yield return (CustomizeIndex.EyeColorRight, CustomizeIndex.EyeColorRight.PrettyName());
         yield return (CustomizeIndex.EyeColorLeft, CustomizeIndex.EyeColorLeft.PrettyName());
         yield return (CustomizeIndex.FacePaintColor, CustomizeIndex.FacePaintColor.PrettyName());
 
-        if (race is EnumRace.AuRa) {
+        if (forceShowAll) {
+            yield return (CustomizeIndex.TattooColor, "Tattoo / Limbal Ring / Ear Clasp Color");
+        } else if (race is EnumRace.AuRa) {
             yield return (CustomizeIndex.TattooColor, "Limbal Ring Color");
         } else if (subRace is SubRace.KeeperOfTheMoon or SubRace.Wildwood) {
             yield return (CustomizeIndex.TattooColor, "Ear Clasp Color");
@@ -97,6 +102,11 @@ public static class CustomizeEditor {
                 using (ImRaii.PushId($"customizeModEditor_{v}"))
                 using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(1))) {
                     edited |= ModListDisplay.Show(modable, label, ImGui.GetContentRegionAvail().X * EditorInputScale);
+                }
+
+                if (v is CustomizeIndex.Clan or CustomizeIndex.SkinColor) {
+                    ImGui.SameLine();
+                    ImGuiComponents.HelpMarker($"Mods for '{label}' are not automatically detected. You can add mods manually and they will be applied when '{label}' is applied by the outfit.", FontAwesomeIcon.InfoCircle, ImGui.ColorConvertU32ToFloat4(ImGui.GetColorU32(ImGuiCol.TextDisabled)));
                 }
             }
         }

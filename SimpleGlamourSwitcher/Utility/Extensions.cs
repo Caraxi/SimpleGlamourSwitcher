@@ -7,7 +7,6 @@ using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
-using SimpleGlamourSwitcher.UserInterface.Components;
 
 namespace SimpleGlamourSwitcher.Utility;
 

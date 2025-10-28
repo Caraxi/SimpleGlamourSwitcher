@@ -7,16 +7,11 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Interface.Components;
 using Lumina.Excel.Sheets;
-using Penumbra.GameData.Enums;
-using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
-using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.UserInterface.Components;
-using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
-using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 

@@ -1,12 +1,13 @@
 ﻿using System.Numerics;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using ECommons;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using ECommons.ImGuiMethods;
+using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
+using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
@@ -106,5 +107,45 @@ public class ConfigWindow : Window {
         
         #endif
         
+        DrawAutomaticModDetectionSettings();
+
+    }
+    
+    private readonly OutfitAppearance _appearance = new();
+    private void DrawAutomaticModDetectionSettings() {
+        if (!ImGui.CollapsingHeader("Automatic Mod Detection")) return;
+        ImGuiExt.TextDisabledWrapped("Simple Glamour Switcher will try to detect mods automatically when creating new outfits.");
+        using var _ = ImRaii.PushIndent();
+        
+        ImGui.Text("Enable Automatic Detection for Appearance:");
+        using (ImRaii.PushIndent()) {
+            foreach (var (customizeIndex, label) in CustomizeEditor.GetCustomizeTypes()) {
+                if (_appearance[customizeIndex] is not IHasModConfigs) continue;
+                if (customizeIndex is CustomizeIndex.Clan or CustomizeIndex.SkinColor) continue; // No Automatic Detection
+                
+                var e = !PluginConfig.DisableAutoModsCustomize.Contains(customizeIndex);
+                if (ImGui.Checkbox($"{label}##autoModDetectCustomize_{customizeIndex}", ref e)) {
+                    if (e) {
+                        PluginConfig.DisableAutoModsCustomize.Remove(customizeIndex);
+                    } else {
+                        PluginConfig.DisableAutoModsCustomize.Add(customizeIndex);
+                    }
+                }
+            }
+        }
+        
+        ImGui.Text("Enable Automatic Detection for Equipment:");
+        using (ImRaii.PushIndent()) {
+            foreach (var slot in Common.GetGearSlots()) {
+                var e = !PluginConfig.DisableAutoModsEquip.Contains(slot);
+                if (ImGui.Checkbox($"{slot.ToName()}##autoModDetectEquip_{slot}", ref e)) {
+                    if (e) {
+                        PluginConfig.DisableAutoModsEquip.Remove(slot);
+                    } else {
+                        PluginConfig.DisableAutoModsEquip.Add(slot);
+                    }
+                }
+            }
+        }
     }
 }

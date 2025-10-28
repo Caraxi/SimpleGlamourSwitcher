@@ -5,8 +5,6 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ECommons;
 using Dalamud.Bindings.ImGui;
-using ECommons.ImGuiMethods;
-using Lumina.Excel.Sheets;
 using SimpleGlamourSwitcher.Configuration;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Enum;

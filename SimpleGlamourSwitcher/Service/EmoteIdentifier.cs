@@ -1,8 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 

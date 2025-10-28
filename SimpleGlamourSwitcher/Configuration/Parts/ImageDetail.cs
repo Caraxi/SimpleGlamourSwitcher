@@ -1,7 +1,5 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 

@@ -1,7 +1,5 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
-using Dalamud.Interface.Components;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.UserInterface.Components;

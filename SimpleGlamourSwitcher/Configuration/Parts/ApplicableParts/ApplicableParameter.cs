@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json.Linq;
 using SimpleGlamourSwitcher.Configuration.Enum;

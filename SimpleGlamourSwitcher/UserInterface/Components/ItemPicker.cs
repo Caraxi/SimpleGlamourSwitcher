@@ -6,7 +6,6 @@ using Dalamud.Bindings.ImGui;
 using Lumina.Excel.Sheets;
 using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
-using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.Utility;
 using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
 

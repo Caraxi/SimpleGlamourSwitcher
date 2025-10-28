@@ -1,6 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
-using System.Drawing.Imaging;
 using Dalamud.Interface.Textures.TextureWraps;
 using SimpleGlamourSwitcher.Configuration.Parts;
 

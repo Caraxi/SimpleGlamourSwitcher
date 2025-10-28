@@ -1,5 +1,4 @@
-﻿using Dalamud.Interface.Colors;
-using Dalamud.Interface.Utility.Raii;
+﻿using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.UserInterface.Components;
 

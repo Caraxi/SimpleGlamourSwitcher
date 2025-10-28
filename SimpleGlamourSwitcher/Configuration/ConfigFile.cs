@@ -1,8 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using System.Reflection;
+﻿using System.Reflection;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
-using SimpleGlamourSwitcher.Configuration.Files;
 
 namespace SimpleGlamourSwitcher.Configuration;
 

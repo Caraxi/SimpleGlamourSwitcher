@@ -99,7 +99,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             using (ImRaii.Group()) {
                 if (ImGui.CollapsingHeader("Appearance")) {
                     using (ImRaii.PushIndent()) {
-                        ImGui.Checkbox("Revert to Game State", ref appearance.RevertToGame);
+                        ImGui.Checkbox("Revert to Game State##appearance", ref appearance.RevertToGame);
                         DrawAppearance();
                     }
                 }
@@ -115,7 +115,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             ImGui.SameLine();
             if (ImGui.CollapsingHeader("Equipment")) {
                 using (ImRaii.PushIndent()) {
-                    ImGui.Checkbox("Revert to Game State", ref equipment.RevertToGame);
+                    ImGui.Checkbox("Revert to Game State##equipment", ref equipment.RevertToGame);
                     DrawEquipment();
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.Interop;
 
 namespace SimpleGlamourSwitcher.Service;
@@ -22,4 +23,6 @@ public static unsafe class GameHelper {
     public static (byte Id, string Name)? GetActiveGearset() {
         return GetGearsetByIndex(RaptureGearsetModule.Instance()->CurrentGearsetIndex);
     }
+
+    public static string PlayerNameString => PlayerState.Instance()->CharacterNameString;
 }

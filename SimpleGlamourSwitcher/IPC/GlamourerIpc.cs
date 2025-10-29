@@ -5,6 +5,7 @@ using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.IPC.Glamourer;
+using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.Utility;
 using API = Glamourer.Api.IpcSubscribers;
 
@@ -19,7 +20,7 @@ public static class GlamourerIpc {
     public static readonly API.SetItem SetItem = new(PluginInterface);
     public static readonly API.SetBonusItem SetBonusItem = new(PluginInterface);
     public static readonly API.SetMetaState SetMetaState = new(PluginInterface);
-    public static readonly API.RevertState RevertState = new(PluginInterface);
+    public static readonly API.RevertStateName RevertStateName = new(PluginInterface);
 
     public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment) {
         
@@ -157,7 +158,7 @@ public static class GlamourerIpc {
             if (appearance is { RevertToGame: true, Apply: true }) flags |= ApplyFlag.Customization;
             if (equipment is { RevertToGame: true, Apply: true }) flags |= ApplyFlag.Equipment;
             await Framework.RunOnTick(() => {
-                RevertState.Invoke(0, flags: flags);
+                RevertStateName.Invoke(GameHelper.PlayerNameString, flags: flags);
             });
             await Framework.DelayTicks(1);
         }

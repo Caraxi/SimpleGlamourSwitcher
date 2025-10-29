@@ -19,7 +19,7 @@ public static class GlamourSystem {
 
         if (revert) {
             ModManager.RemoveAllMods();
-            GlamourerIpc.RevertState.Invoke(0);
+            GlamourerIpc.RevertStateName.Invoke(GameHelper.PlayerNameString);
             await Task.Delay(250);
         }
         

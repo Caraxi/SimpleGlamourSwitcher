@@ -160,7 +160,6 @@ public static class GlamourerIpc {
             await Framework.RunOnTick(() => {
                 RevertStateName.Invoke(GameHelper.PlayerNameString, flags: flags);
             });
-            await Framework.DelayTicks(1);
         }
         
         var obj = GetCustomizationJObject(appearance, equipment);

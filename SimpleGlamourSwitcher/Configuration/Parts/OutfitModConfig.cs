@@ -124,14 +124,77 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
         
         return list;
     }
+
+    private static void ResolvePathList(List<OutfitModConfig> list, Guid penumbraCollection, List<string> pathList) {
+        // Does not work for file swaps to vanilla paths
+        if (pathList.Count == 0) return;
+        var penumbraRoot = PenumbraIpc.GetModDirectory.Invoke();
+        var resolve = PenumbraIpc.ResolvePlayerPaths.Invoke(pathList.ToArray(), []);
+        var mods = new HashSet<string>();
+        for (var i = 0; i < pathList.Count && i < resolve.Item1.Length; i++) {
+            if (pathList[i] == resolve.Item1[i]) continue;
+            if (!resolve.Item1[i].StartsWith(penumbraRoot)) continue;
+            var p = Path.GetRelativePath(penumbraRoot, resolve.Item1[i]);
+            var modDir = p.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], 2);
+            mods.Add(modDir[0]);
+        }
+                
+        foreach (var mod in mods) {
+            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod);
+            if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+            var modSettings = getModSettings.Item2.Value;
+            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+        }
+    }
     
     public static List<OutfitModConfig> GetModListFromEmote(EmoteIdentifier emoteIdentifier, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
         
         if (emoteIdentifier is { EmoteModeId: 0, EmoteId: 0 }) {
-            // Idle (Not Currently Supported)
+            // Idle
+            var pathList = new List<string>();
+            foreach (var a in System.Enum.GetValues<GenderRace>()) {
+                if (emoteIdentifier.CPoseState == 0) {
+                    pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/resident/idle.pap");
+                } else if ( DataManager.GetExcelSheet<Emote>().TryGetRow(90, out var emote)) {
+                    pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/pose{emoteIdentifier.CPoseState:00}_start.pap");
+                    pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/pose{emoteIdentifier.CPoseState:00}_loop.pap");
+                }
+            }
+            
+            ResolvePathList(list, penumbraCollection, pathList);
         } else if (emoteIdentifier is { EmoteModeId: 1 or 2 or 3 }) {
-            // Sitting or Sleeping (Not Currently Supported)
+            // Sitting or Sleeping
+            var pathList = new List<string>();
+            PluginLog.Warning($"Getting Mods for EmoteMode#{emoteIdentifier.EmoteModeId}, CPose#{emoteIdentifier.CPoseState}");
+            foreach (var a in System.Enum.GetValues<GenderRace>()) {
+                switch (emoteIdentifier) {
+                    case not null when emoteIdentifier is { EmoteModeId: 1, CPoseState: 0 }: // Sit on Ground
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/jmn.pap");
+                        break;
+                    case not null when emoteIdentifier is { EmoteModeId: 1, CPoseState: > 0 }: // Sit on Ground
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/j_pose{emoteIdentifier.CPoseState:00}_loop.pap");
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/j_pose{emoteIdentifier.CPoseState:00}_start.pap");
+                        break;
+                    case not null when emoteIdentifier is { EmoteModeId: 2, CPoseState: 0 }: // Sit on Chair
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/sit.pap");
+                        break;
+                    case not null when emoteIdentifier is { EmoteModeId: 2, CPoseState: > 0 }: // Sit on Chair
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/s_pose{emoteIdentifier.CPoseState:00}_loop.pap");
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/s_pose{emoteIdentifier.CPoseState:00}_start.pap");
+                        break;
+                    case not null when emoteIdentifier is { EmoteModeId: 3, CPoseState: 0 }: // Doze on Bed
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/bed_liedown_loop.pap");
+                        break;
+                    case not null when emoteIdentifier is { EmoteModeId: 3, CPoseState: > 0 }: // Doze on Bed
+                        var c = emoteIdentifier.CPoseState;
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/l_pose{c switch { 1 => 2, 2 => 1, _ => c }:00}_loop.pap");
+                        pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/l_pose{c switch { 1 => 2, 2 => 1, _ => c }:00}_start.pap");
+                        break;
+                }
+            }
+            
+            ResolvePathList(list, penumbraCollection, pathList);
         } else {
             var emoteId = emoteIdentifier.EmoteId;
             if (emoteIdentifier.EmoteModeId > 0) {

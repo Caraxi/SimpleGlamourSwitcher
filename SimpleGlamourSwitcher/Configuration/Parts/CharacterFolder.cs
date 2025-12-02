@@ -177,6 +177,35 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
 
         return PluginConfig.FolderSortStrategy;
     }
+
+    public async void CloneTo(CharacterConfigFile character, Guid? parentFolder = null, bool doSave = true)
+    {
+        try {
+            if (ConfigFile == null) return;
+        
+            var guid = Guid.NewGuid();
+            var clone = this.Clone();
+            clone.ConfigFile = character;
+            clone.Parent = parentFolder ?? Guid.Empty;
+            character.Folders.Add(guid, clone);
+            foreach(var (_, childFolder) in ConfigFile.Folders.Where(f => f.Value.Parent.Equals(this.FolderGuid))) {
+                childFolder.CloneTo(character, guid, false);
+            }
+
+            foreach (var (entryGuid, entry) in await ConfigFile.GetEntries(FolderGuid)) {
+                var entryClone = entry.CloneTo(character);
+                if (entryClone == null) continue;
+                entryClone.Folder = guid;
+                entryClone.Save(true);
+            }
+            
+            if (doSave) character.Save(true);
+        }
+        catch (Exception e) {
+            PluginLog.Error(e, "Failed to clone folder.");
+            return;
+        }
+    }
 }
 
 

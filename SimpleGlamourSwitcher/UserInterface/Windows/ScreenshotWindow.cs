@@ -134,6 +134,8 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                     Framework.RunOnTick(() => {
                         TextureProvider.CreateFromExistingTextureAsync(wrap, new TextureModificationArgs() { NewHeight = (int)(polaroidStyle!.ImageSize.Y * 2), NewWidth = (int)(polaroidStyle!.ImageSize.X * 2), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax }, true).ContinueWith((t) => {
                             if (t.IsCompletedSuccessfully) {
+                                imageProvider.ImageDetail.UvMin = Vector2.Zero;
+                                imageProvider.ImageDetail.UvMax = Vector2.One;
                                 imageProvider.LoadImage(t.Result);
                                 t.Result.Dispose();
                                 IsOpen = false;

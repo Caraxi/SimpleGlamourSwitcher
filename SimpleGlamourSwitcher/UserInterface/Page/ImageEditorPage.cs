@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility.Raii;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -18,7 +19,9 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
     private RectangleHandle UvEditHandle = RectangleHandle.None;
 
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
-        DrawEditor(ref controlFlags);
+        using (ImRaii.Child("scroll", ImGui.GetContentRegionAvail())) {
+            DrawEditor(ref controlFlags);
+        }
     }
 
     public void DrawEditor(ref WindowControlFlags controlFlags) {

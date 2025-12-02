@@ -334,6 +334,26 @@ public class GlamourListPage : Page {
                             if (characterFolder is not PreviousCharacterFolder && ImGui.MenuItem("Copy Command")) {
                                 ImGui.SetClipboardText($"/sgs open {folderGuid}");
                             }
+                            
+                            if (characterCloneTargets == null) {
+                                characterCloneTargets = [];
+                                CharacterConfigFile.GetCharacterConfigurations(fc => {
+                                    if (ActiveCharacter?.Guid == fc.Guid) return false;
+                                    if (string.IsNullOrWhiteSpace(fc.Name)) return false;
+                                    return fc is { Hidden: false, Deleted: false };
+                                }).ContinueWith((c) => {
+                                    characterCloneTargets = c.Result;
+                                });
+                            }
+                            
+                            if (characterFolder is not PreviousCharacterFolder && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
+                                foreach (var c in characterCloneTargets) {
+                                    if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
+                                    characterFolder.CloneTo(c.Value);
+                                }
+
+                                ImGui.EndMenu();
+                            }
 
                             if (ImGui.BeginMenu($"Delete")) {
                                 

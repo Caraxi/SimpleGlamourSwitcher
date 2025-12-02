@@ -4,6 +4,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using ECommons.ImGuiMethods;
+using OtterGui.Extensions;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Parts;

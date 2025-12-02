@@ -34,8 +34,8 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     private bool applyOnLogin = character?.ApplyOnLogin ?? true;
     private bool applyOnPluginReload = character?.ApplyOnPluginReload ?? false;
     
-    private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
-    private (string Name, uint World) heelsIdentity = character?.HeelsIdentity ?? (ClientState.LocalPlayer?.Name.TextValue ?? string.Empty, ClientState.LocalPlayer?.HomeWorld.RowId ?? 0);
+    private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (Objects.LocalPlayer?.Name.TextValue ?? string.Empty, Objects.LocalPlayer?.HomeWorld.RowId ?? 0);
+    private (string Name, uint World) heelsIdentity = character?.HeelsIdentity ?? (Objects.LocalPlayer?.Name.TextValue ?? string.Empty, Objects.LocalPlayer?.HomeWorld.RowId ?? 0);
 
     private Guid? customizePlusProfile = character == null ? CustomizePlus.TryGetActiveProfileOnCharacter(0, out var activeProfile) ? activeProfile.UniqueId : null : character.CustomizePlusProfile;
 

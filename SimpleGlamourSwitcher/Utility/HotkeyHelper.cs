@@ -44,8 +44,8 @@ public static class HotkeyHelper {
             handleType = NativeKeyState.KeyHandleType.Block;
         } else {
             
-            // if (ClientState.LocalContentId == 0) return;
-            // if (ClientState.LocalPlayer == null) return;
+            // if (PlayerStateService.ContentId == 0) return;
+            // if (Objects.LocalPlayer == null) return;
             if (IsSettingHotkey) return;
             
             if (Condition.Any(ConditionFlag.LoggingOut, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51, ConditionFlag.InCombat, PluginConfig.AllowHotkeyInGpose && ClientState.IsGPosing ? ConditionFlag.None : ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent)) return;

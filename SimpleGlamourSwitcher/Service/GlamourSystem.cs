@@ -34,7 +34,7 @@ public static class GlamourSystem {
                 var profileId = ActiveCharacter.CustomizePlusProfile.Value;
                 PluginLog.Debug($"Set Customize Plus Profile: {ActiveCharacter.CustomizePlusProfile}");
                 await Framework.RunOnTick(() => {
-                    var player = ClientState.LocalPlayer;
+                    var player = Objects.LocalPlayer;
                     if (player == null) return;
 
                     var playerName = player.Name.TextValue;

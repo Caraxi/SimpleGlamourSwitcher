@@ -151,7 +151,7 @@ public class Plugin : IDalamudPlugin {
     private void OpenOnStartup() {
         ClientState.Login -= OpenOnStartup;
         Framework.RunOnTick(() => {
-            if (ActiveCharacter != null && ClientState.LocalContentId != 0) {
+            if (ActiveCharacter != null && PlayerStateService.ContentId != 0) {
                 switch (PluginConfig.DebugDefaultPage.ToLowerInvariant()) {
                     case "none":
                         break;

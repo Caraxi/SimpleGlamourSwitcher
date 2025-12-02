@@ -6,13 +6,13 @@ namespace SimpleGlamourSwitcher.Service;
 
 public static unsafe class GameHelper {
     public static (byte Id, string Name)? GetGearsetByIndex(int index) {
-        if (ClientState.LocalContentId == 0) return null;
+        if (PlayerStateService.ContentId == 0) return null;
         var currentGearset = RaptureGearsetModule.Instance()->GetGearset(index);
         return (currentGearset->Id, currentGearset->NameString);
     }
 
     public static (byte Id, string Name)? GetGearsetById(byte id) {
-        if (ClientState.LocalContentId == 0) return null;
+        if (PlayerStateService.ContentId == 0) return null;
         foreach (var e in RaptureGearsetModule.Instance()->Entries.PointerEnumerator()) {
             if (e->Id == id) return (e->Id, e->NameString);
         }

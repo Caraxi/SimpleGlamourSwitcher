@@ -4,7 +4,7 @@ namespace SimpleGlamourSwitcher.Service;
 
 public static class PluginState {
     public static bool TryGetActiveCharacterGuid(out Guid guid) {
-        return PluginConfig.SelectedCharacter.TryGetValue(ClientState.LocalContentId, out guid);
+        return PluginConfig.SelectedCharacter.TryGetValue(PlayerStateService.ContentId, out guid);
     }
     
     

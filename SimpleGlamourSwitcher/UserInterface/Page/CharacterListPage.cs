@@ -25,7 +25,7 @@ public class CharacterListPage : Page {
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "New Character", () => {
             MainWindow?.OpenPage(new EditCharacterPage(null));
-        }) { IsDisabled = () => ClientState.LocalPlayer == null, Tooltip = "New Character"} );
+        }) { IsDisabled = () => Objects.LocalPlayer == null, Tooltip = "New Character"} );
         
         LoadCharacters();
     }

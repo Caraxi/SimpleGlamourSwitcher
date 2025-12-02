@@ -47,7 +47,7 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         var activeEmote = await EmoteIdentifier.GetLocalPlayer();
         if (EmoteIdentifier == null) return;
         
-        var isActive = EmoteIdentifier.Get(ClientState.LocalPlayer) == EmoteIdentifier;
+        var isActive = EmoteIdentifier.Get(Objects.LocalPlayer) == EmoteIdentifier;
         ModManager.ApplyMods(EmoteIdentifier, ModConfigs);
         EnqueueAutoCommands();
         
@@ -260,7 +260,7 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
 
     public static EmoteConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid) {
         var cfg = Create(character, folderGuid);
-        cfg.EmoteIdentifier = EmoteIdentifier.Get(ClientState.LocalPlayer);
+        cfg.EmoteIdentifier = EmoteIdentifier.Get(Objects.LocalPlayer);
         
         if (cfg.EmoteIdentifier != null) {
             var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);

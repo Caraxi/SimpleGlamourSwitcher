@@ -34,13 +34,13 @@ public static class Config {
       
       if (guid == null || guid == Guid.Empty) {
          if (setSaved) {
-            _pluginConfig.SelectedCharacter.Remove(ClientState.LocalContentId);
+            _pluginConfig.SelectedCharacter.Remove(PlayerStateService.ContentId);
             _pluginConfig.Dirty = true;
             _pluginConfig.Save();
          }
       } else {
          if (setSaved) {
-            _pluginConfig.SelectedCharacter[ClientState.LocalContentId] = guid.Value;
+            _pluginConfig.SelectedCharacter[PlayerStateService.ContentId] = guid.Value;
             _pluginConfig.Dirty = true;
             _pluginConfig.Save();
          }

@@ -153,7 +153,7 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
         EmoteIdentifier? emoteIdentifier = null;
 
         await Framework.RunOnFrameworkThread(() => {
-            emoteIdentifier = Get(ClientState.LocalPlayer);
+            emoteIdentifier = Get(Objects.LocalPlayer);
         });
 
         return emoteIdentifier;

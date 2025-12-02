@@ -97,7 +97,7 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
         }
         
         if (ImGui.CollapsingHeader("Emotes")) {
-            var activeEmote = EmoteIdentifier.Get(ClientState.LocalPlayer);
+            var activeEmote = EmoteIdentifier.Get(Objects.LocalPlayer);
             foreach (var e in EmoteIdentifier.List) {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.HealerGreen, activeEmote == e)) {
                     ImGui.Text($"{nameof(EmoteIdentifier)}({nameof(EmoteIdentifier.EmoteModeId)} = {e.EmoteModeId}, {nameof(EmoteIdentifier.EmoteId)} = {e.EmoteId}, {nameof(EmoteIdentifier.CPoseState)} = {e.CPoseState}): {e.Name}");
@@ -111,7 +111,7 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                 
                 ImGui.Text("Ready");
 
-                var chr = ClientState.LocalPlayer;
+                var chr = Objects.LocalPlayer;
                 if (chr == null) {
                     ImGui.TextUnformatted("No Character");
                 } else {

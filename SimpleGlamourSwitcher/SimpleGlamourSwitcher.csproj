@@ -12,11 +12,11 @@
         <Version>1.3.0.2</Version>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\ECommons\ECommons\ECommons.csproj" />
       <ProjectReference Include="..\Glamourer.Api\Glamourer.Api.csproj" />
       <ProjectReference Include="..\Glamourer.GameData\Glamourer.GameData.csproj" />
       <ProjectReference Include="..\Penumbra.Api\Penumbra.Api.csproj" />
       <ProjectReference Include="..\Penumbra.GameData\Penumbra.GameData.csproj" />
+      <PackageReference Include="ECommons" Version="3.0.1.29" />
     </ItemGroup>
     <ItemGroup>
       <Compile Remove="PenumbraPathResolve.cs" />

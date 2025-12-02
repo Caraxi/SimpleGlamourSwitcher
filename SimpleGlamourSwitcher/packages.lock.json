@@ -14,6 +14,12 @@
         "resolved": "1.2.25",
         "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
       },
+      "ECommons": {
+        "type": "Direct",
+        "requested": "[3.0.1.29, )",
+        "resolved": "3.0.1.29",
+        "contentHash": "w4vjAdH6jh5oKcT4E7dcxbmbYhMVJ/1fL58/qfGrHNXGfkLxb2TcQlvMbQOzL8HrhEUORRBv8E1h1e9rwhR9fg=="
+      },
       "FlatSharp.Compiler": {
         "type": "Transitive",
         "resolved": "7.9.0",
@@ -49,9 +55,6 @@
         "type": "Transitive",
         "resolved": "4.5.5",
         "contentHash": "XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw=="
-      },
-      "ecommons": {
-        "type": "Project"
       },
       "glamourer.api": {
         "type": "Project"

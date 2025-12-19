@@ -128,7 +128,7 @@ public static class StainPicker {
         var stainColor = ImGui.GetColorU32(stainVec4);
 
         dl.AddImage(texture.Handle, center - drawOffset, center + drawOffset, new Vector2(0, 0.3529f), new Vector2(0.27777f, 0.6470f), stainColor);
-        if (stain.Value.Unknown1) {
+        if (stain.Value.IsMetallic) {
             dl.PushClipRect(center - drawOffset2, center + drawOffset2);
             var hsv = new Vector3();
             ImGui.ColorConvertRGBtoHSV(stainVec4.X, stainVec4.Y, stainVec4.Z, ref hsv.X, ref hsv.Y, ref hsv.Z);

@@ -1,24 +1,24 @@
 {
   "version": 1,
   "dependencies": {
-    "net9.0-windows7.0": {
+    "net10.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[13.1.0, )",
-        "resolved": "13.1.0",
-        "contentHash": "XdoNhJGyFby5M/sdcRhnc5xTop9PHy+H50PTWpzLhJugjB19EDBiHD/AsiDF66RETM+0qKUdJBZrNuebn7qswQ=="
+        "requested": "[14.0.1, )",
+        "resolved": "14.0.1",
+        "contentHash": "y0WWyUE6dhpGdolK3iKgwys05/nZaVf4ZPtIjpLhJBZvHxkkiE23zYRo7K7uqAgoK/QvK5cqF6l3VG5AbgC6KA=="
       },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
-        "requested": "[1.2.25, )",
-        "resolved": "1.2.25",
-        "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
+        "requested": "[1.2.39, )",
+        "resolved": "1.2.39",
+        "contentHash": "fcFN01tDTIQqDuTwr1jUQK/geofiwjG5DycJQOnC72i1SsLAk1ELe+apBOuZ11UMQG8YKFZG1FgvjZPbqHyatg=="
       },
       "ECommons": {
         "type": "Direct",
-        "requested": "[3.0.1.29, )",
-        "resolved": "3.0.1.29",
-        "contentHash": "w4vjAdH6jh5oKcT4E7dcxbmbYhMVJ/1fL58/qfGrHNXGfkLxb2TcQlvMbQOzL8HrhEUORRBv8E1h1e9rwhR9fg=="
+        "requested": "[3.1.0.5, )",
+        "resolved": "3.1.0.5",
+        "contentHash": "oEpz7wIB4GPEWcYsNKqf3Sny+K4agdFlSo8YKEu6QdEFuPEH6kzwL7UKCKxj327lailQ927fIPPxCFHSAOXIMA=="
       },
       "FlatSharp.Compiler": {
         "type": "Transitive",
@@ -28,10 +28,7 @@
       "FlatSharp.Runtime": {
         "type": "Transitive",
         "resolved": "7.9.0",
-        "contentHash": "Bm8+WqzEsWNpxqrD5x4x+zQ8dyINlToCreM5FI2oNSfUVc9U9ZB+qztX/jd8rlJb3r0vBSlPwVLpw0xBtPa3Vw==",
-        "dependencies": {
-          "System.Memory": "4.5.5"
-        }
+        "contentHash": "Bm8+WqzEsWNpxqrD5x4x+zQ8dyINlToCreM5FI2oNSfUVc9U9ZB+qztX/jd8rlJb3r0vBSlPwVLpw0xBtPa3Vw=="
       },
       "JetBrains.Annotations": {
         "type": "Transitive",
@@ -50,11 +47,6 @@
         "type": "Transitive",
         "resolved": "9.0.2",
         "contentHash": "MNe7GSTBf3jQx5vYrXF0NZvn6l7hUKF6J54ENfAgCO8y6xjN1XUmKKWG464LP2ye6QqDiA1dkaWEZBYnhoZzjg=="
-      },
-      "System.Memory": {
-        "type": "Transitive",
-        "resolved": "4.5.5",
-        "contentHash": "XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw=="
       },
       "glamourer.api": {
         "type": "Project"
@@ -83,7 +75,7 @@
           "FlatSharp.Compiler": "[7.9.0, )",
           "FlatSharp.Runtime": "[7.9.0, )",
           "OtterGui": "[1.0.0, )",
-          "Penumbra.Api": "[5.12.0, )",
+          "Penumbra.Api": "[5.13.0, )",
           "Penumbra.String": "[1.0.6, )"
         }
       },

@@ -12,11 +12,11 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher;
 
 public class Plugin : IDalamudPlugin {
-    private static readonly WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
-    public static readonly MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
-    public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
-    public static readonly DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
-    public static readonly ScreenshotWindow ScreenshotWindow = new ScreenshotWindow() { IsOpen = true}.Enroll(WindowSystem);
+    private readonly static WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
+    public readonly static MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
+    public readonly static ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
+    public readonly static DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
+    public readonly static ScreenshotWindow ScreenshotWindow = new ScreenshotWindow() { IsOpen = true}.Enroll(WindowSystem);
     
     
     public Plugin(IDalamudPluginInterface pluginInterface) {

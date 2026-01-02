@@ -322,12 +322,15 @@ public static class CustomizeEditor {
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * EditorInputScale);
             
             if (ImGui.BeginChildFrame(ImGui.GetID($"{index}CustomizePreview"), new Vector2(ImGui.GetContentRegionAvail().X * EditorInputScale, 48 * ImGuiHelpers.GlobalScale))) {
-                var active = list[appearance[index].Value - 1];
+                CustomizeData? active = appearance[index].Value == 0 || appearance[index].Value >= list.Count ? null : list[appearance[index].Value - 1];
                 
-                var icon = TextureProvider.GetFromGameIcon(active.IconId).GetWrapOrEmpty();
-                ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
-                ImGui.SameLine();
-                ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
+                if (active != null) {
+                    var icon = TextureProvider.GetFromGameIcon(active.Value.IconId).GetWrapOrEmpty();
+                    ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
+                    ImGui.SameLine();
+                    ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
+                }
+                
                 ImGui.Text($"{label} #{appearance[index].Value}");
             }
             ImGui.EndChildFrame();

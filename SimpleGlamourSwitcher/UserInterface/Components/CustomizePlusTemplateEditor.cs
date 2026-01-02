@@ -19,7 +19,7 @@ public static class CustomizePlusTemplateEditor {
         var profile = ActiveCharacter.CustomizePlusProfile.Value;
 
         using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled), equipment.CustomizePlusTemplateConfigs.Count == 0)) {
-            if (ImGui.Button("C+", buttonSize)) {
+            if (ImGui.Button($"C+##{slotName}", buttonSize)) {
                 ImGui.OpenPopup($"cplus_template_editor_{slotName}");
             }
         }

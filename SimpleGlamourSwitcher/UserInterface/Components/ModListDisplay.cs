@@ -129,7 +129,7 @@ public static class ModListDisplay {
         
         ImGui.SameLine();
 
-        var id = $"##editMods_{ImGui.GetID("editModsPopup")}";
+        var id = $"##editMods_{ImGui.GetID("editModsPopup")}_{slotName}";
         
         if (ImGuiExt.IconButton($"{id}_open", FontAwesomeIcon.Edit, _buttonSize)) {
             ImGui.OpenPopup(id);

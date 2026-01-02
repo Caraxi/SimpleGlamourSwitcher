@@ -508,7 +508,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     if (ImGui.IsItemHovered()) {
                         ImGui.BeginTooltip();
 
-                        ImGui.Text($"{slot.PrettyName()} Advanced Dyes");
+                        ImGui.Text($"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()} Advanced Dyes");
                         ImGui.Separator();
 
                         using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
@@ -541,14 +541,14 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
 
                 if (weapon is { } ae) {
                     ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
+                    dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
                     ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{slot}, Stain 2##{slot}_stain2", ref ae.Stain.Stain2, new Vector2(s.Y));
+                    dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 2##{slot}_stain2", ref ae.Stain.Stain2, new Vector2(s.Y));
                 }
 
                 ImGui.EndGroup();
                 
-                dirty |= ModListDisplay.Show(weapon, $"{slot.PrettyName()}");
+                dirty |= ModListDisplay.Show(weapon, $"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()}");
             }
         }
     }

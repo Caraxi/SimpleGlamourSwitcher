@@ -45,6 +45,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     
     public HashSet<CustomizeIndex>? CustomDefaultEnabledCustomizeIndexes;
     public HashSet<HumanSlot>? CustomDefaultDisabledEquipmentSlots;
+    public HashSet<EquipSlot>? CustomDefaultDisabledWeaponSlots;
     public HashSet<AppearanceParameterKind>? CustomDefaultEnabledParameterKinds;
     public HashSet<ToggleType>? CustomDefaultEnabledToggles;
     
@@ -68,7 +69,10 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes => CustomDefaultEnabledCustomizeIndexes ?? ConfigFile?.DefaultEnabledCustomizeIndexes ?? [];
     
     [JsonIgnore]
-    public HashSet<HumanSlot> DefaultDisabledEquipmentSlots => CustomDefaultDisabledEquipmentSlots ?? ConfigFile?.DefaultDisabledEquipmentSlots ?? [];
+    public HashSet<HumanSlot> DefaultDisabledEquipmentSlots => CustomDefaultDisabledEquipmentSlots ?? ConfigFile?.DefaultDisabledEquipmentSlots ?? [];    
+    
+    [JsonIgnore]
+    public HashSet<EquipSlot> DefaultDisabledWeaponSlots => CustomDefaultDisabledWeaponSlots ?? ConfigFile?.DefaultDisabledWeaponSlots ?? [];
 
     [JsonIgnore]
     public HashSet<AppearanceParameterKind> DefaultEnabledParameterKinds => CustomDefaultEnabledParameterKinds ?? ConfigFile?.DefaultEnabledParameterKinds ?? [];

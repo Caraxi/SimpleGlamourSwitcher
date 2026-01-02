@@ -30,6 +30,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
     private HashSet<CustomizeIndex>? defaultAppearanceToggles = editFolder?.CustomDefaultEnabledCustomizeIndexes.Clone();
     private HashSet<HumanSlot>? defaultEquipmentToggles = editFolder?.CustomDefaultDisabledEquipmentSlots.Clone();
+    private HashSet<EquipSlot>? defaultWeaponToggles = editFolder?.CustomDefaultDisabledWeaponSlots.Clone();
     private HashSet<AppearanceParameterKind>? defaultParameterToggles = editFolder?.CustomDefaultEnabledParameterKinds.Clone();
     private HashSet<ToggleType>? defaultToggleTypes = editFolder?.CustomDefaultEnabledToggles.Clone();
     private CharacterFolder.DefaultLinks? defaultLinks = editFolder?.CustomDefaultLinks.Clone();
@@ -83,6 +84,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             var useCustomFolderPolaroid = folderStyle != null;
             var useCustomDefaultAppearanceToggles = defaultAppearanceToggles != null;
             var useCustomDefaultEquipmentToggles = defaultEquipmentToggles != null;
+            var useCustomDefaultWeaponToggles = defaultWeaponToggles != null;
             var useCustomDefaultParameterToggles = defaultParameterToggles != null;
             var useCustomDefaultToggles = defaultToggleTypes != null;
             var useCustomDefaultLinks = defaultLinks != null;
@@ -197,6 +199,33 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
             dirty |= ImGuiExt.CheckboxTriState("Revert Equipment State", ref defaultRevertEquip, true);
 
+            
+            if (ImGui.Checkbox(useCustomDefaultWeaponToggles ? "##useCustomDefaultEquipToggles" : "Use Custom Default Weapon Toggles", ref useCustomDefaultWeaponToggles)) {
+                dirty = true;
+                defaultWeaponToggles = useCustomDefaultWeaponToggles ? ActiveCharacter.DefaultDisabledWeaponSlots.Clone() : null;
+            }
+            
+            if (useCustomDefaultWeaponToggles && defaultWeaponToggles != null) {
+                ImGui.SameLine();
+                if (ImGui.CollapsingHeader("Custom Default Weapon Toggles")) {
+                    ImGui.Columns(2, "defaultWeaponToggles", false);
+                    foreach (var es in Common.Set(EquipSlot.MainHand, EquipSlot.OffHand)) {
+                        var v = !defaultWeaponToggles.Contains(es);
+                        if (ImGui.Checkbox($"{es.PrettyName()}##defaultEnabledEquip", ref v)) {
+                            dirty = true;
+                            if (v) {
+                                defaultWeaponToggles.Remove(es);
+                            } else {
+                                defaultWeaponToggles.Add(es);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+                    
+                    ImGui.Columns(1);
+                }
+            }
+            
             
             if (ImGui.Checkbox(useCustomDefaultToggles ? "##useCustomDefaultToggles" : "Use Custom Defaults for Other Toggles", ref useCustomDefaultToggles)) {
                 dirty = true;
@@ -326,6 +355,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.FolderPolaroidStyle = folderStyle;
         folder.OutfitPolaroidStyle = outfitStyle;
         folder.CustomDefaultDisabledEquipmentSlots = defaultEquipmentToggles;
+        folder.CustomDefaultDisabledWeaponSlots = defaultWeaponToggles;
         folder.CustomDefaultEnabledCustomizeIndexes = defaultAppearanceToggles;
         folder.CustomDefaultEnabledParameterKinds = defaultParameterToggles;
         folder.CustomDefaultEnabledToggles = defaultToggleTypes;

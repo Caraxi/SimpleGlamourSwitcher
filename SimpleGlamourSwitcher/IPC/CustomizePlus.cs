@@ -170,6 +170,7 @@ public static class CustomizePlus {
 
     private static readonly Dictionary<(Guid, int), List<CustomizeTemplateConfig>> RevertLists = [];
     public static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> customizePlusTemplateConfigs, HumanSlot slot) => ApplyTemplateConfig(profile, customizePlusTemplateConfigs, slot.TempIdentificationKey());
+    public static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> customizePlusTemplateConfigs, EquipSlot slot) => ApplyTemplateConfig(profile, customizePlusTemplateConfigs, slot.TempIdentificationKey());
     public static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> customizePlusTemplateConfigs, CustomizeIndex slot)  => ApplyTemplateConfig(profile, customizePlusTemplateConfigs, slot.TempIdentificationKey());
     private static void ApplyTemplateConfig(Guid profile, List<CustomizeTemplateConfig> templates, int slotId, bool isRevert = false) {
         if (profile == Guid.Empty) return;

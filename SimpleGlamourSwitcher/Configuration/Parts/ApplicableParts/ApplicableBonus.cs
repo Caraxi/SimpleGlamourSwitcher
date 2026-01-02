@@ -9,7 +9,7 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
-public record ApplicableBonus : ApplicableItem {
+public record ApplicableBonus : ApplicableItem<HumanSlot> {
     public ulong BonusItemId;
     
     public override void ApplyToCharacter(HumanSlot slot, ref bool requestRedraw) {
@@ -58,5 +58,8 @@ public record ApplicableBonus : ApplicableItem {
         default:
                 return PluginService.ItemManager.Resolve(bonusSlot, BonusItemId);
         }
+    }
+    public override EquipItem GetEquipItem(EquipSlot slot) {
+        throw new NotImplementedException();
     }
 }

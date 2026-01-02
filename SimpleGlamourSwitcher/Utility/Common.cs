@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using Dalamud.Interface.Textures;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using Penumbra.GameData.Enums;
 
 namespace SimpleGlamourSwitcher.Utility;
@@ -35,6 +36,7 @@ public static class Common {
         yield return HumanSlot.Face;
     }
 
+    public static IEnumerable<T> Set<T>(params T[] entries) => entries;
 /*
 
     private enum ClipboardType {

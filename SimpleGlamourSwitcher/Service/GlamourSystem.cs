@@ -138,15 +138,16 @@ public static class GlamourSystem {
     }
     
     
-    public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment, List<IAdditionalLink> Additionals)> HandleLinks(OutfitConfigFile outfit) {
-        if (outfit.ConfigFile == null) return (outfit.Appearance, outfit.Equipment, []);
+    public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment, OutfitWeapons Weapons, List<IAdditionalLink> Additionals)> HandleLinks(OutfitConfigFile outfit) {
+        if (outfit.ConfigFile == null) return (outfit.Appearance, outfit.Equipment, outfit.Weapons, []);
         var outfitList = await GetOutfitLinks(outfit);
         return StackOutfits(outfitList.ToArray());
     }
     
-    public static (OutfitAppearance Appearance, OutfitEquipment Equipment, List<IAdditionalLink> Additionals) StackOutfits(params IListEntry[] entries) {
+    public static (OutfitAppearance Appearance, OutfitEquipment Equipment, OutfitWeapons Weapons, List<IAdditionalLink> Additionals) StackOutfits(params IListEntry[] entries) {
         var appearance = new OutfitAppearance();
         var equipment = new OutfitEquipment();
+        var weapons = new OutfitWeapons();
         var additionals = new List<IAdditionalLink>();
         
         foreach (var entry in entries) {
@@ -248,9 +249,23 @@ public static class GlamourSystem {
                     }
                 }
             }
+
+            if (outfit.Weapons.Apply) {
+                weapons.Apply = true;
+                foreach (var (cjId, cjWeapons) in outfit.Weapons.ClassWeapons) {
+                    if (!cjWeapons.Apply) continue;
+                    weapons.ClassWeapons.TryAdd(cjId, new OutfitClassWeapons() {
+                        Apply = true
+                    });
+                    
+                    if (cjWeapons.MainHand.Apply) weapons.ClassWeapons[cjId].MainHand = cjWeapons.MainHand;
+                    if (cjWeapons.OffHand.Apply) weapons.ClassWeapons[cjId].OffHand = cjWeapons.OffHand;
+                }
+            }
+            
         }
         
-        return (appearance, equipment, additionals);
+        return (appearance, equipment, weapons, additionals);
     } 
     
 }

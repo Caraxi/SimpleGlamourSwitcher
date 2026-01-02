@@ -43,6 +43,7 @@ public static class ModManager {
 
 
     public static int TempIdentificationKey(this HumanSlot slot) => GetIdentifier($"HumanSlot.{slot}");
+    public static int TempIdentificationKey(this EquipSlot slot) => GetIdentifier($"EquipSlot.{slot}");
     public static int TempIdentificationKey(this CustomizeIndex customizeIndex) => GetIdentifier($"CustomizeIndex.{customizeIndex}");
     private static int TempIdentificationKey(this Companion companion) => GetIdentifier($"Companion.{companion.RowId}");
     private static int TempIdentificationKey(this EmoteIdentifier emote) => GetIdentifier($"EmoteIdentifier.{emote}");
@@ -58,6 +59,11 @@ public static class ModManager {
     }
     
     public static void ApplyMods(HumanSlot slot, IEnumerable<OutfitModConfig> outfitModConfigs) {
+        PluginLog.Debug($"Applying mods for {slot}");
+        ApplyMods(slot.TempIdentificationKey(), outfitModConfigs);
+    }    
+    
+    public static void ApplyMods(EquipSlot slot, IEnumerable<OutfitModConfig> outfitModConfigs) {
         PluginLog.Debug($"Applying mods for {slot}");
         ApplyMods(slot.TempIdentificationKey(), outfitModConfigs);
     }

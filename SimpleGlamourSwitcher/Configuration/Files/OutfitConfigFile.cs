@@ -37,6 +37,8 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
     public OutfitEquipment Equipment = new();
     public OutfitAppearance Appearance = new();
+    public OutfitWeapons Weapons = new();
+    
     // public OutfitMods Mods = new();
 
     public static OutfitConfigFile Create(CharacterConfigFile parent, Guid folderGuid) {
@@ -63,11 +65,12 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
         await Framework.RunOnTick(async () => {
 
-            await GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment);
+            await GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment, stack.Weapons);
             
             stack.Appearance.ApplyToCharacter(ref redraw);
             await Framework.RunOnTick(async () => {
                 stack.Equipment.ApplyToCharacter(ref redraw);
+                stack.Weapons.ApplyToCharacter(ref redraw);
 
                 foreach (var a in stack.Additionals) {
                     redraw |= await a.ApplyMods();
@@ -195,6 +198,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         if (glamourerState != null && penumbraCollection.ObjectValid) {
             instance.Equipment = OutfitEquipment.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
             instance.Appearance = OutfitAppearance.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
+            instance.Weapons = OutfitWeapons.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
         }
 
         return instance;

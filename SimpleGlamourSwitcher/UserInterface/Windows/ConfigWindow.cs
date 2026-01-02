@@ -147,6 +147,17 @@ public class ConfigWindow : Window {
                     }
                 }
             }
+
+            foreach (var slot in Common.Set(EquipSlot.MainHand, EquipSlot.OffHand)) {
+                var e = !PluginConfig.DisableAutoModsWeapons.Contains(slot);
+                if (ImGui.Checkbox($"{slot.PrettyName()}##autoModDetectWeapon_{slot}", ref e)) {
+                    if (e) {
+                        PluginConfig.DisableAutoModsWeapons.Remove(slot);
+                    } else {
+                        PluginConfig.DisableAutoModsWeapons.Add(slot);
+                    }
+                }
+            }
         }
     }
 }

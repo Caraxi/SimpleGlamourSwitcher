@@ -9,7 +9,7 @@ using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
-public record ApplicableEquipment : ApplicableItem {
+public record ApplicableEquipment : ApplicableItem<HumanSlot> {
     public Penumbra.GameData.Structs.ItemId ItemId;
     public ApplicableStain Stain = new();
 
@@ -57,5 +57,8 @@ public record ApplicableEquipment : ApplicableItem {
 
     public override EquipItem GetEquipItem(HumanSlot slot) {
         return PluginService.ItemManager.Resolve(slot.ToEquipSlot(), ItemId);
+    }
+    public override EquipItem GetEquipItem(EquipSlot slot) {
+        return PluginService.ItemManager.Resolve(slot, ItemId);
     }
 }

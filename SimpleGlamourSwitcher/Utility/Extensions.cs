@@ -74,6 +74,14 @@ public static class Extensions {
         };
     }
 
+    public static string PrettyName(this EquipSlot slot) {
+        return slot switch {
+            EquipSlot.LFinger => "Left Ring",
+            EquipSlot.RFinger => "Right Ring",
+            _ => slot.ToString()
+        };
+    }
+
     public static string PrettyName(this CustomizeIndex cIndex) {
         return cIndex switch {
             CustomizeIndex.BustSize => "Bust Size",
@@ -114,4 +122,83 @@ public static class Extensions {
         
     }
     
+    internal static FullEquipType ToEquipType(this Item item)
+    {
+        var slot   = (EquipSlot)item.EquipSlotCategory.RowId;
+        var weapon = (WeaponCategory)item.ItemUICategory.RowId;
+        return slot.ToEquipType(weapon);
+    }
+
+    extension(ClassJobCategory category) {
+        public bool Allows(ClassJob classJob) {
+            return category.GetClassJobs().Any(cj => classJob.RowId == cj.RowId);
+        }
+
+        public IEnumerable<ClassJob> GetClassJobs() {
+            if (category.GLA) yield return GetClassJob(1);
+            if (category.PGL) yield return GetClassJob(2);
+            if (category.MRD) yield return GetClassJob(3);
+            if (category.LNC) yield return GetClassJob(4);
+            if (category.ARC) yield return GetClassJob(5);
+            if (category.CNJ) yield return GetClassJob(6);
+            if (category.THM) yield return GetClassJob(7);
+            if (category.CRP) yield return GetClassJob(8);
+            if (category.BSM) yield return GetClassJob(9);
+            if (category.ARM) yield return GetClassJob(10);
+            if (category.GSM) yield return GetClassJob(11);
+            if (category.LTW) yield return GetClassJob(12);
+            if (category.WVR) yield return GetClassJob(13);
+            if (category.ALC) yield return GetClassJob(14);
+            if (category.CUL) yield return GetClassJob(15);
+            if (category.MIN) yield return GetClassJob(16);
+            if (category.BTN) yield return GetClassJob(17);
+            if (category.FSH) yield return GetClassJob(18);
+            if (category.PLD) yield return GetClassJob(19);
+            if (category.MNK) yield return GetClassJob(20);
+            if (category.ACN) yield return GetClassJob(21);
+            if (category.WAR) yield return GetClassJob(22);
+            if (category.DRG) yield return GetClassJob(23);
+            if (category.BRD) yield return GetClassJob(24);
+            if (category.WHM) yield return GetClassJob(25);
+            if (category.BLM) yield return GetClassJob(26);
+            if (category.SMN) yield return GetClassJob(27);
+            if (category.SCH) yield return GetClassJob(28);
+            if (category.ROG) yield return GetClassJob(29);
+            if (category.NIN) yield return GetClassJob(30);
+            if (category.MCH) yield return GetClassJob(31);
+            if (category.DRK) yield return GetClassJob(32);
+            if (category.AST) yield return GetClassJob(33);
+            if (category.SAM) yield return GetClassJob(34);
+            if (category.RDM) yield return GetClassJob(35);
+            if (category.BLU) yield return GetClassJob(36);
+            if (category.GNB) yield return GetClassJob(37);
+            if (category.DNC) yield return GetClassJob(38);
+            if (category.RPR) yield return GetClassJob(39);
+            if (category.SGE) yield return GetClassJob(40);
+            if (category.VPR) yield return GetClassJob(41);
+            if (category.PCT) yield return GetClassJob(42);
+            yield break;
+            ClassJob GetClassJob(uint id) => DataManager.GetExcelSheet<ClassJob>().GetRow(id);
+        }
+
+        public IEnumerable<ClassJob> GetBaseClasses() {
+            foreach (var cj in category.GetClassJobs()) {
+                if (cj.ClassJobParent.RowId == cj.RowId) yield return cj;
+            }
+        }
+    }
+    
+    public static bool IsEquipableWeaponOrToolForClassSlot(this Item item, ClassJob classJob, EquipSlot equipSlot) {
+        var equipType = item.ToEquipType();
+        
+        if (classJob.RowId is 26 or 27 or 28) { // Arcanist, Summoner and Scholar can use all books.
+            return equipType == FullEquipType.Book && equipSlot == EquipSlot.MainHand;
+        }
+        
+        if (!(equipType.IsWeapon() || equipType.IsTool())) return false;
+        switch (equipSlot) {
+            default:
+                return item.ClassJobCategory.Value.Allows(classJob);
+        }
+    }
 }

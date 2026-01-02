@@ -28,7 +28,7 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
     public ApplicableToggle WeaponVisible = new();
     public ApplicableToggle VieraEarsVisible = new();
     
-    public ApplicableItem this[HumanSlot slot] {
+    public ApplicableItem<HumanSlot> this[HumanSlot slot] {
         get {
             switch (slot) {
                 case HumanSlot.Head: return Head;

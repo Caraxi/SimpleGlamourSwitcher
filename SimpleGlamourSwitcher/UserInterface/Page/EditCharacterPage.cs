@@ -43,6 +43,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     
     private readonly HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
     private readonly HashSet<HumanSlot> defaultDisableEquipSlots = character?.DefaultDisabledEquipmentSlots.Clone() ?? [];
+    private readonly HashSet<EquipSlot> defaultDisableWeaponSlots = character?.DefaultDisabledWeaponSlots.Clone() ?? [];
     private readonly HashSet<AppearanceParameterKind> defaultEnabledParameterKinds = character?.DefaultEnabledParameterKinds.Clone() ?? [];
     private readonly HashSet<ToggleType> defaultEnabledToggles = character?.DefaultEnabledToggles.Clone() ?? [];
     
@@ -317,6 +318,28 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                 
                 ImGui.Columns(1);
             }
+            
+            if (ImGui.CollapsingHeader("Default Weapon Toggles")) {
+                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                    ImGui.TextWrapped("Set to have outfits created for this character apply their weapons. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                }
+
+                ImGui.Columns(2, "defaultWeaponToggles", false);
+                foreach (var es in Common.Set(EquipSlot.MainHand, EquipSlot.OffHand)) {
+                    var v = !defaultDisableWeaponSlots.Contains(es);
+                    if (ImGui.Checkbox($"{es.PrettyName()}##defaultEnabledEquip", ref v)) {
+                        dirty = true;
+                        if (v) {
+                            defaultDisableWeaponSlots.Remove(es);
+                        } else {
+                            defaultDisableWeaponSlots.Add(es);
+                        }
+                    }
+                    ImGui.NextColumn();
+                }
+                
+                ImGui.Columns(1);
+            }
 
             if (ImGui.CollapsingHeader("Other Default Toggles")) {
                 ImGui.Columns(2, "defaultToggles", false);
@@ -421,6 +444,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.HeelsIdentity = heelsIdentity;
                     Character.DefaultEnabledCustomizeIndexes = defaultEnabledCustomizeIndexes;
                     Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
+                    Character.DefaultDisabledWeaponSlots = defaultDisableWeaponSlots;
                     Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;
                     Character.DefaultEnabledToggles = defaultEnabledToggles;
                     Character.CustomizePlusProfile = customizePlusProfile;

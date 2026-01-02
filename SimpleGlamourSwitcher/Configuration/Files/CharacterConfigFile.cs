@@ -298,6 +298,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes { get; set; } = new();
     public HashSet<HumanSlot> DefaultDisabledEquipmentSlots { get; set; } = new();
+    public HashSet<EquipSlot> DefaultDisabledWeaponSlots { get; set; } = new();
     public HashSet<AppearanceParameterKind> DefaultEnabledParameterKinds { get; set; } = new();
     public HashSet<ToggleType> DefaultEnabledToggles { get; set; } = new();
     public bool DefaultRevertEquip { get; set; } = false;

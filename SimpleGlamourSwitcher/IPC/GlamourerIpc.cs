@@ -22,7 +22,7 @@ public static class GlamourerIpc {
     public static readonly API.SetMetaState SetMetaState = new(PluginInterface);
     public static readonly API.RevertStateName RevertStateName = new(PluginInterface);
 
-    public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment) {
+    public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment, OutfitWeapons outfitWeapons) {
         
         var state = GetState(0);
         if (state == null) return null;
@@ -94,6 +94,11 @@ public static class GlamourerIpc {
             
         }
 
+        var revertMaterial = new JObject {
+            { "Revert", true },
+            { "Enabled", true }
+        };
+        
         if (outfitEquipment.Apply) {
             if (outfitEquipment.HatVisible.Apply) {
                 equipment["Hat"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.HatVisible.Toggle } };
@@ -111,10 +116,7 @@ public static class GlamourerIpc {
                 equipment["VieraEars"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.VieraEarsVisible.Toggle } };
             }
             
-            var revertMaterial = new JObject {
-                { "Revert", true },
-                { "Enabled", true }
-            };
+
             
             foreach (var slot in Common.GetGearSlots()) {
                 if (outfitEquipment[slot].Apply) {
@@ -142,6 +144,60 @@ public static class GlamourerIpc {
                 }
             }
         }
+
+        if (outfitWeapons.Apply) {
+            var activeBaseClass = PlayerStateService.ClassJob.ValueNullable?.ClassJobParent.ValueNullable;
+            if (activeBaseClass != null && outfitWeapons.ClassWeapons.TryGetValue(activeBaseClass.Value.RowId, out var cjWeapons) && cjWeapons.Apply) {
+                if (cjWeapons.MainHand.Apply) {
+                    foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToEquipSlot() == EquipSlot.MainHand)) {
+                        materials[mIndex.Key.ToString("X16")] = revertMaterial;
+                    }
+                    
+                    foreach (var material in cjWeapons.MainHand.Materials) {
+                        materials[material.Index] = new JObject {
+                            ["DiffuseR"] = material.DiffuseR,
+                            ["DiffuseG"] = material.DiffuseG,
+                            ["DiffuseB"] = material.DiffuseB,
+                            ["SpecularR"] = material.SpecularR,
+                            ["SpecularG"] = material.SpecularG,
+                            ["SpecularB"] = material.SpecularB,
+                            ["SpecularA"] = material.SpecularA,
+                            ["EmissiveR"] = material.EmissiveR,
+                            ["EmissiveG"] = material.EmissiveG,
+                            ["EmissiveB"] = material.EmissiveB,
+                            ["Gloss"] = material.Gloss,
+                            ["Enabled"] = material.Apply,
+                            ["Revert"] = false
+                        };
+                    }
+                }
+                
+                if (cjWeapons.OffHand.Apply) {
+                    foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToEquipSlot() == EquipSlot.OffHand)) {
+                        materials[mIndex.Key.ToString("X16")] = revertMaterial;
+                    }
+                    
+                    foreach (var material in cjWeapons.OffHand.Materials) {
+                        materials[material.Index] = new JObject {
+                            ["DiffuseR"] = material.DiffuseR,
+                            ["DiffuseG"] = material.DiffuseG,
+                            ["DiffuseB"] = material.DiffuseB,
+                            ["SpecularR"] = material.SpecularR,
+                            ["SpecularG"] = material.SpecularG,
+                            ["SpecularB"] = material.SpecularB,
+                            ["SpecularA"] = material.SpecularA,
+                            ["EmissiveR"] = material.EmissiveR,
+                            ["EmissiveG"] = material.EmissiveG,
+                            ["EmissiveB"] = material.EmissiveB,
+                            ["Gloss"] = material.Gloss,
+                            ["Enabled"] = material.Apply,
+                            ["Revert"] = false
+                        };
+                    }
+                }
+            }
+        }
+        
         
         obj.Add("Customize", customize);
         obj.Add("Equipment", equipment);
@@ -152,7 +208,7 @@ public static class GlamourerIpc {
         return obj;
     }
 
-    public static async Task ApplyOutfit(OutfitAppearance appearance, OutfitEquipment equipment) {
+    public static async Task ApplyOutfit(OutfitAppearance appearance, OutfitEquipment equipment, OutfitWeapons weapons) {
         if (appearance is { RevertToGame: true, Apply: true } || equipment is { RevertToGame: true, Apply: true }) {
             ApplyFlag flags = 0;
             if (appearance is { RevertToGame: true, Apply: true }) flags |= ApplyFlag.Customization;
@@ -162,7 +218,7 @@ public static class GlamourerIpc {
             });
         }
         
-        var obj = GetCustomizationJObject(appearance, equipment);
+        var obj = GetCustomizationJObject(appearance, equipment, weapons);
         if (obj == null) return;
 
         ApplyState.Invoke(obj, 0, 0, ApplyFlag.Customization);

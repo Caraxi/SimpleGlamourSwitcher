@@ -52,7 +52,7 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                         
                         if (entry is OutfitConfigFile outfit) {
                             if (ImGui.SmallButton("Copy Appearance JSON")) {
-                                var a = GlamourerIpc.GetCustomizationJObject(outfit.Appearance, outfit.Equipment);
+                                var a = GlamourerIpc.GetCustomizationJObject(outfit.Appearance, outfit.Equipment, outfit.Weapons);
                                 ImGui.SetClipboardText(a?.ToString() ?? "null");
                             }
                             ImGui.SameLine();

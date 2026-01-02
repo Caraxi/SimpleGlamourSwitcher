@@ -37,6 +37,24 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
         return list;
     }
     
+    public static List<OutfitModConfig> GetModListFromWeapon(EquipSlot slot, EquipItem equipItem, Guid penumbraCollection) {
+        var list = new List<OutfitModConfig>();
+        if (slot is not (EquipSlot.MainHand or EquipSlot.OffHand)) return list;
+        if (PluginConfig.DisableAutoModsWeapons.Contains(slot)) return list;
+
+        var mods = PenumbraIpc.CheckCurrentChangedItem(equipItem.Name);
+        
+        foreach (var mod in mods) {
+            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
+            if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+            var modSettings = getModSettings.Item2.Value;
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+        }
+        
+        return list;
+    }
+    
+    
     public static List<OutfitModConfig> GetModListFromCustomize(CustomizeIndex slot, GlamourerCustomize customize, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
         if (PluginConfig.DisableAutoModsCustomize.Contains(slot)) return list;

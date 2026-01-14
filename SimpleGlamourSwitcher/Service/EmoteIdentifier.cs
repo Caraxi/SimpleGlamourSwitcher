@@ -57,9 +57,9 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
     };
 
     private static readonly Dictionary<EmoteIdentifier, uint> Icons = new() {
-        [new EmoteIdentifier(3, 0, 0)] = 64013, // Sleep -> Doze
-        [new EmoteIdentifier(3, 0, 1)] = 64013,
-        [new EmoteIdentifier(3, 0, 2)] = 64013,
+        [new EmoteIdentifier(3, 0, 0)] = 246213, // Sleep -> Doze
+        [new EmoteIdentifier(3, 0, 1)] = 246213,
+        [new EmoteIdentifier(3, 0, 2)] = 246213,
     };
 
     private static string FetchModeName(uint emoteModeId) {
@@ -117,7 +117,7 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
             if (Icons.TryGetValue(this, out var icon)) return icon;
 
             if (EmoteId == 0 && EmoteModeId == 0) {
-                icon = 64453;
+                icon = 246428;
             } else if (EmoteModeId == 0) {
                 icon = FetchEmoteIcon(EmoteId);
             } else {

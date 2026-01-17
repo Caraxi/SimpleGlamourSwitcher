@@ -48,6 +48,7 @@ public class Plugin : IDalamudPlugin {
         PluginUi.OpenConfigUi += ConfigWindow.Toggle;
 
         PluginUi.Draw += WindowSystem.Draw;
+        PluginUi.DisableGposeUiHide = true;
 
         Commands.AddHandler("/sgs", new CommandInfo((_, args) => {
             var splitArgs = args.Split(' ', StringSplitOptions.TrimEntries);

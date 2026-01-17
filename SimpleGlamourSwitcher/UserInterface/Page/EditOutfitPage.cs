@@ -408,47 +408,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     var name = equipItem.Name;
                     ImGui.InputText("##itemName", ref name, 64, ImGuiInputTextFlags.ReadOnly);
                 }
-                
-                if (equipment.Materials is { Count: > 0 }) {
-                    ImGui.SameLine();
-                    using (ImRaii.PushFont(UiBuilder.IconFont)) {
-                        if (ImGui.Button(FontAwesomeIcon.Palette.ToIconString(), new Vector2(s.Y))) { }
-                    }
 
-                    if (ImGui.IsItemHovered()) {
-                        ImGui.BeginTooltip();
-
-                        ImGui.Text($"{slot.PrettyName()} Advanced Dyes");
-                        ImGui.Separator();
-
-                        using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
-                        using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(3, ImGui.GetStyle().CellPadding.Y))) {
-                            if (ImGui.BeginTable("materialsTable", 4)) {
-                                foreach (var material in equipment.Materials) {
-                                    ImGui.TableNextColumn();
-                                    var t = $"{material.MaterialValueIndex.MaterialString()} {material.MaterialValueIndex.RowString()}";
-                                    ImGui.SetNextItemWidth(ImGui.CalcTextSize(t).X + ImGui.GetStyle().FramePadding.X * 2);
-                                    ImGui.InputText("##material", ref t, 128, ImGuiInputTextFlags.ReadOnly);
-                                    ImGui.TableNextColumn();
-                                    ImGui.ColorButton("Diffuse", new Vector4(material.DiffuseR, material.DiffuseG, material.DiffuseB, 1));
-                                    ImGui.SameLine();
-                                    ImGui.ColorButton("Specular", new Vector4(material.SpecularR, material.SpecularG, material.SpecularB, 1));
-                                    ImGui.SameLine();
-                                    ImGui.ColorButton("Emissive", new Vector4(material.EmissiveR, material.EmissiveG, material.EmissiveB, 1));
-                                    ImGui.TableNextColumn();
-                                    ImGui.Text($"{material.Gloss}");
-                                    ImGui.TableNextColumn();
-                                    ImGui.TextUnformatted($"{material.SpecularA * 100}%");
-                                }
-
-                                ImGui.EndTable();
-                            }
-                        }
-
-                        ImGui.EndTooltip();
-                    }
-                }
-
+                AdvancedMaterialsDisplay.ShowAdvancedMaterialsDisplay(equipment, $"{slot.PrettyName()}");
                 if (equipment is ApplicableEquipment ae) {
                     ImGui.SameLine();
                     dirty |= StainPicker.Show($"{slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
@@ -489,8 +450,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 ImGui.SetNextItemWidth(s.X - (weapon.Materials is { Count: > 0 } ? s.Y + ImGui.GetStyle().ItemSpacing.X : 0) - (s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2));
 
                 ImGui.BeginGroup();
-
-                
                 
                 if (ItemPicker.ShowWeaponPicker($"##{slot}##ClassJob{classJob.RowId}", slot, classJob, ref equipItem)) {
                     PluginLog.Warning($"Changed Item: {equipItem.Name}");
@@ -498,47 +457,8 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     
                     dirty = true;
                 }
-   
-                if (weapon.Materials is { Count: > 0 }) {
-                    ImGui.SameLine();
-                    using (ImRaii.PushFont(UiBuilder.IconFont)) {
-                        if (ImGui.Button(FontAwesomeIcon.Palette.ToIconString(), new Vector2(s.Y))) { }
-                    }
 
-                    if (ImGui.IsItemHovered()) {
-                        ImGui.BeginTooltip();
-
-                        ImGui.Text($"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()} Advanced Dyes");
-                        ImGui.Separator();
-
-                        using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
-                        using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(3, ImGui.GetStyle().CellPadding.Y))) {
-                            if (ImGui.BeginTable("materialsTable", 4)) {
-                                foreach (var material in weapon.Materials) {
-                                    ImGui.TableNextColumn();
-                                    var t = $"{material.MaterialValueIndex.MaterialString()} {material.MaterialValueIndex.RowString()}";
-                                    ImGui.SetNextItemWidth(ImGui.CalcTextSize(t).X + ImGui.GetStyle().FramePadding.X * 2);
-                                    ImGui.InputText("##material", ref t, 128, ImGuiInputTextFlags.ReadOnly);
-                                    ImGui.TableNextColumn();
-                                    ImGui.ColorButton("Diffuse", new Vector4(material.DiffuseR, material.DiffuseG, material.DiffuseB, 1));
-                                    ImGui.SameLine();
-                                    ImGui.ColorButton("Specular", new Vector4(material.SpecularR, material.SpecularG, material.SpecularB, 1));
-                                    ImGui.SameLine();
-                                    ImGui.ColorButton("Emissive", new Vector4(material.EmissiveR, material.EmissiveG, material.EmissiveB, 1));
-                                    ImGui.TableNextColumn();
-                                    ImGui.Text($"{material.Gloss}");
-                                    ImGui.TableNextColumn();
-                                    ImGui.TextUnformatted($"{material.SpecularA * 100}%");
-                                }
-
-                                ImGui.EndTable();
-                            }
-                        }
-
-                        ImGui.EndTooltip();
-                    }
-                }
-
+                AdvancedMaterialsDisplay.ShowAdvancedMaterialsDisplay(weapon, $"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()}");
                 if (weapon is { } ae) {
                     ImGui.SameLine();
                     dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));

@@ -131,10 +131,13 @@ public static class ModListDisplay {
 
         var id = $"##editMods_{ImGui.GetID("editModsPopup")}_{slotName}";
         
-        if (ImGuiExt.IconButton($"{id}_open", FontAwesomeIcon.Edit, _buttonSize)) {
+        
+        if (ImGui.Button($"##{id}_open", _buttonSize)) {
             ImGui.OpenPopup(id);
         }
         
+        ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), FontAwesomeIcon.Edit.ToIconString());
+
         ImGui.SetNextWindowPos(popupPosition);
         if (ImGui.BeginPopup(id, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.Modal)) {
             if (!string.IsNullOrEmpty(_locatingMod)) ImGui.Text($"Locating: {_locatingMod}");

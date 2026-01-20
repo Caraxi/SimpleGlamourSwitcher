@@ -138,9 +138,9 @@ public static class GlamourSystem {
     }
     
     
-    public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment, OutfitWeapons Weapons, List<IAdditionalLink> Additionals)> HandleLinks(OutfitConfigFile outfit) {
+    public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment, OutfitWeapons Weapons, List<IAdditionalLink> Additionals)> HandleLinks(OutfitConfigFile outfit, bool throwOnCircular = true) {
         if (outfit.ConfigFile == null) return (outfit.Appearance, outfit.Equipment, outfit.Weapons, []);
-        var outfitList = await GetOutfitLinks(outfit);
+        var outfitList = await GetOutfitLinks(outfit, throwOnCircular);
         return StackOutfits(outfitList.ToArray());
     }
     

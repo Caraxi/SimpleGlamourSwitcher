@@ -13,7 +13,7 @@ namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
 public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
     private OrderedDictionary<Guid, IListEntry> entries = new();
-    private List<OutfitConfigFile> stack = new();
+    private List<IListEntry> stack = new();
     public override void Draw() {
 
         if (ImGui.Button("Copy Glamourer State")) {

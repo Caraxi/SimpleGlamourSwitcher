@@ -59,7 +59,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     public async Task Apply() {
         Notice.Show($"Apply Outfit: {Name}");
 
-        var stack = await GlamourSystem.HandleLinks(this);
+        var stack = await GlamourSystem.HandleLinks(this, false);
         
         var redraw = false;
 

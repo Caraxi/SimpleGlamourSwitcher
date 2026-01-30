@@ -14,13 +14,13 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
-public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Page {
+public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder, bool createShared = false) : Page {
     private bool dirty;
     
-    private readonly CharacterFolder? newFolder = editFolder == null ? new CharacterFolder() { FolderGuid = Guid.NewGuid(), ConfigFile = ActiveCharacter } : null;
+    private readonly CharacterFolder? newFolder = editFolder == null ? new CharacterFolder() { FolderGuid = Guid.NewGuid(), ConfigFile = createShared ? SharedCharacter : ActiveCharacter } : null;
     
     
-    private readonly string folderPath = ActiveCharacter?.ParseFolderPath(parentFolder) ?? throw new Exception("No Active Character");
+    private readonly string folderPath = (editFolder == null ? (createShared ? SharedCharacter : ActiveCharacter) : editFolder.ConfigFile)?.ParseFolderPath(parentFolder) ?? throw new Exception("No Active Character");
     private string folderName = editFolder?.Name ?? string.Empty;
     private const float SubWindowWidth = 500f;
     private bool focusName = editFolder == null;
@@ -320,7 +320,7 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
 
                     var guid = folder?.FolderGuid;
                     if (guid != null) {
-                        MainWindow.OpenPage(new GlamourListPage(guid.Value));
+                        MainWindow.OpenPage(new GlamourListPage(guid.Value, isShared: createShared));
                     }
                     
                 }
@@ -343,11 +343,11 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
             var newFolderGuid = newFolder?.FolderGuid ?? Guid.NewGuid();
             folder = new CharacterFolder() {
                 Parent = parentFolder,
-                ConfigFile = ActiveCharacter,
+                ConfigFile = createShared ? SharedCharacter : ActiveCharacter,
                 FolderGuid = newFolderGuid,
             };
             
-            ActiveCharacter?.Folders.Add(newFolderGuid, folder);
+            (createShared ? SharedCharacter : ActiveCharacter)?.Folders.Add(newFolderGuid, folder);
         }
         
         folder.Name = folderName;
@@ -367,9 +367,15 @@ public class EditFolderPage(Guid parentFolder, CharacterFolder? editFolder) : Pa
         folder.CustomDefaultRevertCustomize = defaultRevertCustomize;
         folder.FolderSortStrategy = folderSortStrategy;
 
-        if (ActiveCharacter == null) return;
-        ActiveCharacter.Dirty = true;
-        ActiveCharacter.Save(true);
+        if (ActiveCharacter != null) {
+            ActiveCharacter.Dirty = true;
+            ActiveCharacter.Save(true);
+        }
+
+        if (SharedCharacter != null) {
+            SharedCharacter.Dirty = true;
+            SharedCharacter.Save(true);
+        }
     }
     
     public override void DrawLeft(ref WindowControlFlags controlFlags) {

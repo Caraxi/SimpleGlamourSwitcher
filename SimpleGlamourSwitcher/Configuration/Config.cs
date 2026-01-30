@@ -8,6 +8,9 @@ public static class Config {
    public static class I {
       public static PluginConfigFile PluginConfig => _pluginConfig;
       public static CharacterConfigFile? ActiveCharacter => _activeCharacter;
+
+      public static CharacterConfigFile? SharedCharacter => _sharedCharacter;
+
    }
    
    static Config() {
@@ -21,9 +24,11 @@ public static class Config {
    
    private static PluginConfigFile _pluginConfig;
    private static CharacterConfigFile? _activeCharacter;
+   private static CharacterConfigFile? _sharedCharacter;
 
    public static PluginConfigFile ReloadPluginConfig() {
       _pluginConfig = PluginConfigFile.Load(Guid.Empty) ?? PluginConfigFile.Create();
+      LoadSharedCharacter();
       return _pluginConfig;
    }
    
@@ -49,8 +54,10 @@ public static class Config {
       
       return _activeCharacter != null;
    }
-   
-   
-   
-   
+
+   public static void LoadSharedCharacter() {
+      _sharedCharacter = CharacterConfigFile.Load(CharacterConfigFile.SharedDataGuid, _pluginConfig) ?? CharacterConfigFile.Create(CharacterConfigFile.SharedDataGuid, _pluginConfig);
+      _sharedCharacter.Name = "Shared";
+      _sharedCharacter.Save(true);
+   }
 }

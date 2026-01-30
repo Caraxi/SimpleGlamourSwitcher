@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
@@ -22,44 +23,55 @@ namespace SimpleGlamourSwitcher.UserInterface.Page;
 
 public class GlamourListPage : Page {
     public readonly Guid ActiveFolder;
+    public readonly bool IsSharedFolder;
 
     private bool scrollTop;
     private bool showHiddenFolders;
 
     private bool hideBackButton;
+    private Stopwatch holdingControlStopwatch = new Stopwatch();
 
     private FolderSortStrategy folderSortStrategy;
 
     private Dictionary<Guid, CharacterConfigFile>? characterCloneTargets;
     
-    public GlamourListPage(Guid folderGuid = default, bool hideBackButton = false) {
+    private CharacterConfigFile? SharedOrActiveCharacter => IsSharedFolder ? SharedCharacter : ActiveCharacter;
+    
+    public GlamourListPage(Guid folderGuid = default, bool hideBackButton = false, bool isShared = false) {
         this.hideBackButton = hideBackButton;
-        ActiveFolder = ActiveCharacter == null || !ActiveCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid;
+        IsSharedFolder = isShared;
+        ActiveFolder = isShared ? SharedCharacter == null || !SharedCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid
+                                : ActiveCharacter == null || !ActiveCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid;
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Outfit", () => {
-            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(ActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Outfit"} );
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(SharedOrActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Outfit"} );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cat, "Create Minion", () => {
-            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(ActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Minion"} );
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(SharedOrActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Minion"} );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.KissWinkHeart, "Create Emote", () => {
-            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditEmotePage(ActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Emote"} );
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditEmotePage(SharedOrActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Emote"} );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.KissWinkHeart, "Create Other", () => {
-            if (ActiveCharacter != null) MainWindow?.OpenPage(new EditGenericPage(ActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Generic Mod Entry"} );
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditGenericPage(SharedOrActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Generic Mod Entry"} );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
-            MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null));
-        }) { IsDisabled = () => ActiveCharacter == null, Tooltip = "Create New Folder" } );
-       
+            MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null, IsSharedFolder));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Folder" } );
+
+        if (folderGuid == Guid.Empty) {
+            BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Shared Folder", () => {
+                MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null, true));
+            }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create Shared Folder, accessible from all characters" } );
+        }
         LoadOutfits();
     }
 
     private void LoadOutfits() {
-        var character = ActiveCharacter;
+        var character = IsSharedFolder ? SharedCharacter : ActiveCharacter;
 
         scrollTop = true;
         if (character != null) {
@@ -207,7 +219,7 @@ public class GlamourListPage : Page {
         
         
         
-        var character = ActiveCharacter;
+        var character = SharedOrActiveCharacter;
 
         var drag = dragItem;
         if (drag != null) {
@@ -258,7 +270,7 @@ public class GlamourListPage : Page {
         
         if (ActiveFolder != Guid.Empty && folder != null && hideBackButton == false) {
             var parentGuid = Guid.Empty;
-            var parentName = character.Name;
+            var parentName = ActiveCharacter?.Name ?? character.Name;
             if (folder.Parent != Guid.Empty && character.Folders.TryGetValue(folder.Parent, out var parentFolder)) {
                 parentName = parentFolder.Name;
                 parentGuid = folder.Parent;
@@ -267,6 +279,10 @@ public class GlamourListPage : Page {
             folders.Insert(0, new KeyValuePair<Guid, CharacterFolder>(parentGuid, new PreviousCharacterFolder() { Name = folderStyle.ImageSize.X < 100 ? "[Back]" : $"[Back] {parentName}", Parent = ActiveFolder}));
         }
 
+        if (ActiveFolder == Guid.Empty && SharedCharacter != null) {
+            folders.InsertRange(0, SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && f.Value.Parent == Guid.Empty));
+        }
+        
         if (folders.Count > 0) {
             foreach (var (folderGuid, characterFolder) in folders) {
                 if (characterFolder.Hidden && !showHiddenFolders) continue;
@@ -276,17 +292,22 @@ public class GlamourListPage : Page {
 
                     if (drag == null) {
                         
-                        if (Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : CharacterFolder.GetImage(character, folderGuid), characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle)) {
+                        if (Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var folderImage) ? folderImage : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle)) {
 
                             if (characterFolder is PreviousCharacterFolder) {
                                 if (MainWindow?.PreviousPage is GlamourListPage page && page.ActiveFolder == folderGuid) {
                                     MainWindow?.PopPage();
                                 } else {
                                     MainWindow?.PopPage();
-                                    MainWindow?.OpenPage(new GlamourListPage(folderGuid));
+                                    MainWindow?.OpenPage(new GlamourListPage(folderGuid, isShared: characterFolder.ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid) );
                                 }
                             } else {
-                                MainWindow?.OpenPage(new GlamourListPage(folderGuid));
+                                MainWindow?.OpenPage(new GlamourListPage(folderGuid, isShared: characterFolder.ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid));
+                            }
+                        }
+                        if (characterFolder.IsSharedFolder) {
+                            using (PluginService.PluginUi.IconFontHandle.Push()) {
+                                ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExternalLinkAlt.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = 0xFFFFFFFF });
                             }
                         }
 
@@ -294,7 +315,7 @@ public class GlamourListPage : Page {
                             controlFlags |= WindowControlFlags.PreventMove;
                         }
                         
-                        if (ImGui.IsItemHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 10) && characterFolder is not PreviousCharacterFolder) {
+                        if (ImGui.IsItemHovered() && (!characterFolder.IsSharedFolder || IsSharedFolder) && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 10) && characterFolder is not PreviousCharacterFolder) {
                             dragItem = (ItemType.Folder, folderGuid);
                         }
                         
@@ -334,54 +355,116 @@ public class GlamourListPage : Page {
                             if (characterFolder is not PreviousCharacterFolder && ImGui.MenuItem("Copy Command")) {
                                 ImGui.SetClipboardText($"/sgs open {folderGuid}");
                             }
-                            
-                            if (characterCloneTargets == null) {
-                                characterCloneTargets = [];
-                                CharacterConfigFile.GetCharacterConfigurations(fc => {
-                                    if (ActiveCharacter?.Guid == fc.Guid) return false;
-                                    if (string.IsNullOrWhiteSpace(fc.Name)) return false;
-                                    return fc is { Hidden: false, Deleted: false };
-                                }).ContinueWith((c) => {
-                                    characterCloneTargets = c.Result;
-                                });
-                            }
-                            
-                            if (characterFolder is not PreviousCharacterFolder && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
-                                foreach (var c in characterCloneTargets) {
-                                    if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
-                                    characterFolder.CloneTo(c.Value);
-                                }
 
-                                ImGui.EndMenu();
+                            if (!characterFolder.IsSharedFolder) {
+                                if (characterCloneTargets == null) {
+                                    characterCloneTargets = [];
+                                    CharacterConfigFile.GetCharacterConfigurations(fc => {
+                                        if (fc.Guid == CharacterConfigFile.SharedDataGuid) return false;
+                                        if (ActiveCharacter?.Guid == fc.Guid) return false;
+                                        if (string.IsNullOrWhiteSpace(fc.Name)) return false;
+                                        return fc is { Hidden: false, Deleted: false };
+                                    }).ContinueWith((c) => {
+                                        characterCloneTargets = c.Result;
+                                    });
+                                }
+                            
+                                if (characterFolder is not PreviousCharacterFolder && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
+                                    foreach (var c in characterCloneTargets) {
+                                        if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
+                                        characterFolder.CloneTo(c.Value);
+                                    }
+
+                                    ImGui.EndMenu();
+                                }
                             }
 
                             if (ImGui.BeginMenu($"Delete")) {
-                                
-                                ImGui.Text("All contents of the folder will be moved out\nof the folder before it is deleted.\nHold SHIFT and ALT to confirm.");
+
+                                if (characterFolder.IsSharedFolder && !IsSharedFolder) {
+                                    ImGui.TextColored(ImGuiColors.DalamudRed, "Contents of the shared folder will be lost if deleted.\nHold SHIFT and ALT to confirm.");
+                                } else {
+                                    ImGui.Text("All contents of the folder will be moved out\nof the folder before it is deleted.\nHold SHIFT and ALT to confirm.");
+
+                                }
                                 
                                 if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
-
                                     Task.Run(async () => {
-                                        var moveOutfits = await character.GetEntries(folderGuid);
-                                        foreach (var o in moveOutfits.Values.Where(o => o.Folder == folderGuid)) {
-                                            o.Folder = characterFolder.Parent;
-                                            o.Dirty = true;
-                                            o.Save();
-                                        }
+                                        if (characterFolder.IsSharedFolder && !IsSharedFolder) {
+                                            void DeleteSharedFolder(Guid guid) {
+                                                if (SharedCharacter == null) return;
+                                                SharedCharacter?.Folders.Remove(guid);
+                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
+                                                    if (f.FolderGuid != null) DeleteSharedFolder(f.FolderGuid.Value);
+                                                }
+                                            }
+                                            
+                                            DeleteSharedFolder(folderGuid);
+                                            if (SharedCharacter != null) {
+                                                SharedCharacter.Dirty = true;
+                                                SharedCharacter.Save();
+                                            }
+                                            
+                                            Refresh();
+                                        } else {
+                                            var moveOutfits = await character.GetEntries(folderGuid);
+                                            foreach (var o in moveOutfits.Values.Where(o => o.Folder == folderGuid)) {
+                                                o.Folder = characterFolder.Parent;
+                                                o.Dirty = true;
+                                                o.Save();
+                                            }
 
-                                        foreach (var f in character.Folders.Values.Where(f => f.Parent == folderGuid)) {
-                                            f.Parent = characterFolder.Parent;
-                                        }
+                                            foreach (var f in character.Folders.Values.Where(f => f.Parent == folderGuid)) {
+                                                f.Parent = characterFolder.Parent;
+                                            }
 
-                                        character.Folders.Remove(folderGuid);
+                                            character.Folders.Remove(folderGuid);
                                         
-                                        character.Dirty = true;
-                                        character.Save();
+                                            character.Dirty = true;
+                                            character.Save();
                                         
-                                        Refresh();
+                                            Refresh();
+                                        }
+                                    });
+                                }
+                                
+                                if (!ImGui.GetIO().KeyCtrl || ImGui.IsWindowAppearing()) {
+                                    holdingControlStopwatch.Restart();
+                                } else if (holdingControlStopwatch.ElapsedMilliseconds > 5000 && ImGui.MenuItem("> DELETE CONTENTS <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
+                                    Task.Run(async () => {
+                                        if (characterFolder.IsSharedFolder && !IsSharedFolder) {
+                                            void DeleteSharedFolder(Guid guid) {
+                                                if (SharedCharacter == null) return;
+                                                SharedCharacter?.Folders.Remove(guid);
+                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
+                                                    if (f.FolderGuid != null) DeleteSharedFolder(f.FolderGuid.Value);
+                                                }
+                                            }
+                                            
+                                            DeleteSharedFolder(folderGuid);
+                                            if (SharedCharacter != null) {
+                                                SharedCharacter.Dirty = true;
+                                                SharedCharacter.Save();
+                                            }
+                                            
+                                            Refresh();
+                                        } else {
+                                            var moveOutfits = await character.GetEntries(folderGuid);
+                                            foreach (var o in moveOutfits.Values.Where(o => o.Folder == folderGuid)) {
+                                                o.Delete();
+                                            }
 
+                                            foreach (var f in character.Folders.Values.Where(f => f.Parent == folderGuid)) {
+                                                f.Parent = characterFolder.Parent;
+                                            }
 
-
+                                            character.Folders.Remove(folderGuid);
+                                        
+                                            character.Dirty = true;
+                                            character.Save();
+                                        
+                                            Refresh();
+                                        }
                                     });
                                 }
                                 
@@ -397,13 +480,23 @@ public class GlamourListPage : Page {
                         
                     } else {
                         var dragging = drag.Value;
+                        if (IsSharedFolder) {
+                            Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
+                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
+                                BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
+                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
+                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour
+                            });
+                        } else {
+                            Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
+                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
+                                BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
+                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
+                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour
+                            });
+                        }
                         
-                        Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : CharacterFolder.GetImage(character, folderGuid), characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
-                            FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
-                            BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
-                            FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
-                            FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour
-                        });
+                        
 
                         if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left) && dragging.Guid != folderGuid) {
                             
@@ -415,11 +508,15 @@ public class GlamourListPage : Page {
                                     }
                                     break;
                                 case ItemType.Outfit:
-                                    if (outfits?.TryGetValue(dragging.Guid, out var dragFile) ?? false) {
-                                        dragFile.Folder = folderGuid;
-                                        dragFile.Dirty = true;
-                                        dragFile.Save();
-                                        Refresh();
+                                    if (IsSharedFolder && folderGuid == Guid.Empty) {
+                                        
+                                    } else {
+                                        if (outfits?.TryGetValue(dragging.Guid, out var dragFile) ?? false) {
+                                            dragFile.Folder = folderGuid;
+                                            dragFile.Dirty = true;
+                                            dragFile.Save();
+                                            Refresh();
+                                        }
                                     }
                                     break;
                                 default:
@@ -604,6 +701,7 @@ public class GlamourListPage : Page {
                         if (characterCloneTargets == null) {
                             characterCloneTargets = [];
                             CharacterConfigFile.GetCharacterConfigurations(fc => {
+                                if (fc.Guid == CharacterConfigFile.SharedDataGuid) return false;
                                 if (ActiveCharacter?.Guid == fc.Guid) return false;
                                 if (string.IsNullOrWhiteSpace(fc.Name)) return false;
                                 return fc is { Hidden: false, Deleted: false };
@@ -612,7 +710,7 @@ public class GlamourListPage : Page {
                             });
                         }
                         
-                        if (entry is ConfigFile && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
+                        if (!IsSharedFolder && entry is ConfigFile && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
                             foreach (var c in characterCloneTargets) {
                                 if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
                                 

@@ -33,6 +33,7 @@ public class CharacterListPage : Page {
     private void LoadCharacters() {
         characters = null;
         CharacterConfigFile.GetCharacterConfigurations(fc => {
+            if (fc.Guid == CharacterConfigFile.SharedDataGuid) return false;
             if (PluginConfig.ShowActiveCharacterInCharacterList == false && ActiveCharacter?.Guid == fc.Guid) return false;
             return CharacterConfigFile.Filters.ShowHiddenCharacter(fc);
         }).ContinueWith((c) => {

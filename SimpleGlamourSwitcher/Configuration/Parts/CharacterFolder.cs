@@ -122,6 +122,8 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
 
     public ImageDetail ImageDetail { get; set; } = new();
 
+    public bool IsSharedFolder => ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid;
+
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) {
         if (this is PreviousCharacterFolder folder) {
             wrap = PreviousCharacterFolder.GetImage();

@@ -74,6 +74,12 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
         return instance;
     }
     
+    public static T Create(Guid guid, TParent? parent = null) {
+        VerifyParent(ref parent);
+        var instance = new T();
+        instance.Initialize(parent, guid);
+        return instance;
+    }
     
     public static T? Load(Guid guid, TParent? parent = null) {
         try {

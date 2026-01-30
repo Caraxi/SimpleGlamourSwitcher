@@ -15,6 +15,8 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 
 
 public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigFile>, INamedConfigFile, IParentConfig<CharacterConfigFile>, IImageProvider, IDefaultOutfitOptionsProvider {
+    public readonly static Guid SharedDataGuid = new("00000000-0000-0000-0000-000000000001");
+    
     public string Name = string.Empty;
     public bool Hidden = false;
     public bool ApplyOnLogin = true;

@@ -106,16 +106,19 @@ public class Plugin : IDalamudPlugin {
         }
 
         if (ActiveCharacter.Folders.ContainsKey(guid)) {
-
             if (MainWindow is { IsOpen: true, RootPage: GlamourListPage glp } && glp.ActiveFolder == guid) {
                 MainWindow.PopPage();
             } else {
                 MainWindow.IsOpen = true;
                 MainWindow.OpenPage(new GlamourListPage(guid, true), true);
             }
-            
-            
-            
+        } else if (SharedCharacter?.Folders.ContainsKey(guid) ?? false) {
+            if (MainWindow is { IsOpen: true, RootPage: GlamourListPage glp } && glp.ActiveFolder == guid) {
+                MainWindow.PopPage();
+            } else {
+                MainWindow.IsOpen = true;
+                MainWindow.OpenPage(new GlamourListPage(guid, true, true), true);
+            }
         } else {
             Chat.PrintError($"[{args[0]}] is not a valid folder.", "SimpleGlamourSwitcher");
         }
@@ -139,8 +142,9 @@ public class Plugin : IDalamudPlugin {
         }
         
         var entries = await ActiveCharacter.GetEntries();
+        var sharedEntries = SharedCharacter == null ? [] : await SharedCharacter.GetEntries();
 
-        if (entries.TryGetValue(guid, out var entry)) {
+        if (entries.TryGetValue(guid, out var entry) || sharedEntries.TryGetValue(guid, out entry)) {
             await entry.Apply();
         }
         else {

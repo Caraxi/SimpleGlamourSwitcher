@@ -57,6 +57,7 @@ public class ConfigWindow : Window {
         PluginConfig.Dirty |= ImGui.Checkbox("Log actions to chat", ref PluginConfig.LogActionsToChat);
         PluginConfig.Dirty |= ImGui.Checkbox("Show current character on character list", ref PluginConfig.ShowActiveCharacterInCharacterList);
         PluginConfig.Dirty |= ImGui.Checkbox("Show icons on buttons", ref PluginConfig.ShowButtonIcons);
+        PluginConfig.Dirty |= ImGui.Checkbox("Show shared folders on their own line", ref PluginConfig.SharedFoldersOnOwnLine);
 
         var useCustomFolderPolaroid = PluginConfig.CustomCharacterPolaroidStyle != null;
 

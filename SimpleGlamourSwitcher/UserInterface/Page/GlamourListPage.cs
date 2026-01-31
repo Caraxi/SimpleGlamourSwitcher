@@ -549,6 +549,7 @@ public class GlamourListPage : Page {
 
         if (localFolders.Count > 0 || sharedFolders.Count > 0) {
             DrawFolders(sharedFolders, ref controlFlags, true);
+            if (PluginConfig.SharedFoldersOnOwnLine && localFolders.Count > 0 && sharedFolders.Count > 0) ImGui.NewLine();
             DrawFolders(localFolders, ref controlFlags, false);
             
             ImGui.NewLine();

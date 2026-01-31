@@ -26,6 +26,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public Vector2 FullscreenPadding = new(0, 0);
     public string DebugDefaultPage = string.Empty;
     public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Manual;
+    public bool SharedFoldersOnOwnLine = false;
     
     [JsonIgnore]
     public Style? CustomStyle {

@@ -184,8 +184,8 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
         return PluginConfig.FolderSortStrategy;
     }
 
-    public async void CloneTo(CharacterConfigFile character, Guid? parentFolder = null, bool doSave = true)
-    {
+    public async void CloneTo(CharacterConfigFile character, Guid? parentFolder = null, bool doSave = true) {
+
         try {
             if (ConfigFile == null) return;
         
@@ -201,6 +201,14 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
             foreach (var (entryGuid, entry) in await ConfigFile.GetEntries(FolderGuid)) {
                 var entryClone = entry.CloneTo(character);
                 if (entryClone == null) continue;
+                
+                if (entry is IImageProvider ip && entryClone is IImageProvider ip2) {
+                    if (ip.TryGetImageFileInfo(out var imageFile)) {
+                        ip2.SetImageDetail(ip.ImageDetail);
+                        ip2.SetImage(imageFile);
+                    }
+                }
+          
                 entryClone.Folder = guid;
                 entryClone.Save(true);
             }
@@ -209,8 +217,28 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
         }
         catch (Exception e) {
             PluginLog.Error(e, "Failed to clone folder.");
-            return;
         }
+    }
+    
+    public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
+        if (ConfigFile == null) {
+            fileInfo = null;
+            return false;
+        }
+        
+        var dir = ConfigFile.ImagesDirectory;
+        if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
+        var fileName = Path.Join(dir.FullName, $"{FolderGuid}");
+        
+        foreach (var type in IImageProvider.SupportedImageFileTypes) {
+            if (File.Exists($"{fileName}.{type}")) {
+                fileInfo =  new FileInfo($"{fileName}.{type}");
+                return fileInfo.Exists;
+            }
+        }
+        
+        fileInfo = null;
+        return false;
     }
 }
 

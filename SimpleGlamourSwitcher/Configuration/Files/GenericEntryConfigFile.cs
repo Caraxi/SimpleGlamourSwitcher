@@ -170,4 +170,9 @@ public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, Charact
     }
     
     public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
+    
+    public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
+        fileInfo = GetImageFile();
+        return fileInfo is { Exists: true };
+    }
 }

@@ -221,6 +221,11 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
     }
     
     public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
+    
+    public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
+        fileInfo = GetImageFile();
+        return fileInfo is { Exists: true };
+    }
 }
 
 

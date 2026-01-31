@@ -63,6 +63,8 @@ public interface IImageProvider {
     }
     */
 
+    public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo);
+    
     public void LoadImage(IDalamudTextureWrap clipImage) {
         var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");
         if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);

@@ -372,4 +372,21 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public FolderSortStrategy GetFolderSortStrategy() {
         return FolderSortStrategy == FolderSortStrategy.Inherit ? PluginConfig.FolderSortStrategy : FolderSortStrategy;
     }
+    
+    public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
+        var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
+        fileInfo = new FileInfo(fileName + ".png");
+        foreach (var type in IImageProvider.SupportedImageFileTypes) {
+            if (File.Exists($"{fileName}.{type}")) {
+                fileInfo = new FileInfo($"{fileName}.{type}");
+            }
+        }
+        
+        if (!fileInfo.Exists) {
+            fileInfo = null;
+            return false;
+        }
+
+        return true;
+    }
 }

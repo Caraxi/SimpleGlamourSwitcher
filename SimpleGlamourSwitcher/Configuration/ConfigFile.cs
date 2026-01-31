@@ -54,7 +54,7 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
     }
 
     
-    private static readonly T Default = new();
+    private readonly static T Default = new();
 
     [JsonIgnore] private TParent? parent;
     

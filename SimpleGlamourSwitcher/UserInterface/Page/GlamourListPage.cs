@@ -91,6 +91,7 @@ public class GlamourListPage : Page {
     public override void Refresh() {
         allowContextMenu = false;
         LoadOutfits();
+        Config.LoadSharedCharacter();
         base.Refresh();
     }
 
@@ -205,11 +206,6 @@ public class GlamourListPage : Page {
         }
         
         
-        
-        
-        
-        
-        
         using var child = ImRaii.Child("glamourListScroll", ImGui.GetContentRegionAvail());
 
         if (scrollTop) {
@@ -282,16 +278,11 @@ public class GlamourListPage : Page {
         var sharedFolders = new List<KeyValuePair<Guid, CharacterFolder>>();
         
         if (ActiveFolder == Guid.Empty && SharedCharacter != null) {
-            
             sharedFolders = SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || (ActiveFolder == Guid.Empty && !SharedCharacter.Folders.ContainsKey(f.Value.Parent)))).ToList();
-            
-            // sharedFolders.InsertRange(0, SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && f.Value.Parent == Guid.Empty));
-            
-            
+
             if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
                 sharedFolders = sharedFolders.OrderBy(kvp => kvp.Value.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
             } 
-            
         }
         
         void DrawFolders(List<KeyValuePair<Guid, CharacterFolder>> folders, ref WindowControlFlags controlFlags, bool isShared) {
@@ -387,7 +378,24 @@ public class GlamourListPage : Page {
                                         if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
                                         characterFolder.CloneTo(c.Value);
                                     }
+                                    
+                                    if (!characterFolder.IsSharedFolder && characterFolder.Parent == Guid.Empty && SharedCharacter != null) {
+                                        // Only Root Non-Shared folders
+                                        ImGui.Separator();
+                                        if (ImGui.MenuItem("Convert to Shared Folder", enabled: ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
+                                            characterFolder.CloneTo(SharedCharacter, doSave: true);
+                                            DeleteFolderWithContents(folderGuid, characterFolder);
+                                        }
 
+                                        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+                                            using (ImRaii.Tooltip()) {
+                                                ImGui.TextColored(ImGuiColors.DalamudRed, "This is not reversible");
+                                                ImGui.Text("Convert this folder to a shared folder,\nallowing all characters to use the contents.");
+                                                ImGui.TextColored(ImGuiColors.DalamudGrey2, "Hold SHIFT + ALT to confirm");
+                                            }
+                                        }
+                                    }
+                                        
                                     ImGui.EndMenu();
                                 }
                             }
@@ -444,41 +452,7 @@ public class GlamourListPage : Page {
                                 if (!ImGui.GetIO().KeyCtrl || ImGui.IsWindowAppearing()) {
                                     holdingControlStopwatch.Restart();
                                 } else if (holdingControlStopwatch.ElapsedMilliseconds > 5000 && ImGui.MenuItem("> DELETE CONTENTS <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
-                                    Task.Run(async () => {
-                                        if (characterFolder.IsSharedFolder && !IsSharedFolder) {
-                                            void DeleteSharedFolder(Guid guid) {
-                                                if (SharedCharacter == null) return;
-                                                SharedCharacter?.Folders.Remove(guid);
-                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
-                                                    if (f.FolderGuid != null) DeleteSharedFolder(f.FolderGuid.Value);
-                                                }
-                                            }
-                                                
-                                            DeleteSharedFolder(folderGuid);
-                                            if (SharedCharacter != null) {
-                                                SharedCharacter.Dirty = true;
-                                                SharedCharacter.Save();
-                                            }
-                                                
-                                            Refresh();
-                                        } else {
-                                            var moveOutfits = await character.GetEntries(folderGuid);
-                                            foreach (var o in moveOutfits.Values.Where(o => o.Folder == folderGuid)) {
-                                                o.Delete();
-                                            }
-
-                                            foreach (var f in character.Folders.Values.Where(f => f.Parent == folderGuid)) {
-                                                f.Parent = characterFolder.Parent;
-                                            }
-
-                                            character.Folders.Remove(folderGuid);
-                                            
-                                            character.Dirty = true;
-                                            character.Save();
-                                            
-                                            Refresh();
-                                        }
-                                    });
+                                    DeleteFolderWithContents(folderGuid, characterFolder);
                                 }
                                     
                                 ImGui.EndMenu();
@@ -867,5 +841,45 @@ public class GlamourListPage : Page {
             var path = SharedOrActiveCharacter.ParseFolderPath(ActiveFolder, false);
             ImGuiExt.CenterText(path, shadowed: true);
         }
+    }
+
+
+    private void DeleteFolderWithContents(Guid folderGuid, CharacterFolder characterFolder) {
+        Task.Run(async () => {
+            var character = characterFolder.ConfigFile;
+            if (character == null) return;
+            
+            if (characterFolder.IsSharedFolder && !IsSharedFolder) {
+                void DeleteSharedFolder(Guid guid) {
+                    if (SharedCharacter == null) return;
+                    SharedCharacter?.Folders.Remove(guid);
+                    foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
+                        if (f.FolderGuid != null) DeleteSharedFolder(f.FolderGuid.Value);
+                    }
+                }
+                    
+                DeleteSharedFolder(folderGuid);
+                if (SharedCharacter != null) {
+                    SharedCharacter.Dirty = true;
+                    SharedCharacter.Save();
+                }
+            } else {
+                var deleteOutfits = await character.GetEntries(folderGuid);
+                foreach (var o in deleteOutfits.Values.Where(o => o.Folder == folderGuid)) {
+                    o.Delete();
+                }
+
+                foreach (var f in character.Folders.Values.Where(f => f.Parent == folderGuid)) {
+                    f.Parent = characterFolder.Parent;
+                }
+
+                character.Folders.Remove(folderGuid);
+                
+                character.Dirty = true;
+                character.Save();
+            }
+            
+            Refresh();
+        });
     }
 }

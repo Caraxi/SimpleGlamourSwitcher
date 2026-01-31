@@ -56,6 +56,7 @@ public static class Config {
    }
 
    public static void LoadSharedCharacter() {
+      _sharedCharacter?.Save(true);
       _sharedCharacter = CharacterConfigFile.Load(CharacterConfigFile.SharedDataGuid, _pluginConfig) ?? CharacterConfigFile.Create(CharacterConfigFile.SharedDataGuid, _pluginConfig);
       _sharedCharacter.Name = "Shared";
       _sharedCharacter.Save(true);

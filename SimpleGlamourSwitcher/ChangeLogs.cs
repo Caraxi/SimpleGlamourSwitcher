@@ -3,6 +3,12 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.3.1.0", () => {
+            Change("Added ability to apply weapons with outfits.");
+            Change("Added 'Shared Folders'.");
+            Change("Allows all characters to access the saved designs within.", 1);
+            Change("Existing folders may be converted to a shared folder.", 1);
+        });
         ChangelogFor("1.3.0.0", () => {
             Change("Added 'Generic' option.");
             Change("Generic items load a set of mods and can be configured to have a unique or shared 'Identifier'.", 1);

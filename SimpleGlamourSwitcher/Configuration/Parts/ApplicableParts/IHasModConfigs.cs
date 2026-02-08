@@ -24,11 +24,9 @@ public interface IHasModConfigs {
             if (m.HeliosphereId == null) {
                 continue;
             }
-            Chat.Print($"Bad Helipsphere Mod {m.ModDirectory}... Searching... ");
+            
             if (Heliosphere.TryGetMod(m.HeliosphereId, out var mod)) {
-                Chat.Print($"Updating {m.ModDirectory} -> {mod}");
                 ModConfigs[i] = m with { ModDirectory = mod };
-                
                 anyChanged = true;
             }
         }

@@ -17,24 +17,18 @@ public static class Heliosphere {
 
     private static Dictionary<string, string> GetModList() {
         PluginLog.Debug("Searching for Heliosphere mods...");
-
         var rootDir = PenumbraIpc.GetModDirectory.Invoke();
-
         var mods = new Dictionary<string, string>();
         
         var c = 0;
         foreach (var mod in PenumbraIpc.GetModList.Invoke()) {
-            
             var isHeliosphere = File.Exists(Path.Join(rootDir, mod.Key, "heliosphere.json"));
             if (!isHeliosphere) continue;
-            Chat.Print($"{mod.Key} has Heliosphere.json");
             var id = GetId(mod.Key);
             if (id == null) continue;
             mods[id] = mod.Key;
             c++;
         }
-        
-        Chat.Print($"Found {c} Helioshere Mods...");
 
         return mods;
     }

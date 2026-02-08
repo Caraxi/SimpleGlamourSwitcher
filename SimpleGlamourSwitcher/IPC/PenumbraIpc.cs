@@ -9,8 +9,8 @@ using API = Penumbra.Api.IpcSubscribers;
 namespace SimpleGlamourSwitcher.IPC;
 
 public static class PenumbraIpc {
-    public static readonly EventSubscriber<string> ModAdded = API.ModAdded.Subscriber(PluginInterface, _ => InvalidateCache(), (a) => Chat.Print(a));
-    public static readonly EventSubscriber<string> ModDeleted = API.ModDeleted.Subscriber(PluginInterface, _ => InvalidateCache(), (a) => Chat.Print(a));
+    public static readonly EventSubscriber<string> ModAdded = API.ModAdded.Subscriber(PluginInterface, _ => InvalidateCache());
+    public static readonly EventSubscriber<string> ModDeleted = API.ModDeleted.Subscriber(PluginInterface, _ => InvalidateCache());
     public static readonly EventSubscriber<string, string> ModMoved = API.ModMoved.Subscriber(PluginInterface, (_, _) => InvalidateCache(), QueueModMovedUpdate);
 
 
@@ -18,7 +18,6 @@ public static class PenumbraIpc {
     private static CancellationTokenSource? _modMovedCancellationTokenSource = new();
     
     public static void QueueModMovedUpdate(string oldDir, string newDir) {
-        Chat.Print($"Mod Moved: {oldDir} -> {newDir}");
         _modMovedCancellationTokenSource?.Cancel();
         ModMovedParseList[oldDir] = newDir;
         _modMovedCancellationTokenSource = new CancellationTokenSource();

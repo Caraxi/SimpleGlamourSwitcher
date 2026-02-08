@@ -26,10 +26,6 @@ public static class ModListDisplay {
         }
         return true;
     }
-
-    public static bool IsValid(IHasModConfigs modable) {
-        return modable.ModConfigs.Count == 0 || modable.ModConfigs.All(m => TryParseModName(m.ModDirectory, out _));
-    }
     
     public static bool Show(IHasModConfigs modable, string slotName, float width = -1) {
         var edited = false;
@@ -178,9 +174,9 @@ public static class ModListDisplay {
                             OutfitModConfig modConfig;
                             if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                 var modSettings = getModSettings.Item2.Value;
-                                modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                                modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(m.ModDirectory));
                             } else {
-                                modConfig = new OutfitModConfig(m.ModDirectory, false, 0, []);
+                                modConfig = new OutfitModConfig(m.ModDirectory, false, 0, [], Heliosphere.GetId(m.ModDirectory));
                             }
 
                             modable.ModConfigs[i] = modConfig;
@@ -195,10 +191,10 @@ public static class ModListDisplay {
                                 if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
                                 if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                     var modSettings = getModSettings.Item2.Value;
-                                    var modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                                    var modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(m.ModDirectory));
                                     ShowModSettingsTable(modConfig);
                                 } else {
-                                    var modConfig = new OutfitModConfig(m.ModDirectory, false, 0, []);
+                                    var modConfig = new OutfitModConfig(m.ModDirectory, false, 0, [], Heliosphere.GetId(m.ModDirectory));
                                     ShowModSettingsTable(modConfig, ImGuiTableFlags.BordersOuter);
                                 }
 
@@ -265,10 +261,10 @@ public static class ModListDisplay {
                                 var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, mod.Key);
                                 if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                     var modSettings = getModSettings.Item2.Value;
-                                    var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                                    var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.Key));
                                     modable.ModConfigs.Add(modConfig);
                                 } else {
-                                    var modConfig = new OutfitModConfig(mod.Key, false, 0, []);
+                                    var modConfig = new OutfitModConfig(mod.Key, false, 0, [],  Heliosphere.GetId(mod.Key));
                                     modable.ModConfigs.Add(modConfig);
                                 }
                             } else {
@@ -291,10 +287,10 @@ public static class ModListDisplay {
                                 var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, mod.Key);
                                 if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                     var modSettings = getModSettings.Item2.Value;
-                                    var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3);
+                                    var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.Key));
                                     ShowModSettingsTable(modConfig);
                                 } else {
-                                    var modConfig = new OutfitModConfig(mod.Key, false, 0, []);
+                                    var modConfig = new OutfitModConfig(mod.Key, false, 0, [], Heliosphere.GetId(mod.Key));
                                     ShowModSettingsTable(modConfig);
                                 }
                             }
@@ -323,6 +319,20 @@ public static class ModListDisplay {
 
     private static void ShowModSettingsTable(OutfitModConfig modConfig, ImGuiTableFlags flags = ImGuiTableFlags.None) {
         if (ImGui.BeginTable("modSettingsTable", 2, flags)) {
+            if (ImGui.GetIO().KeyAlt) {
+                ImGui.TableNextColumn();
+                ImGui.TextDisabled("Mod Directory");
+                ImGui.TableNextColumn();
+                ImGui.Text($"{modConfig.ModDirectory}");
+            }
+            
+            if (modConfig.HeliosphereId != null) {
+                ImGui.TableNextColumn();
+                ImGui.TextDisabled("Heliosphere ID");
+                ImGui.TableNextColumn();
+                ImGui.Text($"{modConfig.HeliosphereId}");
+            }
+            
             ImGui.TableNextColumn();
             ImGui.TextDisabled("Enabled");
             ImGui.TableNextColumn();

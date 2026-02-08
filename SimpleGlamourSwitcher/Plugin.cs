@@ -87,6 +87,8 @@ public class Plugin : IDalamudPlugin {
 #endif
         }, delayTicks: 3);
         
+        
+        PenumbraIpc.EnableEvents();
     }
 
     private void ProcessOpenCommand(string[] args) {

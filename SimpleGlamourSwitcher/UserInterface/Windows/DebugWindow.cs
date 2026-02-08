@@ -154,5 +154,20 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                 ImGui.Text("Compatible C+ version not detected.");
             }
         }
+
+        if (ImGui.CollapsingHeader("Heliosphere")) {
+            var heliosphereMods = Heliosphere.HeliosphereMods;
+            var penumbraMods = PenumbraIpc.GetModList.Invoke();
+            using (ImRaii.PushIndent()) {
+                foreach (var (heliosphereId, penumbraModDir) in heliosphereMods) {
+                    var name = penumbraMods.GetValueOrDefault(penumbraModDir, penumbraModDir);
+                    if (ImGui.CollapsingHeader(name)) {
+                        ImGui.TextDisabled("Heliosphere ID:");
+                        ImGui.SameLine();
+                        ImGui.Text(heliosphereId);
+                    }
+                }
+            }
+        }
     }
 }

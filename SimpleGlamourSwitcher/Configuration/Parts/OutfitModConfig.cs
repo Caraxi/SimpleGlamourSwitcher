@@ -12,9 +12,9 @@ using Race = Penumbra.GameData.Enums.Race;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts;
 
-public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings) {
+public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings, string? HeliosphereId) {
     public static implicit operator OutfitModConfig((string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings) a) {
-        return new OutfitModConfig(a.ModDirectory, a.Enabled, a.Priority, a.Settings);
+        return new OutfitModConfig(a.ModDirectory, a.Enabled, a.Priority, a.Settings, Heliosphere.GetId(a.ModDirectory));
     }
 
     public static implicit operator (string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings)(OutfitModConfig a) {
@@ -31,7 +31,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
         }
         
         return list;
@@ -48,7 +48,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
         }
         
         return list;
@@ -114,7 +114,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
         }
         
         
@@ -137,7 +137,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
         }
         
         return list;
@@ -161,7 +161,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)));
         }
     }
     
@@ -231,7 +231,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
                             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
                             var modSettings = getModSettings.Item2.Value;
-                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3));
+                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
                         }
                     }
                 }

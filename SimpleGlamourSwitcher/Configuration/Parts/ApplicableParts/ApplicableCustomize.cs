@@ -46,9 +46,6 @@ public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs, 
     
 }
 
-public interface IHasModConfigs {
-    public List<OutfitModConfig> ModConfigs { get; set; }
-}
 
 public interface IHasCustomizePlusTemplateConfigs {
     public List<CustomizeTemplateConfig> CustomizePlusTemplateConfigs { get; set; }

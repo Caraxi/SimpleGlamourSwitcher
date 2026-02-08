@@ -43,6 +43,11 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         return instance;
     }
     
+    protected override void Setup() {
+        base.Setup();
+        (this as IHasModConfigs).UpdateHeliosphereMods();
+    }
+
     public async Task Apply() {
         var activeEmote = await EmoteIdentifier.GetLocalPlayer();
         if (EmoteIdentifier == null) return;

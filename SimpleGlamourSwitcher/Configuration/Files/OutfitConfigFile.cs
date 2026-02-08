@@ -9,7 +9,6 @@ using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
-using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
@@ -55,7 +54,28 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         
         return instance;
     }
-    
+
+    protected override void Setup() {
+        base.Setup();
+
+        foreach (var (_, applicable) in Appearance) {
+            if (applicable is IHasModConfigs modable) {
+                Dirty |= modable.UpdateHeliosphereMods();
+            }
+        }
+        
+        foreach (var (_, applicable) in Equipment) {
+            if (applicable is IHasModConfigs modable) {
+                Dirty |= modable.UpdateHeliosphereMods();
+            }
+        }
+        
+        foreach (var (_, weaponSet) in Weapons.ClassWeapons) {
+            Dirty |= (weaponSet.MainHand as IHasModConfigs).UpdateHeliosphereMods();
+            Dirty |= (weaponSet.OffHand as IHasModConfigs).UpdateHeliosphereMods();
+        }
+    }
+
     public async Task Apply() {
         Notice.Show($"Apply Outfit: {Name}");
 
@@ -209,7 +229,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     protected override void Validate(List<string> errors) {
         foreach(var (slotName, applicable) in Enumerable.Concat(Equipment, Appearance)) {
             if (applicable is IHasModConfigs modable) {
-                if (!ModListDisplay.IsValid(modable)) {
+                if (!modable.IsValid()) {
                     errors.Add($"Invalid mod setup in '{slotName}' slot.");
                 }
             }

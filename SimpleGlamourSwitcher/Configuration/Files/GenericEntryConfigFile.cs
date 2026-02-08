@@ -40,6 +40,11 @@ public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, Charact
         return instance;
     }
     
+    protected override void Setup() {
+        base.Setup();
+        (this as IHasModConfigs).UpdateHeliosphereMods();
+    }
+    
     public async Task Apply() {
         await ApplyMods();
     }

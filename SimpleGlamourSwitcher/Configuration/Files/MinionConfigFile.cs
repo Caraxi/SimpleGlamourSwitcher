@@ -45,6 +45,12 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         return instance;
     }
     
+    protected override void Setup() {
+        base.Setup();
+        (this as IHasModConfigs).UpdateHeliosphereMods();
+    }
+
+    
     public async Task Apply() {
         var isActive = await CompanionHelper.GetActiveCompanionId() == MinionId;
 

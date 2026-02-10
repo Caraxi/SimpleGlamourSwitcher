@@ -34,7 +34,7 @@ public static class Heliosphere {
     }
     
     public static void UpdateModList() {
-        heliosphereToPenumbra = GetModList();
+        heliosphereToPenumbra = null;
     }
     
     public static string? GetId(string modDirectory) {

@@ -18,6 +18,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
     
     
     private readonly LazyAsync<OrderedDictionary<Guid, IListEntry>> otherOutfits = new(character.GetEntries);
+    private readonly LazyAsync<OrderedDictionary<Guid, IListEntry>> sharedOutfits = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, IListEntry>()) : SharedCharacter.GetEntries());
 
     [Flags]
     private enum Button : uint  {
@@ -57,14 +58,23 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
 
 
     private string OutfitName(Guid outfitGuid) {
-        if (otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(outfitGuid, out var o)) {
+        if (character.Guid != CharacterConfigFile.SharedDataGuid && otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(outfitGuid, out var o)) {
             return o.Name;
         }
+
+        if (sharedOutfits.IsValueCreated && sharedOutfits.Value.TryGetValue(outfitGuid, out o)) {
+            return $"[Shared] {o.Name}";
+        }
+        
         return $"{outfitGuid}";
     }
     
     private FontAwesomeIcon OutfitTypeIcon(Guid guid) {
-        if (otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(guid, out var o)) {
+        if (character.Guid != CharacterConfigFile.SharedDataGuid && otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(guid, out var o)) {
+            return o.TypeIcon;
+        }
+        
+        if (sharedOutfits.IsValueCreated && sharedOutfits.Value.TryGetValue(guid, out o)) {
             return o.TypeIcon;
         }
         
@@ -215,36 +225,54 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
 
             if (!otherOutfits.IsValueCreated) return false;
 
-            foreach (var (outfitGuid, o) in otherOutfits.Value.OrderBy(kvp => character.ParseFolderPath(kvp.Value.Folder)).ThenBy(kvp => kvp.Value.SortName)) {
-                if (outfitGuid != guid && (linkAfter.Contains(outfitGuid) || linkBefore.Contains(outfitGuid) || (exclude?.Contains(outfitGuid) ?? false))) continue;
-                if (ImGui.IsWindowAppearing() && guid == outfitGuid) {
-                    ImGui.SetScrollHereY(0.5f);
-                }
-                var fullName = character.ParseFolderPath(o.Folder, false) + " / " + o.Name;
-                var fullNameCollapse = string.Join('/', character.ParseFolderPath(o.Folder, false).Split('/', StringSplitOptions.TrimEntries)) + "/" + o.Name;
-                if (!(fullName.Contains(search, StringComparison.InvariantCultureIgnoreCase) || fullNameCollapse.Contains(search, StringComparison.InvariantCultureIgnoreCase))) continue;
+
+            void ShowEntries(OrderedDictionary<Guid, IListEntry> entries, CharacterConfigFile chr) {
+                foreach (var (outfitGuid, o) in entries.OrderBy(kvp => chr.ParseFolderPath(kvp.Value.Folder)).ThenBy(kvp => kvp.Value.SortName)) {
+                    var isShared = chr.Guid == CharacterConfigFile.SharedDataGuid;
+                    if (isShared) {
+                        // Hide Invalid Shared Files
+                        if (o.Folder == Guid.Empty) continue;
+                        if (!chr.Folders.TryGetValue(o.Folder, out var f)) continue;
+                    }
+                    
+                    if (outfitGuid != guid && (linkAfter.Contains(outfitGuid) || linkBefore.Contains(outfitGuid) || (exclude?.Contains(outfitGuid) ?? false))) continue;
+                    if (ImGui.IsWindowAppearing() && guid == outfitGuid) {
+                        ImGui.SetScrollHereY(0.5f);
+                    }
+                    var fullName = chr.ParseFolderPath(o.Folder, isShared) + " / " + o.Name;
+                    var fullNameCollapse = string.Join('/', chr.ParseFolderPath(o.Folder, isShared).Split('/', StringSplitOptions.TrimEntries)) + "/" + o.Name;
+                    if (!(fullName.Contains(search, StringComparison.InvariantCultureIgnoreCase) || fullNameCollapse.Contains(search, StringComparison.InvariantCultureIgnoreCase))) continue;
                 
-                using (ImRaii.Group())
-                using (ImRaii.PushId(o.Guid.ToString())) {
-                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get(), o.Folder != Guid.Empty)) {
-                        if (ImGui.Selectable(o.Folder == Guid.Empty ? o.Name : character.ParseFolderPath(o.Folder, false) + " /", guid == outfitGuid)) {
-                            guid = outfitGuid;
-                            modified = true;
+                    using (ImRaii.Group())
+                    using (ImRaii.PushId(o.Guid.ToString())) {
+                        using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get(), o.Folder != Guid.Empty)) {
+                            if (ImGui.Selectable(o.Folder == Guid.Empty ? o.Name : chr.ParseFolderPath(o.Folder, isShared) + " /", guid == outfitGuid)) {
+                                guid = outfitGuid;
+                                modified = true;
+                            }
+                        }
+
+                        if (o.Folder != Guid.Empty) {
+                            ImGui.SameLine();
+                            ImGui.Text(o.Name);
                         }
                     }
 
-                    if (o.Folder != Guid.Empty) {
-                        ImGui.SameLine();
-                        ImGui.Text(o.Name);
+                    if (ImGui.IsItemHovered()) {
+                        var hasImage = o.TryGetImage(out var wrap);
+                        using (ImRaii.Tooltip()) {
+                            Polaroid.Draw(hasImage ? wrap : null, o.ImageDetail, o.Name, chr.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? chr.OutfitPolaroidStyle);
+                        }
                     }
                 }
-
-                if (ImGui.IsItemHovered()) {
-                    var hasImage = o.TryGetImage(out var wrap);
-                    using (ImRaii.Tooltip()) {
-                        Polaroid.Draw(hasImage ? wrap : null, o.ImageDetail, o.Name, character.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle);
-                    }
-                }
+            }
+            
+            if (character.Guid != CharacterConfigFile.SharedDataGuid) {
+                ShowEntries(otherOutfits.Value, character);
+            }
+            
+            if (SharedCharacter != null) {
+                ShowEntries(sharedOutfits.Value, SharedCharacter);
             }
 
             return modified;

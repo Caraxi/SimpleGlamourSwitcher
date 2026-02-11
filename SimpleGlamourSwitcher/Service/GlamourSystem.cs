@@ -86,6 +86,7 @@ public static class GlamourSystem {
         HashSet<Guid> guids = [];
         
         var outfits = await outfit.ConfigFile.GetEntries();
+        var sharedOutfits = SharedCharacter != null ? await SharedCharacter.GetEntries() : new OrderedDictionary<Guid, IListEntry>();
         
         void AddOutfit(OutfitConfigFile addOutfit) {
             if (guids.Contains(addOutfit.Guid)) return;
@@ -96,7 +97,7 @@ public static class GlamourSystem {
                     continue;
                 }
 
-                if (outfits.TryGetValue(pre, out var preEntry)) {
+                if (outfits.TryGetValue(pre, out var preEntry) || sharedOutfits.TryGetValue(pre, out preEntry)) {
                     if (preEntry is OutfitConfigFile preOutfit) {
                         AddOutfit(preOutfit);
                     } else {
@@ -121,7 +122,7 @@ public static class GlamourSystem {
                     continue;
                 }
                 
-                if (outfits.TryGetValue(post, out var postEntry)) {
+                if (outfits.TryGetValue(post, out var postEntry) || sharedOutfits.TryGetValue(post, out postEntry)) {
                     if (postEntry is OutfitConfigFile postOutfit) {
                         AddOutfit(postOutfit);
                     } else {

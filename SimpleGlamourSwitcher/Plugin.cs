@@ -187,5 +187,6 @@ public class Plugin : IDalamudPlugin {
         Config.Shutdown();
         PenumbraIpc.Dispose();
         PluginService.Dispose();
+        CustomTextureProvider.DisposeAll();
     }
 }

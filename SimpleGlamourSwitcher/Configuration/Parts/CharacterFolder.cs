@@ -7,6 +7,7 @@ using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
+using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
 
@@ -95,7 +96,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid, out bool isDefault) {
         if (TempImagePath.TryGetValue(folderGuid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
             isDefault = false;
-            return TextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
+            return CustomTextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
         }
         
         isDefault = true;
@@ -107,7 +108,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
                 isDefault = false;
-                return TextureProvider.GetFromFileAbsolute($"{fileName}.{type}").GetWrapOrDefault();
+                return CustomTextureProvider.GetFromFileAbsolute($"{fileName}.{type}").GetWrapOrDefault();
             }
         }
 

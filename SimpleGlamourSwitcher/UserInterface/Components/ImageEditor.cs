@@ -69,7 +69,7 @@ public static class ImageEditor {
                 controlFlags |= WindowControlFlags.PreventClose;
                 Plugin.MainWindow.AllowAutoClose = false;
                 _fileDialogManager.Reset();
-                _fileDialogManager.OpenFileDialog("Select Image...", $"Image Files ({string.Join(' ', Common.SupportedImageFileTypes)}){{{string.Join(',', Common.SupportedImageFileTypes.Select(t => $".{t}"))}}}", imageProvider.LoadFile, 1, startPath: PluginConfig.ImageFilePickerLastPath.OrDefault(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)));
+                _fileDialogManager.OpenFileDialog("Select Image...", $"Image Files ({string.Join(' ', IImageProvider.SupportedImageFileTypes)}){{{string.Join(',', IImageProvider.SupportedImageFileTypes.Select(t => $".{t}"))}}}", imageProvider.LoadFile, 1, startPath: PluginConfig.ImageFilePickerLastPath.OrDefault(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)));
             }
             
             using (ImRaii.Disabled(image == null || imageProvider.IsUsingDefaultImage())) {

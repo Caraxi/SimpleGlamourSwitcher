@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Enum;
+using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.UserInterface.Enums;
@@ -27,6 +28,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public string DebugDefaultPage = string.Empty;
     public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Manual;
     public bool SharedFoldersOnOwnLine = false;
+    public AnimatedImageConfiguration AnimatedImageConfiguration = new();
     
     [JsonIgnore]
     public Style? CustomStyle {

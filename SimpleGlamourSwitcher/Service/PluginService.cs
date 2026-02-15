@@ -1,10 +1,15 @@
 ﻿global using static SimpleGlamourSwitcher.Service.PluginService;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Dalamud.Interface;
+using Dalamud.Interface.ImGuiSeStringRenderer;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Glamourer.GameData;
+using Lumina.Data.Files;
 using OtterGui.Log;
 using OtterGui.Services;
 using Penumbra.GameData.Data;
@@ -30,6 +35,7 @@ public class PluginService {
     [PluginService] public static IPluginLog PluginLog { get; private set; } = null!;
     [PluginService] public static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
     [PluginService] public static ISeStringEvaluator SeStringEvaluator { get; private set; } = null!;
+    [PluginService] public static INotificationManager NotificationManager { get; private set; } = null!;
     public static IUiBuilder PluginUi => PluginInterface.UiBuilder;
 
     public static ActionQueueService ActionQueue { get; private set; } = new();

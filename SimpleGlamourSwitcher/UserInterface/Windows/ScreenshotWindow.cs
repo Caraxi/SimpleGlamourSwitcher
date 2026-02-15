@@ -1,10 +1,14 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
@@ -24,12 +28,43 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
     private float scale = 2f;
     private IDalamudTextureWrap? wrap;
     private Task<IDalamudTextureWrap>? textureWrapTask;
+
+    private AnimatedScreenshotRecording animatedScreenshot = new();
+    private float animationTargetSeconds = 2f;
+
+    private unsafe float GetCurrentAnimationDuration() {
+        var chr = (Character*) (Objects.LocalPlayer?.Address ?? 0);
+        if (chr == null) return -1f;
+        var obj = (Human*) chr->GetDrawObject();
+        if (obj == null || obj->GetObjectType() != ObjectType.CharacterBase || obj->GetModelType() != CharacterBase.ModelType.Human || obj->Skeleton == null || obj->Skeleton->PartialSkeletonCount <= 0) return -1f;
+        
+        var animatedSkeleton = (&obj->Skeleton->PartialSkeletons[0])->GetHavokAnimatedSkeleton(0);
+        if (animatedSkeleton == null || animatedSkeleton->AnimationControls.Length <= 0) return -1f;
+        
+        var control = animatedSkeleton->AnimationControls[0].Value;
+        if (control == null) return -1f;
+
+        var binding = control->hkaAnimationControl.Binding.ptr;
+        if (binding == null) return -1f;
+
+        var anim = binding->Animation.ptr;
+        if (anim == null) return -1f;
+
+        return anim->Duration;
+    }
+    
     
     public void BeginScreenshot(PolaroidStyle? style, IImageProvider? imageProvider) {
         this.imageProvider = imageProvider;
         this.polaroidStyle = style;
+
+        animationTargetSeconds = 2f;
+        var d = GetCurrentAnimationDuration();
+        if (d > 0) animationTargetSeconds = d;
         
         IsOpen = true;
+        animatedScreenshot.Dispose();
+        animatedScreenshot = new AnimatedScreenshotRecording();
     }
 
     public override bool DrawConditions() {
@@ -40,20 +75,55 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
         ForceMainWindow = true;
         this.AllowPinning = false;
         this.AllowClickthrough = false;
+
+        this.ShowCloseButton = !animatedScreenshot.IsRecording;
+        this.RespectCloseHotkey = !animatedScreenshot.IsRecording;
+        
         base.PreDraw();
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
     }
 
+    private bool ConstrainWindow() {
+        var windowTopLeft = ImGui.GetWindowPos();
+        var windowBottomRight = windowTopLeft + ImGui.GetWindowSize();
+        var mainViewportTopLeft = ImGui.GetMainViewport().Pos;
+        var mainViewportBottomRight = mainViewportTopLeft + ImGui.GetMainViewport().Size;
+
+        if (windowTopLeft.X < mainViewportTopLeft.X || windowTopLeft.Y < mainViewportTopLeft.Y) {
+            ImGui.SetWindowPos(new Vector2(
+                MathF.Max(mainViewportTopLeft.X,  windowTopLeft.X),
+                MathF.Max(mainViewportTopLeft.Y, windowTopLeft.Y)
+                ));
+            return false;
+        }
+        
+        if (windowBottomRight.X > mainViewportBottomRight.X || windowBottomRight.Y > mainViewportBottomRight.Y) {
+            ImGui.SetWindowPos(new Vector2(
+                MathF.Min(mainViewportBottomRight.X,  windowBottomRight.X) - ImGui.GetWindowSize().X,
+                MathF.Min(mainViewportBottomRight.Y, windowBottomRight.Y) - ImGui.GetWindowSize().Y
+                ));
+
+            return false;
+        }
+
+        return true;
+    }
+    
     public override void Draw() {
+        using var disableAll = ImRaii.Disabled(!ConstrainWindow());
+        
         ImGui.GetBackgroundDrawList().AddRectFilled(ImGui.GetMainViewport().Pos, ImGui.GetMainViewport().Pos + ImGui.GetMainViewport().Size, 0xB0000000);
         if (imageProvider == null || ScaledStyle == null) return;
 
-        if (ImGui.GetIO().MouseWheel > 0) {
-            scale *= 1.025f;
-            ImGui.SetWindowPos(ImGui.GetWindowPos() - (ImGui.GetWindowSize() * 1.025f - ImGui.GetWindowSize()) / 2);
-        } else if (ImGui.GetIO().MouseWheel < 0) {
-            scale /= 1.025f;
-            ImGui.SetWindowPos(ImGui.GetWindowPos() - (ImGui.GetWindowSize() / 1.025f - ImGui.GetWindowSize()) / 2);
+
+        if (!animatedScreenshot.IsRecording) {
+            if (ImGui.GetIO().MouseWheel > 0) {
+                scale *= 1.025f;
+                ImGui.SetWindowPos(ImGui.GetWindowPos() - (ImGui.GetWindowSize() * 1.025f - ImGui.GetWindowSize()) / 2);
+            } else if (ImGui.GetIO().MouseWheel < 0) {
+                scale /= 1.025f;
+                ImGui.SetWindowPos(ImGui.GetWindowPos() - (ImGui.GetWindowSize() / 1.025f - ImGui.GetWindowSize()) / 2);
+            }
         }
 
         if (wrap == null) {
@@ -122,29 +192,66 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                         break;
                 }
             }
-            
-            if (wrap != null && ImGui.Button("Take Screenshot", new Vector2(ImGui.GetItemRectSize().X, 24 * ImGuiHelpers.GlobalScale))) {
-                unsafe {
-                    var originalUiVisibility = !RaptureAtkUnitManager.Instance()->Flags.HasFlag(AtkUnitManagerFlags.UiHidden);
-                    if (originalUiVisibility) {
-                        RaptureAtkModule.Instance()->SetUiVisibility(false);
-                    }
 
-                    Framework.RunOnTick(() => {
-                        TextureProvider.CreateFromExistingTextureAsync(wrap, new TextureModificationArgs() { NewHeight = (int)(polaroidStyle!.ImageSize.Y * 2), NewWidth = (int)(polaroidStyle!.ImageSize.X * 2), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax }, true).ContinueWith((t) => {
-                            if (t.IsCompletedSuccessfully) {
-                                imageProvider.ImageDetail.UvMin = Vector2.Zero;
-                                imageProvider.ImageDetail.UvMax = Vector2.One;
-                                imageProvider.LoadImage(t.Result);
-                                t.Result.Dispose();
-                                IsOpen = false;
-                            }
-                        });
 
+
+            using (ImRaii.Disabled(animatedScreenshot.IsRecording)) {
+                if (wrap != null && ImGui.Button("Take Screenshot", new Vector2(ImGui.GetItemRectSize().X, 24 * ImGuiHelpers.GlobalScale))) {
+                    unsafe {
+                        var originalUiVisibility = !RaptureAtkUnitManager.Instance()->Flags.HasFlag(AtkUnitManagerFlags.UiHidden);
                         if (originalUiVisibility) {
-                            RaptureAtkModule.Instance()->SetUiVisibility(true);
+                            RaptureAtkModule.Instance()->SetUiVisibility(false);
                         }
-                    }, delayTicks: 2);
+
+                        Framework.RunOnTick(() => {
+
+                            var sw = Stopwatch.StartNew();
+                            TextureProvider.CreateFromExistingTextureAsync(wrap, new TextureModificationArgs() { NewHeight = (int)(polaroidStyle!.ImageSize.Y * 2), NewWidth = (int)(polaroidStyle!.ImageSize.X * 2), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax }, true).ContinueWith((t) => {
+                                if (t.IsCompletedSuccessfully) {
+                                    imageProvider.ImageDetail.UvMin = Vector2.Zero;
+                                    imageProvider.ImageDetail.UvMax = Vector2.One;
+                                    imageProvider.LoadImage(t.Result);
+                                    t.Result.Dispose();
+                                    IsOpen = false;
+                                }
+                            });
+
+                            if (originalUiVisibility) {
+                                RaptureAtkModule.Instance()->SetUiVisibility(true);
+                            }
+                        }, delayTicks: 2);
+                    }
+                }
+            }
+
+            if (animatedScreenshot.IsRecording) {
+                if (wrap == null || animatedScreenshot.RecordingDuration >= TimeSpan.FromSeconds(animationTargetSeconds) || ImGui.Button("Stop Recording", new Vector2(ImGui.GetItemRectSize().X, 24 * ImGuiHelpers.GlobalScale))) {
+                    animatedScreenshot.StopRecording();
+
+                    imageProvider.ImageDetail.UvMin = Vector2.Zero;
+                    imageProvider.ImageDetail.UvMax = Vector2.One;
+                    imageProvider.LoadImage(animatedScreenshot);
+                    
+                    animatedScreenshot = new AnimatedScreenshotRecording();
+                    IsOpen = false;
+                    
+                } else {
+                    animatedScreenshot.UpdateRecording(imageDetail, polaroidStyle);
+                }
+
+                using (ImRaii.Disabled()) {
+                    var t = (float)(animationTargetSeconds - animatedScreenshot.RecordingDuration.TotalSeconds);
+                    ImGui.SetNextItemWidth(ImGui.GetItemRectSize().X);
+                    ImGui.DragFloat("##recordDuration", ref t, 0.1f, 0.1f, 30f);
+                }
+            } else {
+                if (wrap != null && ImGui.Button("Begin Recording", new Vector2(ImGui.GetItemRectSize().X, 24 * ImGuiHelpers.GlobalScale))) {
+                    animatedScreenshot.BeginRecording(wrap, imageDetail, polaroidStyle);
+                }
+
+                if (wrap != null) {
+                    ImGui.SetNextItemWidth(ImGui.GetItemRectSize().X);
+                    ImGui.DragFloat("##recordDuration", ref animationTargetSeconds, 0.1f, 0.1f, 30f);
                 }
             }
         }
@@ -155,11 +262,7 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                 var g = Enum.GetValues<GridlineStyle>();
                 var i = g.IndexOf(PluginConfig.ScreenshotGridlineStyle);
                 i++;
-                if (g.Length <= i) {
-                    PluginConfig.ScreenshotGridlineStyle = g[0];
-                } else {
-                    PluginConfig.ScreenshotGridlineStyle = g[i];
-                }
+                PluginConfig.ScreenshotGridlineStyle = g.Length <= i ? g[0] : g[i];
 
                 PluginConfig.Dirty = true;
             }
@@ -183,5 +286,128 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
         wrap?.Dispose();
         wrap = null;
         textureWrapTask = null;
+        animatedScreenshot.Dispose();
+    }
+}
+
+
+public class AnimatedScreenshotRecording : IDisposable {
+    public record FrameDetail(IDalamudTextureWrap TextureWrap, float TimeSinceLastFrame);
+    private IDalamudTextureWrap? wrap;
+    private readonly List<FrameDetail> frames = [];
+    public IReadOnlyList<FrameDetail> Frames => frames;
+    
+    private ImageDetail? imageDetail;
+    private PolaroidStyle? polaroidStyle;
+    public Vector2 Size => frames.Count == 0 ? new Vector2(0) : frames[0].TextureWrap.Size;
+    public TimeSpan RecordingDuration => TimeSpan.FromMilliseconds(frames.Sum(f => f.TimeSinceLastFrame));
+    public bool IsRecording { get; private set; }
+    private bool originalUiVisibility;
+
+    private bool stopRequested;
+    
+    public void StopRecording() {
+        stopRequested = true;
+    }
+
+    public void BeginRecording(IDalamudTextureWrap textureWrap, ImageDetail initialImageDetail, PolaroidStyle? initialPolaroidStyle) {
+        PluginUi.DisableAutomaticUiHide = true;
+        unsafe {
+            originalUiVisibility = !RaptureAtkUnitManager.Instance()->Flags.HasFlag(AtkUnitManagerFlags.UiHidden);
+            if (originalUiVisibility) RaptureAtkModule.Instance()->SetUiVisibility(false);
+        }
+        
+        wrap?.Dispose();
+        wrap = textureWrap.CreateWrapSharingLowLevelResource();
+        
+        imageDetail = initialImageDetail;
+        polaroidStyle = initialPolaroidStyle;
+        IsRecording = true;
+        Framework.RunOnTick(() => {
+            CreateFrame();
+            Framework.Update += OnFrameworkUpdate;
+        }, delayTicks: 2);
+    }
+
+    private float delta;
+
+    private Task<IDalamudTextureWrap>? creatingFrame;
+
+    private void EndRecording() {
+        if (!IsRecording) return;
+        stopRequested = false;
+        IsRecording = false;
+        Framework.Update -= OnFrameworkUpdate;
+        PluginUi.DisableAutomaticUiHide = false;
+        unsafe {
+            if (originalUiVisibility) RaptureAtkModule.Instance()->SetUiVisibility(true);
+        }
+    }
+    
+    private async void CreateFrame(float d = 0) {
+        try {
+            if (imageDetail == null) {
+                EndRecording();
+                return;
+            }
+            if (wrap == null) return;
+            delta += d;
+            if (creatingFrame != null) {
+                return;
+            }
+
+            if (delta < (1000f / Math.Clamp(PluginConfig.AnimatedImageConfiguration.MaxFrameRate, 1, 1000))) return;
+            var cancellationToken = new CancellationTokenSource();
+            creatingFrame = TextureProvider.CreateFromExistingTextureAsync(
+                wrap,
+                new TextureModificationArgs()
+                    { NewHeight = (int)(polaroidStyle!.ImageSize.Y), NewWidth = (int)(polaroidStyle!.ImageSize.X), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax },
+                true,
+                cancellationToken: cancellationToken.Token);
+            await Task.WhenAny(creatingFrame, Task.Delay(50, cancellationToken.Token));
+            if (creatingFrame.IsCompletedSuccessfully) {
+                var frameDetail = new FrameDetail(creatingFrame.Result, delta);
+                delta = 0;
+                frames.Add(frameDetail);
+            } else {
+                await cancellationToken.CancelAsync();
+            }
+
+            creatingFrame = null;
+            if (stopRequested) {
+                EndRecording();
+            }
+        } catch (Exception ex) {
+            EndRecording();
+            PluginLog.Error(ex, "Error while creating frame. Aborting Recording.");
+        }
+    }
+    
+    private void OnFrameworkUpdate(IFramework framework) {
+        CreateFrame((float)framework.UpdateDelta.TotalMilliseconds);
+    }
+
+    public void Dispose() {
+        wrap?.Dispose();
+
+        foreach (var f in frames) {
+            f.TextureWrap.Dispose();
+        }
+        frames.Clear();
+    }
+
+    public void UpdateRecording(ImageDetail newImageDetail, PolaroidStyle? newPolaroidStyle) {
+        imageDetail = newImageDetail;
+        polaroidStyle = newPolaroidStyle;
+    }
+
+    public async Task<bool> WaitFinishedRecording(TimeSpan? timeout = null, CancellationToken cancellationToken = default) {
+        var sw = Stopwatch.StartNew();
+        while (timeout == null || sw.Elapsed < timeout.Value) {
+            if (cancellationToken.IsCancellationRequested) return false;
+            if (!IsRecording) return true;
+            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+        }
+        return false;
     }
 }

@@ -12,6 +12,7 @@ using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 using SimpleGlamourSwitcher.Utility;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
@@ -89,6 +90,33 @@ public class ConfigWindow : Window {
                     if (PolaroidStyle.DrawEditor("Character", PluginConfig.CustomCharacterPolaroidStyle)) {
                         PluginConfig.Dirty = true;
                     }
+                }
+            }
+        }
+
+        if (ImGui.CollapsingHeader("Animated 'Screenshot' Settings")) {
+
+            using (ImRaii.PushIndent()) {
+                ImGui.SetNextItemWidth(150);
+                PluginConfig.Dirty |= ImGui.SliderFloat("Target Frame Rate", ref PluginConfig.AnimatedImageConfiguration.MaxFrameRate, 1, 60, flags: ImGuiSliderFlags.AlwaysClamp);
+                PluginConfig.Dirty |= ImGui.Checkbox("Use Lossless Compression", ref PluginConfig.AnimatedImageConfiguration.UseLosslessCompression);
+                ImGui.SetNextItemWidth(150);
+                PluginConfig.Dirty |= ImGui.SliderInt("Compression Quality", ref PluginConfig.AnimatedImageConfiguration.CompressionQuality, 0, 100, flags: ImGuiSliderFlags.AlwaysClamp);
+
+
+
+                var selectedEncodingValueNames = Common.GetEnumValueNames(PluginConfig.AnimatedImageConfiguration.EncodingMethod).ToArray();
+                if (ImGui.BeginCombo("Encoding Method", selectedEncodingValueNames.Length > 1 ? $"{selectedEncodingValueNames[0]} ({string.Join(',', selectedEncodingValueNames[1..])})" : $"{selectedEncodingValueNames[0]}")) {
+                    foreach (var f in Common.GetEnumValueNames<WebpEncodingMethod>()) {
+                        var names = f.ToArray();
+                        if (names.Length == 0) continue;
+                        if (ImGui.Selectable(names.Length > 1 ? $"{names[0]} ({string.Join(',', names[1..])})" : $"{names[0]}", f.Key == PluginConfig.AnimatedImageConfiguration.EncodingMethod)) {
+                            PluginConfig.AnimatedImageConfiguration.EncodingMethod = f.Key;
+                            PluginConfig.Dirty = true;
+                        }
+                    }
+                    
+                    ImGui.EndCombo();
                 }
             }
         }

@@ -109,7 +109,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             return false;
         }
         
-        wrap = TextureProvider.GetFromFile(filePath.FullName).GetWrapOrDefault();
+        wrap = CustomTextureProvider.GetFromFile(filePath).GetWrapOrDefault();
         return wrap is not null;
     }
     

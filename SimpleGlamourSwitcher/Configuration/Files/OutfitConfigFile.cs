@@ -164,7 +164,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) {
         if (TempImagePath.TryGetValue(Guid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
-            wrap = TextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
+            wrap = CustomTextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
             return wrap != null;
         }
         
@@ -174,7 +174,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
             wrap = null;
             return false;
         }
-        wrap = TextureProvider.GetFromFile(file).GetWrapOrDefault();
+        wrap = CustomTextureProvider.GetFromFile(file).GetWrapOrDefault();
         return wrap is not null;
     }
     

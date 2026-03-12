@@ -1,10 +1,11 @@
 ﻿using System.Numerics;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
-using OtterGuiInternal.Utility;
+using ImSharp;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.IPC;
+using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 

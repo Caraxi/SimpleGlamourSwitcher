@@ -17,7 +17,7 @@ global using CustomizePlusTemplateStatusTuple = (
 
 using System.Diagnostics.CodeAnalysis;
 using ECommons.EzIpcManager;
-using OtterGui.Extensions;
+using Luna;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;

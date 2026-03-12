@@ -4,7 +4,6 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using ECommons.ImGuiMethods;
-using OtterGui.Extensions;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Parts;
@@ -123,7 +122,7 @@ public class ConfigWindow : Window {
 
         #if DEBUG
         var debugPages = new[] { "none", "automation", "outfit" };
-        var debugPage = ArrayExtensions.IndexOf(debugPages, PluginConfig.DebugDefaultPage);
+        var debugPage = debugPages.IndexOf(PluginConfig.DebugDefaultPage);
         if (debugPage < 0) {
             debugPage = 0;
             PluginConfig.DebugDefaultPage = debugPages[0];

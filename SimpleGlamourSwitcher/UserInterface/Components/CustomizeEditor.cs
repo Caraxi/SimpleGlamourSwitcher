@@ -393,12 +393,12 @@ public static class CustomizeEditor {
         var selected = colorSet.FirstOrDefault(c => c.Value.Value == appearance[idx].Value, colorSet[0]);
         
         if (size != null) {
-            if (ImGui.ColorButton($"{idx}#{selected.Value.Value}", ImGui.ColorConvertU32ToFloat4(selected.Color), ImGuiColorEditFlags.None, size.Value)) {
+            if (ImGui.ColorButton($"{idx}#{selected.Value.Value}", ImGui.ColorConvertU32ToFloat4(selected.Color.Color), ImGuiColorEditFlags.None, size.Value)) {
                 ImGui.OpenPopup($"ColorPicker_{idx}");
             }
 
         } else {
-            if (ImGui.ColorButton($"{idx}#{selected.Value.Value}", ImGui.ColorConvertU32ToFloat4(selected.Color))) {
+            if (ImGui.ColorButton($"{idx}#{selected.Value.Value}", ImGui.ColorConvertU32ToFloat4(selected.Color.Color))) {
                 ImGui.OpenPopup($"ColorPicker_{idx}");
             }
 
@@ -415,7 +415,7 @@ public static class CustomizeEditor {
                 foreach (var c in colorSet) {
                     if (i++ % 8 != 0) ImGui.SameLine();
                     using (ImRaii.PushColor(ImGuiCol.Border, Vector4.One, appearance[idx].Value == c.Value.Value)) {
-                        if (ImGui.ColorButton($"{idx}#{c.Value.Value}", ImGui.ColorConvertU32ToFloat4(c.Color))) {
+                        if (ImGui.ColorButton($"{idx}#{c.Value.Value}", ImGui.ColorConvertU32ToFloat4(c.Color.Color))) {
                             appearance[idx].Value = c.Value.Value;
                             edited = true;
                             ImGui.CloseCurrentPopup();

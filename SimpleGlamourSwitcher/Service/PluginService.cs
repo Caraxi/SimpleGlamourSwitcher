@@ -1,17 +1,11 @@
 ﻿global using static SimpleGlamourSwitcher.Service.PluginService;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using Dalamud.Interface;
-using Dalamud.Interface.ImGuiSeStringRenderer;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Glamourer.GameData;
-using Lumina.Data.Files;
-using OtterGui.Log;
-using OtterGui.Services;
+using Luna;
 using Penumbra.GameData.Data;
 using Penumbra.GameData.DataContainers;
 
@@ -49,10 +43,7 @@ public class PluginService {
     public void Initialize() {
         var logger = new Logger();
         _serviceManager = new ServiceManager(logger)
-            .AddDalamudService<IDataManager>(PluginInterface)
-            .AddDalamudService<ISeStringEvaluator>(PluginInterface)
-            .AddDalamudService<ITextureProvider>(PluginInterface)
-            .AddDalamudService<IPluginLog>(PluginInterface)
+            .AddDalamudServices(PluginInterface)
             .AddSingleton<DictAction>()
             .AddSingleton<DictBNpc>()
             .AddSingleton<DictBNpcNames>()

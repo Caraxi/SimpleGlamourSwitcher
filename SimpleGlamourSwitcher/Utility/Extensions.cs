@@ -86,7 +86,7 @@ public static class Extensions {
         return cIndex switch {
             CustomizeIndex.BustSize => "Bust Size",
             CustomizeIndex.EyeShape => "Eye Shape",
-            _ => cIndex.ToDefaultName()
+            _ => cIndex.ToName()
         };
     }
 

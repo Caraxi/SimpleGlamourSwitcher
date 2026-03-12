@@ -7,9 +7,9 @@
 [submodule "Penumbra.String"]
 	path = Penumbra.String
 	url = https://github.com/ottermandias/Penumbra.String.git
-[submodule "OtterGui"]
-	path = OtterGui
-	url = https://github.com/ottermandias/OtterGui.git
 [submodule "Glamourer.Api"]
 	path = Glamourer.Api
 	url = https://github.com/ottermandias/Glamourer.Api.git
+[submodule "Luna"]
+	path = Luna
+	url = https://github.com/Ottermandias/Luna.git

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/14.0.1">
+﻿<Project Sdk="Dalamud.NET.Sdk/14.0.2">
     <PropertyGroup>
         <AssemblyTitle>Glamourer.GameData</AssemblyTitle>
         <Product>Glamourer</Product>
@@ -13,6 +13,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Penumbra.GameData\Penumbra.GameData.csproj" />
         <ProjectReference Include="..\Penumbra.String\Penumbra.String.csproj" />
-        <ProjectReference Include="..\OtterGui\OtterGui.csproj" />
+        <ProjectReference Include="..\Luna\Luna\Luna.csproj" />
+        <ProjectReference Include="..\Luna\Luna.Generators\Luna.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 </Project>

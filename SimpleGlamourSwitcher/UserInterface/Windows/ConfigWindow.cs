@@ -121,7 +121,7 @@ public class ConfigWindow : Window {
         }
 
         #if DEBUG
-        var debugPages = new[] { "none", "automation", "outfit" };
+        var debugPages = new[] { "none", "automation", "outfit", "active" };
         var debugPage = debugPages.IndexOf(PluginConfig.DebugDefaultPage);
         if (debugPage < 0) {
             debugPage = 0;
@@ -137,9 +137,18 @@ public class ConfigWindow : Window {
         #endif
         
         DrawAutomaticModDetectionSettings();
+        DrawEquippedWindowSettings();
 
     }
-    
+
+    private void DrawEquippedWindowSettings() {
+        if (!ImGui.CollapsingHeader("Equipped Window Settings")) return;
+
+        PluginConfig.Dirty |= ImGui.Checkbox("Show 'Save Outfit' Button", ref PluginConfig.EquippedWindowConfig.ShowSaveButton);
+
+
+    }
+
     private readonly OutfitAppearance _appearance = new();
     private void DrawAutomaticModDetectionSettings() {
         if (!ImGui.CollapsingHeader("Automatic Mod Detection")) return;

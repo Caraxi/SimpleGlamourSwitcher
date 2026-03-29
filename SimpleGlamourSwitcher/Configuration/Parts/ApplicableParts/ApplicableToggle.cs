@@ -28,7 +28,7 @@ public record ApplicableToggle : Applicable<ToggleType> {
         };
     }
 
-    public bool ShowToggleEditor(string label) {
+    public bool ShowToggleEditor(string label, bool noApplySwitch = false) {
 
         using (ImRaii.Group()) {
             var size = ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2;
@@ -62,8 +62,8 @@ public record ApplicableToggle : Applicable<ToggleType> {
                     Toggle = false;
                     Apply = true;
                 } else {
-                    Toggle = false;
-                    Apply = false;
+                    Toggle = noApplySwitch;
+                    Apply = noApplySwitch;
                 }
             } else {
                 Toggle = true;

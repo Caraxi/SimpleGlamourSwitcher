@@ -69,8 +69,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             ImGui.SetTooltip("Hold SHIFT to confirm.");
         }
     }
-
-
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         equipment ??= Outfit.Equipment.Clone();
@@ -210,12 +208,9 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     private void DrawEquipment() {
-        foreach (var s in Common.GetGearSlots()) {
-            ShowSlot(s);
-        }
+        equipment ??= Outfit.Equipment.Clone();
+        EquipmentDisplay.DrawEquipment(equipment, EquipmentDisplayFlags.None, character, folderGuid); 
     }
-
-
     
     private void DrawWeapons() {
         weapons ??= Outfit.Weapons.Clone();
@@ -332,136 +327,6 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             }
         }
     }
-    
-    public void ShowSlot(HumanSlot slot) {
-        equipment ??= Outfit.Equipment.Clone();
-        
-        var equip = equipment[slot];
-
-        using (ImRaii.Group()) {
-            using (ImRaii.Group()) {
-                ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));
-                using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), !equipment.Apply)) {
-                    dirty |= ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
-                }
-        
-                if (ImGui.IsItemHovered()) {
-                    using (ImRaii.Tooltip()) {
-                        ImGui.Text($"Enable {slot.PrettyName()}");
-                        if (!equipment.Apply) {
-                            ImGui.TextDisabled("This option is will not be applied because the Equipment option is not enabled for this outfit.");
-                        }
-                    }
-                }
-            }
-
-            ImGui.SameLine();
-            using (ImRaii.Group()) {
-                ShowSlot(slot, equip);
-            }
-        }
-
-        if (slot == HumanSlot.Head) {
-            ImGui.SameLine();
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
-            using (ImRaii.Group()) {
-                dirty |= equipment.HatVisible.ShowToggleEditor("Headwear Visible");
-                dirty |= equipment.VisorToggle.ShowToggleEditor("Visor Toggle");
-            }
-        }
-
-        if (slot == HumanSlot.Body) {
-            ImGui.SameLine();
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
-            using (ImRaii.Group()) {
-                dirty |= equipment.VieraEarsVisible.ShowToggleEditor("Ears Visible");
-                dirty |= equipment.WeaponVisible.ShowToggleEditor("Weapon Visible");
-            }
-        }
-    }
-    
-    private void ShowSlot(HumanSlot slot, ApplicableItem<HumanSlot> equipment) {
-        var equipItem = equipment.GetEquipItem(slot);
-        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
-        using (ImRaii.PushId($"State_{slot}")) {
-            ItemIcon.Draw(slot, equipItem);
-            HandleSlotContextMenu($"{slot}##ItemContext", equipment, (a) => a.Equipment[slot]);
-            ImGui.SameLine();
-
-            var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
-
-            using (ImRaii.Group()) {
-                ImGui.SetNextItemWidth(s.X - (equipment.Materials is { Count: > 0 } ? s.Y + ImGui.GetStyle().ItemSpacing.X : 0) - (equipment is ApplicableEquipment ? s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2 : 0));
-
-                ImGui.BeginGroup();
-
-                if (equipment is ApplicableEquipment applicableEquipment) {
-                    if (ItemPicker.Show($"##{slot}", slot, ref equipItem)) {
-                        applicableEquipment.ItemId = equipItem.ItemId;
-                        dirty = true;
-                    }
-                } else if (equipment is ApplicableBonus applicableBonus) {
-                    if (ItemPicker.Show($"##{slot}", slot, ref equipItem)) {
-                        applicableBonus.BonusItemId = equipItem.Id.Id;
-                        dirty = true;
-                    }
-                } else {
-                    var name = equipItem.Name;
-                    ImGui.InputText("##itemName", ref name, 64, ImGuiInputTextFlags.ReadOnly);
-                }
-
-                AdvancedMaterialsDisplay.ShowAdvancedMaterialsDisplay(equipment, $"{slot.PrettyName()}");
-                if (equipment is ApplicableEquipment ae) {
-                    ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
-                    ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{slot}, Stain 2##{slot}_stain2", ref ae.Stain.Stain2, new Vector2(s.Y));
-                }
-
-                ImGui.EndGroup();
-                
-                dirty |= ModListDisplay.Show(equipment, $"{slot.PrettyName()}");
-            }
-        }
-    }
-
-    private void HandleSlotContextMenu(string label, Applicable slot, Func<OutfitConfigFile, Applicable>? getApplicable = null ) {
-        if (ImGui.BeginPopupContextItem($"Context_{label}")) {
-            ImGui.Text(label.Split("##")[0]);
-            ImGui.Separator();
-
-            if (getApplicable != null && slot is ApplicableBonus or ApplicableEquipment && ImGui.MenuItem("Replace with Currently Equipped")) {
-                dirty = true;
-                try {
-                    var o = OutfitConfigFile.CreateFromLocalPlayer(character, folderGuid, character.GetOptionsProvider(folderGuid));
-                    var m = getApplicable(o);
-
-                    if (slot is ApplicableItem<HumanSlot> originalApplicableItem && m is ApplicableItem<HumanSlot> newApplicableItem) {
-                        originalApplicableItem.Materials = newApplicableItem.Materials;
-                        originalApplicableItem.ModConfigs = newApplicableItem.ModConfigs;
-                        switch (slot) {
-                            case ApplicableEquipment originalEquipment when m is ApplicableEquipment newEquipment:
-                                originalEquipment.ItemId = newEquipment.ItemId;
-                                originalEquipment.Stain = newEquipment.Stain;
-                                break;
-                            case ApplicableBonus originalBonus when m is ApplicableBonus newBonus:
-                                originalBonus.BonusItemId = newBonus.BonusItemId;
-                                break;
-                        }
-
-                    }
-                    
-                } catch (Exception ex) {
-                    PluginLog.Error(ex, "Error replacing equipment");
-                    //
-                }
-            }
-            
-            ImGui.EndPopup();
-        }
-
-    }
-
     
     private void ShowSlot(EquipSlot slot, ApplicableWeapon weapon, ClassJob classJob) {
         

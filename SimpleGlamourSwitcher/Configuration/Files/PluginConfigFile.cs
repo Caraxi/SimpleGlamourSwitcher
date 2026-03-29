@@ -29,6 +29,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Manual;
     public bool SharedFoldersOnOwnLine = false;
     public AnimatedImageConfiguration AnimatedImageConfiguration = new();
+    public EquippedWindowConfig EquippedWindowConfig = new();
     
     [JsonIgnore]
     public Style? CustomStyle {

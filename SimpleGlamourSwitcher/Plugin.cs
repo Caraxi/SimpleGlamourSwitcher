@@ -14,6 +14,7 @@ namespace SimpleGlamourSwitcher;
 public class Plugin : IDalamudPlugin {
     private readonly static WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
     public readonly static MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
+    public readonly static ActiveGearWindow ActiveWindow = new ActiveGearWindow().Enroll(WindowSystem);
     public readonly static ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
     public readonly static DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
     public readonly static ScreenshotWindow ScreenshotWindow = new ScreenshotWindow() { IsOpen = true}.Enroll(WindowSystem);
@@ -65,6 +66,9 @@ public class Plugin : IDalamudPlugin {
                     break;
                 case "open":
                     ProcessOpenCommand(splitArgs[1..]);
+                    break;
+                case "active":
+                    ActiveWindow.Toggle();
                     break;
                 default:
                     MainWindow.IsOpen = true;
@@ -169,6 +173,9 @@ public class Plugin : IDalamudPlugin {
                     case "outfit":
                         MainWindow.IsOpen = true;
                         MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, null));
+                        break;
+                    case "active":
+                        ActiveWindow.IsOpen = true;
                         break;
                 }
             }

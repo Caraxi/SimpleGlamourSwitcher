@@ -385,6 +385,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slot}")) {
             ItemIcon.Draw(slot, equipItem);
+            HandleSlotContextMenu($"{slot}##ItemContext", equipment, (a) => a.Equipment[slot]);
             ImGui.SameLine();
 
             var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
@@ -424,6 +425,42 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         }
     }
 
+    private void HandleSlotContextMenu(string label, Applicable slot, Func<OutfitConfigFile, Applicable>? getApplicable = null ) {
+        if (ImGui.BeginPopupContextItem($"Context_{label}")) {
+            ImGui.Text(label.Split("##")[0]);
+            ImGui.Separator();
+
+            if (getApplicable != null && slot is ApplicableBonus or ApplicableEquipment && ImGui.MenuItem("Replace with Currently Equipped")) {
+                dirty = true;
+                try {
+                    var o = OutfitConfigFile.CreateFromLocalPlayer(character, folderGuid, character.GetOptionsProvider(folderGuid));
+                    var m = getApplicable(o);
+
+                    if (slot is ApplicableItem<HumanSlot> originalApplicableItem && m is ApplicableItem<HumanSlot> newApplicableItem) {
+                        originalApplicableItem.Materials = newApplicableItem.Materials;
+                        originalApplicableItem.ModConfigs = newApplicableItem.ModConfigs;
+                        switch (slot) {
+                            case ApplicableEquipment originalEquipment when m is ApplicableEquipment newEquipment:
+                                originalEquipment.ItemId = newEquipment.ItemId;
+                                originalEquipment.Stain = newEquipment.Stain;
+                                break;
+                            case ApplicableBonus originalBonus when m is ApplicableBonus newBonus:
+                                originalBonus.BonusItemId = newBonus.BonusItemId;
+                                break;
+                        }
+
+                    }
+                    
+                } catch (Exception ex) {
+                    PluginLog.Error(ex, "Error replacing equipment");
+                    //
+                }
+            }
+            
+            ImGui.EndPopup();
+        }
+
+    }
 
     
     private void ShowSlot(EquipSlot slot, ApplicableWeapon weapon, ClassJob classJob) {

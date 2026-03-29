@@ -3,6 +3,17 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.3.2.0", () => {
+            Change("Added better support for mods installed and updated using Heliosphere.");
+            Change("Added ability for individual character outfits to link to shared outfits.");
+            Change("Added ability to create and use animated images (WebP) for outfits.");
+            Change("Fixed some weapons that do not support the base class of a job not being selectable.");
+            Change("Added ability to update slots on an outfit to the currently equipped state.");
+            Change("Right click on the item icon", 1);
+            Change("Added new window to display the current state of your equipment.");
+            Change("Open using /sgs active", 1);
+            Change("Avoid disabling mods that are still in use by other slots.");
+        });
         ChangelogFor("1.3.1.0", () => {
             Change("Added ability to apply weapons with outfits.");
             Change("Added 'Shared Folders'.");

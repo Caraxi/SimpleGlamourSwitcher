@@ -17,8 +17,6 @@ public record ApplicableToggle : Applicable<ToggleType> {
         var metaFlag = toggleType.ToMetaFlag();
         if (metaFlag == 0) return;
         GlamourerIpc.SetMetaState.Invoke(0, metaFlag, Toggle);
-
-
     }
     
     public static ApplicableToggle FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, ToggleType hatVisible, bool apply, bool toggle) {

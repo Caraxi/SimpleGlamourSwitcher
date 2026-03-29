@@ -7,7 +7,7 @@ namespace SimpleGlamourSwitcher.Service;
 
 public static class ModManager {
     private const string SourceName = "Simple Glamour Switcher";
-    private static readonly Dictionary<int, List<OutfitModConfig>> AppliedMods = new();
+    private readonly static Dictionary<int, List<OutfitModConfig>> AppliedMods = new();
     private const int KeyBase = 0x_53_47_53_0;
 
     private static Dictionary<string, int> IdentifierToKey => PluginConfig.ModSlotIdentifier;
@@ -54,8 +54,34 @@ public static class ModManager {
     
     private static void RemoveMods(int key) {
         PluginLog.Debug($"Removing mods for Key: {key}");
-        AppliedMods.Remove(key);
-        PenumbraIpc.RemoveAllTemporaryModSettingsPlayer.Invoke(0, key);
+
+        if (AppliedMods.TryGetValue(key, out var mods)) {
+            RemoveMods(key, mods);
+            if (mods.Count == 0) {
+                AppliedMods.Remove(key);
+            }
+        } else {
+            AppliedMods.Remove(key);
+            PenumbraIpc.RemoveAllTemporaryModSettingsPlayer.Invoke(0, key);
+        }
+    }
+
+    private static int CountModUsage(string modDirectory) {
+        var c = 0;
+        foreach (var (_, mods) in AppliedMods) {
+            c += mods.Count(mod => mod.ModDirectory.Equals(modDirectory));
+        }
+        
+        return c;
+    }
+    
+    private static void RemoveMods(int key, List<OutfitModConfig> outfitModConfigs) {
+        outfitModConfigs.RemoveAll((m) => {
+            if (CountModUsage(m.ModDirectory) <= 1) {
+                PenumbraIpc.RemoveTemporaryModSettingsPlayer.Invoke(0, m.ModDirectory, key);
+            }
+            return true;
+        });
     }
     
     public static void ApplyMods(HumanSlot slot, IEnumerable<OutfitModConfig> outfitModConfigs) {

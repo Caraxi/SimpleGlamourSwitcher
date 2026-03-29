@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.IPC.Glamourer;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.Utility;
@@ -221,6 +222,31 @@ public static class GlamourerIpc {
         var obj = GetCustomizationJObject(appearance, equipment, weapons);
         if (obj == null) return;
 
+        ApplyState.Invoke(obj, 0, 0, ApplyFlag.Customization);
+    }
+
+    public static async Task ApplyItem(HumanSlot slot, ApplicableItem<HumanSlot> item) {
+        var equipment = new OutfitEquipment() { Apply = true };
+
+        if (slot == HumanSlot.Face && item is ApplicableBonus bo) {
+            equipment.Face = bo;
+        } else if (item is ApplicableEquipment eq) {
+            switch (slot) {
+                case HumanSlot.Head: equipment.Head = eq with { Apply = true }; break;
+                case HumanSlot.Body: equipment.Body = eq with { Apply = true }; break;
+                case HumanSlot.Hands: equipment.Hands = eq with { Apply = true }; break;
+                case HumanSlot.Legs: equipment.Legs = eq with { Apply = true }; break;
+                case HumanSlot.Feet: equipment.Feet = eq with { Apply = true }; break;
+                case HumanSlot.Ears: equipment.Ears = eq with { Apply = true }; break;
+                case HumanSlot.Neck: equipment.Neck = eq with { Apply = true }; break;
+                case HumanSlot.Wrists: equipment.Wrists = eq with { Apply = true }; break;
+                case HumanSlot.RFinger: equipment.RFinger = eq with { Apply = true }; break;
+                case HumanSlot.LFinger: equipment.LFinger = eq with { Apply = true }; break;
+                default: throw new ArgumentOutOfRangeException(nameof(slot), slot, null);
+            }
+        }
+        var obj = GetCustomizationJObject(new OutfitAppearance { Apply = false}, equipment, new OutfitWeapons { Apply = false });
+        if (obj == null) return;
         ApplyState.Invoke(obj, 0, 0, ApplyFlag.Customization);
     }
 

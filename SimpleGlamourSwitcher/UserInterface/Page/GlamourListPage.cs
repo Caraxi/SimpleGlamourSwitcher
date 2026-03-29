@@ -44,7 +44,11 @@ public class GlamourListPage : Page {
                                 : ActiveCharacter == null || !ActiveCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid;
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Outfit", () => {
             if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Outfit"} );
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Outfit"} );        
+        
+        BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Tshirt, "Create Item", () => {
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditItemPage(SharedOrActiveCharacter,  ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Item"} );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cat, "Create Minion", () => {
             if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(SharedOrActiveCharacter,  ActiveFolder, null));
@@ -637,6 +641,22 @@ public class GlamourListPage : Page {
                                 outfit.CreateClone().ContinueWith(task => {
                                     if (task.IsCompletedSuccessfully) {
                                         MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, task.Result));
+                                    }
+                                });
+                            }
+                        }
+                        
+                        if (entry is ItemConfigFile item)
+                        {
+                            if (ImGui.MenuItem("Edit Item")) {
+                            
+                                MainWindow?.OpenPage(new EditItemPage(character, ActiveFolder, item));
+                            }
+                        
+                            if (ImGui.MenuItem("Clone Item")) {
+                                item.CreateClone().ContinueWith(task => {
+                                    if (task.IsCompletedSuccessfully) {
+                                        MainWindow?.OpenPage(new EditItemPage(character, ActiveFolder, task.Result));
                                     }
                                 });
                             }

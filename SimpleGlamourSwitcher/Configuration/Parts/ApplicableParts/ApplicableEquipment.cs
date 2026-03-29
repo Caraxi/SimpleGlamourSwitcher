@@ -61,4 +61,11 @@ public record ApplicableEquipment : ApplicableItem<HumanSlot> {
     public override EquipItem GetEquipItem(EquipSlot slot) {
         return PluginService.ItemManager.Resolve(slot, ItemId);
     }
+
+    public static ApplicableEquipment FromNothing(HumanSlot body) {
+        return new ApplicableEquipment() {
+            Apply = true,
+            ItemId = ItemManager.NothingId(body.ToEquipSlot()),
+        };
+    }
 }

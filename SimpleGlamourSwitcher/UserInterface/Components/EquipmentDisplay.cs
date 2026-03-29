@@ -31,25 +31,22 @@ public static class EquipmentDisplay {
 
         return dirty;
     }
-    
-    private static bool ShowSlot(OutfitEquipment equipment, HumanSlot slot, EquipmentDisplayFlags flags, CharacterConfigFile? character, Guid? folderGuid) {
+
+    public static bool ShowSlot(ApplicableItem<HumanSlot> equip, HumanSlot slot, bool disable = false, EquipmentDisplayFlags flags = EquipmentDisplayFlags.None, CharacterConfigFile? character = null, Guid? folderGuid = null) {
         var dirty = false;
-        var equip = equipment[slot];
 
         using (ImRaii.Group()) {
             if (!flags.HasFlag(EquipmentDisplayFlags.NoApplyToggles)) {
                 using (ImRaii.Group()) {
-                    
-                    
                     ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));
-                    using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), !equipment.Apply)) {
+                    using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), disable)) {
                         dirty |= ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
                     }
             
                     if (ImGui.IsItemHovered()) {
                         using (ImRaii.Tooltip()) {
                             ImGui.Text($"Enable {slot.PrettyName()}");
-                            if (!equipment.Apply) {
+                            if (disable) {
                                 ImGui.TextDisabled("This option is will not be applied because the Equipment option is not enabled for this outfit.");
                             }
                         }
@@ -62,6 +59,16 @@ public static class EquipmentDisplay {
                 dirty |= ShowSlot(slot, equip, flags, character, folderGuid);
             }
         }
+        
+        
+        return dirty;
+    }
+    
+    private static bool ShowSlot(OutfitEquipment equipment, HumanSlot slot, EquipmentDisplayFlags flags, CharacterConfigFile? character, Guid? folderGuid) {
+        var dirty = false;
+        var equip = equipment[slot];
+        
+        dirty |= ShowSlot(equip, slot, !equipment.Apply, flags, character, folderGuid);
 
         if (slot == HumanSlot.Head) {
             ImGui.SameLine();

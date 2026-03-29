@@ -166,6 +166,18 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 entries.Add(outfitCfg);
             }
             
+            PluginLog.Verbose($"Getting Items from {OutfitDirectory.FullName}");
+            foreach (var f in ItemDirectory.GetFiles("*.json")) {
+                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
+                
+                var itemCfg = ItemConfigFile.Load(guid, this);
+                if (itemCfg == null) continue;
+                var outfitFolder = Folders.ContainsKey(itemCfg.Folder) ? itemCfg.Folder : Guid.Empty;
+                if (folder != null && outfitFolder != folder) continue;
+                entries.Add(itemCfg);
+            }
+
+            
             PluginLog.Verbose($"Getting Minions from {MinionDirectory.FullName}");
             foreach (var f in MinionDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
@@ -215,6 +227,19 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             if (!dir.Exists) dir.Create();
             
             PluginLog.Debug($"Character Outfit Directory [{Guid}] is {dir.FullName}");
+            
+            
+            return dir;
+        }
+    }
+    
+    [JsonIgnore]
+    public DirectoryInfo ItemDirectory {
+        get {
+            var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Items));
+            if (!dir.Exists) dir.Create();
+            
+            PluginLog.Debug($"Character Item Directory [{Guid}] is {dir.FullName}");
             
             
             return dir;

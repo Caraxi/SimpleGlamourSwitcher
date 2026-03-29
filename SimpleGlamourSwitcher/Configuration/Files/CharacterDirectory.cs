@@ -6,4 +6,5 @@ public static class CharacterDirectory {
     public const string Minions = "minions";
     public const string Emotes = "emotes";
     public const string Generics = "generic";
+    public const string Items = "items";
 }

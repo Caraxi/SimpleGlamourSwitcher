@@ -98,7 +98,6 @@
         "type": "Project",
         "dependencies": {
           "Luna": "[1.0.0, )",
-          "Luna.Generators": "[1.0.0, )",
           "Penumbra.GameData": "[1.0.0, )",
           "Penumbra.String": "[1.0.7, )"
         }
@@ -109,12 +108,6 @@
           "JetBrains.Annotations": "[2024.2.0, )",
           "Microsoft.Extensions.Logging": "[9.0.0, )",
           "System.IO.Hashing": "[9.0.8, )"
-        }
-      },
-      "luna.generators": {
-        "type": "Project",
-        "dependencies": {
-          "JetBrains.Annotations": "[2024.2.0, )"
         }
       },
       "penumbra.api": {

@@ -62,4 +62,11 @@ public record ApplicableBonus : ApplicableItem<HumanSlot> {
     public override EquipItem GetEquipItem(EquipSlot slot) {
         throw new NotImplementedException();
     }
+
+    public static ApplicableBonus FromNothing() {
+        return new ApplicableBonus() {
+            Apply = true,
+            BonusItemId = 0
+        };
+    }
 }

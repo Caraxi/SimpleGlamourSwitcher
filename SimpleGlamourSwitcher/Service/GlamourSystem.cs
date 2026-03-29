@@ -152,6 +152,30 @@ public static class GlamourSystem {
         var additionals = new List<IAdditionalLink>();
         
         foreach (var entry in entries) {
+            if (entry is ItemConfigFile item) {
+                equipment.Apply = true;
+                if (item is { Slot: HumanSlot.Face, Item: ApplicableBonus bo }) {
+                    equipment.Face = bo with { Apply = true };
+                    equipment.Face.Apply = true;
+                } else if (item.Item is ApplicableEquipment eq) {
+                    switch (item.Slot) {
+                        case HumanSlot.Head: equipment.Head = eq with { Apply = true }; break;
+                        case HumanSlot.Body: equipment.Body = eq with { Apply = true }; break;
+                        case HumanSlot.Hands: equipment.Hands = eq with { Apply = true }; break;
+                        case HumanSlot.Legs: equipment.Legs = eq with { Apply = true }; break;
+                        case HumanSlot.Feet: equipment.Feet = eq with { Apply = true }; break;
+                        case HumanSlot.Ears: equipment.Ears = eq with { Apply = true }; break;
+                        case HumanSlot.Neck: equipment.Neck = eq with { Apply = true }; break;
+                        case HumanSlot.Wrists: equipment.Wrists = eq with { Apply = true }; break;
+                        case HumanSlot.RFinger: equipment.RFinger = eq with { Apply = true }; break;
+                        case HumanSlot.LFinger: equipment.LFinger = eq with { Apply = true }; break;
+                        default: throw new ArgumentOutOfRangeException(nameof(item.Slot), item.Slot, null);
+                    }
+                }
+                
+                continue;
+            }
+            
             if (entry is not OutfitConfigFile outfit) {
                 if (entry is IAdditionalLink additionalLink) {
                     additionals.Add(additionalLink);

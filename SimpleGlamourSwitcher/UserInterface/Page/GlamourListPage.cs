@@ -644,6 +644,31 @@ public class GlamourListPage : Page {
                                     }
                                 });
                             }
+
+                            if (outfit.ConfigFile != null && !outfit.Appearance.Apply && !outfit.Weapons.Apply && outfit.Equipment.Count(p => p.SlotData.Apply) == 1) {
+                                if (ImGui.MenuItem("Convert to Single Item")) {
+    
+                                    foreach (var slot in Common.GetGearSlots()) {
+                                        var applicable = outfit.Equipment[slot];
+                                        if (applicable.Apply) {
+                                            var newItem = ItemConfigFile.Create(outfit.ConfigFile, outfit.Folder);
+                                            newItem.Initialize(outfit.ConfigFile, outfit.Guid);
+                                            newItem.Name = outfit.Name;
+                                            newItem.Description = outfit.Description;
+                                            newItem.Slot = slot;
+                                            newItem.Item = applicable;
+                                            newItem.ModConfigs = applicable.ModConfigs;
+                                            newItem.ImageDetail = outfit.ImageDetail;
+                                            newItem.SortName = outfit.SortName;
+                                            
+                                            newItem.Save(true);
+                                            outfit.Delete();
+                                            Refresh();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
                         
                         if (entry is ItemConfigFile item)

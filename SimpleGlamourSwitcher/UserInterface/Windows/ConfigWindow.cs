@@ -145,8 +145,17 @@ public class ConfigWindow : Window {
         if (!ImGui.CollapsingHeader("Equipped Window Settings")) return;
 
         PluginConfig.Dirty |= ImGui.Checkbox("Show 'Save Outfit' Button", ref PluginConfig.EquippedWindowConfig.ShowSaveButton);
-
-
+        
+        ImGui.Text("Quick Switch Row Count:");
+        using (ImRaii.PushIndent()) {
+            foreach (var slot in Common.GetGearSlots()) {
+                var c = PluginConfig.EquippedWindowConfig.QuickSwitchRowCount.GetValueOrDefault(slot, 1);
+                if (ImGui.SliderInt($"{slot.ToName()}##rowCount", ref c, 1, EquippedWindowConfig.QuickSwitchMaxRows)) {
+                    PluginConfig.EquippedWindowConfig.QuickSwitchRowCount[slot] = Math.Clamp(c, 1, EquippedWindowConfig.QuickSwitchMaxRows);
+                    PluginConfig.Dirty = true;
+                }
+            }
+        }
     }
 
     private readonly OutfitAppearance _appearance = new();

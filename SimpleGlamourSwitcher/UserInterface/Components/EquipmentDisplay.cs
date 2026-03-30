@@ -147,7 +147,7 @@ public static class EquipmentDisplay {
                 using (ImRaii.PushColor(ImGuiCol.Border, ImGuiColors.DalamudViolet))
                 using (var popup = ImRaii.Popup($"CustomItemPicker_{slot}")) {
                     if (popup.Success) {
-                        using (ImRaii.Child($"CustomItemPickerScroll_{slot}", (s * 1.35f) with { Y = s.Y * 10 }, false, ImGuiWindowFlags.HorizontalScrollbar)) {
+                        using (ImRaii.Child($"CustomItemPickerScroll_{slot}", (s * 1.35f) with { Y = s.Y * 10 }, false, ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysHorizontalScrollbar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
 
                             if (ImGui.IsWindowHovered()) {
                                 ImGui.SetScrollX(ImGui.GetScrollX() - (ImGui.GetIO().MouseWheel * 50 * ImGuiHelpers.GlobalScale));
@@ -160,18 +160,49 @@ public static class EquipmentDisplay {
                                 ImGui.TextDisabled("Loading Items...");
                             } else {
                                 var any = false;
+                                var row = 0;
+                                var rowCount = Math.Clamp(PluginConfig.EquippedWindowConfig.QuickSwitchRowCount.GetValueOrDefault(slot, 1), 1, EquippedWindowConfig.QuickSwitchMaxRows);
 
-                                foreach (var entry in items.Value.Values.Concat(sharedItems.Value.Values).Where(i => i.Slot == slot).OrderBy(i => i.SortName).ThenBy(i => i.Name, StringComparer.InvariantCultureIgnoreCase)) {
-                                    
-                                    if (any) ImGui.SameLine();
-                                    
-                                    any = true;
-                                    var folder = entry.ConfigFile?.Folders.GetValueOrDefault(entry.Folder);
-                                    var style = folder?.OutfitPolaroidStyle ?? entry.ConfigFile?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-                                    
-                                    if (Polaroid.Button((entry as IImageProvider)?.GetImage(), entry.ImageDetail, entry.Name, entry.Guid, style.FitTo(ImGui.GetWindowContentRegionMax() - ImGui.GetWindowContentRegionMin()))) {
-                                        entry.Apply().ConfigureAwait(false);
+                                var contentRegionSize = ImGui.GetWindowContentRegionMax() - ImGui.GetWindowContentRegionMin();
+                                var rowHeight = contentRegionSize.Y / rowCount;
+                                
+                                var group = ImRaii.Group();
+                                try {
+
+                                    using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
+                                        foreach (var entry in items.Value.Values.Concat(sharedItems.Value.Values).Where(i => i.Slot == slot).OrderBy(i => i.SortName).ThenBy(i => i.Name, StringComparer.InvariantCultureIgnoreCase)) {
+                                            
+                                            if (any) {
+                                                if (row >= rowCount) {
+                                                    group.Dispose();
+                                                    ImGui.SameLine();
+                                                    group = ImRaii.Group();
+                                                    row = 0;
+                                                } else {
+                                                    
+                                                }
+                                            }
+
+                                            any = true;
+                                            row++;
+                                            var folder = entry.ConfigFile?.Folders.GetValueOrDefault(entry.Folder);
+                                            var style = folder?.OutfitPolaroidStyle ??
+                                                        entry.ConfigFile?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+                                            
+                                            if (Polaroid.Button(
+                                                    (entry as IImageProvider)?.GetImage(),
+                                                    entry.ImageDetail,
+                                                    entry.Name,
+                                                    entry.Guid,
+                                                    style.FitTo(contentRegionSize with { Y = rowHeight }))) {
+                                                entry.Apply().ConfigureAwait(false);
+                                            }
+                                        }
                                     }
+                                   
+                                }
+                                finally {
+                                    group.Dispose();
                                 }
                                 
                                 if (!any) {

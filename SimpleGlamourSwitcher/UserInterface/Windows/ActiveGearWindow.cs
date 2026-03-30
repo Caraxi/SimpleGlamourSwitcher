@@ -65,7 +65,7 @@ public class ActiveGearWindow() : Window("Simple Glamour Switcher | Equipped###S
             return;
         }
         
-        dirty |= EquipmentDisplay.DrawEquipment(outfit.Equipment, EquipmentDisplayFlags.Simple);
+        dirty |= EquipmentDisplay.DrawEquipment(outfit.Equipment, EquipmentDisplayFlags.Simple | EquipmentDisplayFlags.EnableCustomItemPicker);
 
         if (PluginConfig.EquippedWindowConfig.ShowSaveButton && ActiveCharacter != null) {
             ImGui.SetCursorScreenPos(ImGui.GetItemRectMax() - new Vector2(-ImGui.GetStyle().ItemSpacing.X, ImGui.GetTextLineHeightWithSpacing()));

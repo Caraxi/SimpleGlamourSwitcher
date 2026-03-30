@@ -71,4 +71,10 @@ public static class ItemIcon {
     public static void Draw(EquipSlot slot, EquipItem equipItem) {
         Draw(equipItem, EmptyEquipSlotIcons.GetValueOrDefault(slot));
     }
+
+    public static void DrawEmptySlotIcon(this ImDrawListPtr dl, HumanSlot slot, Vector2 min, Vector2 max) {
+        if (!EmptyIcons.TryGetValue(slot, out var emptySlotTexture)) return;
+        var tex = TextureProvider.GetFromGame(emptySlotTexture.TexturePath).GetWrapOrDefault();
+        if (tex != null) dl.AddImage(tex.Handle, min, max, emptySlotTexture.uvMin, emptySlotTexture.uvMax);
+    }
 }

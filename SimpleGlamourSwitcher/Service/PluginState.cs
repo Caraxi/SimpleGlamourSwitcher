@@ -63,5 +63,21 @@ public static class PluginState {
         PluginLog.Verbose("ShowGlamourSwitcher()");
         Plugin.MainWindow.Toggle();
     }
+
+    public static Action? InvalidateEntryCache;
+    public static void InvalidateEntryCaches() {
+        try {
+            if (InvalidateEntryCache == null) return;
+            foreach (var i in InvalidateEntryCache.GetInvocationList()) {
+                try {
+                    (i as Action)?.Invoke();
+                } catch (Exception ex) {
+                    PluginLog.Error(ex, "Error invoking InvalidateCache");
+                }
+            }
+        } catch {
+            //
+        }
+    }
     
 }

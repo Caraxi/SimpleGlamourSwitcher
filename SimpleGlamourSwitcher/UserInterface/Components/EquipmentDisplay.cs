@@ -1,12 +1,18 @@
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
+using ImSharp;
 using Penumbra.GameData.Enums;
+using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
+using SimpleGlamourSwitcher.Service;
+using SimpleGlamourSwitcher.UserInterface.Windows;
 using SimpleGlamourSwitcher.Utility;
+using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
 
 namespace SimpleGlamourSwitcher.UserInterface.Components;
 
@@ -16,13 +22,27 @@ public enum EquipmentDisplayFlags : uint {
     NoApplyToggles = 1,
     NoCustomizePlus = 2,
     NoModEditing = 4,
-    NoSlotContextMenu = 8,
+    ContextNoSetToCurrent = 8,
+    ContextNoClearSlot = 16,
     
-    Simple = NoApplyToggles | NoCustomizePlus | NoModEditing | NoSlotContextMenu,
+    EnableCustomItemPicker = 32,
+    Simple = NoApplyToggles | NoCustomizePlus | NoModEditing | ContextNoSetToCurrent,
 }
 
 public static class EquipmentDisplay {
     
+    private static LazyAsync<OrderedDictionary<Guid, ItemConfigFile>> items = new(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : ActiveCharacter.GetEntries<ItemConfigFile>());
+    private static LazyAsync<OrderedDictionary<Guid, ItemConfigFile>> sharedItems = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : SharedCharacter.GetEntries<ItemConfigFile>());
+
+    static EquipmentDisplay() {
+        PluginState.InvalidateEntryCache += ClearCustomItemCache;
+    }
+
+    private static void ClearCustomItemCache() {
+        items = new(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : ActiveCharacter.GetEntries<ItemConfigFile>());
+        sharedItems = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : SharedCharacter.GetEntries<ItemConfigFile>());
+    }
+
     public static bool DrawEquipment(OutfitEquipment equipment, EquipmentDisplayFlags flags = EquipmentDisplayFlags.None, CharacterConfigFile? character = null, Guid? folderGuid = null) {
         var dirty = false;
         foreach (var s in Common.GetGearSlots()) {
@@ -98,15 +118,78 @@ public static class EquipmentDisplay {
         var equipItem = equipment.GetEquipItem(slot);
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slot}")) {
+            var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
             ItemIcon.Draw(slot, equipItem);
-            if (character != null && !flags.HasFlag(EquipmentDisplayFlags.NoSlotContextMenu)) {
-                dirty |= HandleSlotContextMenu($"{slot}##ItemContext", equipment, character, folderGuid, (a) => a.Equipment[slot]);
+            if (flags.HasFlag(EquipmentDisplayFlags.EnableCustomItemPicker)) {
+                if (flags.HasFlag(EquipmentDisplayFlags.EnableCustomItemPicker) && ImGui.IsPopupOpen($"CustomItemPicker_{slot}")) {
+                    var dl = ImGui.GetWindowDrawList();
+                    dl.AddRectFilled(
+                        ImGui.GetItemRectMin() - Vector2.One,
+                        ImGui.GetItemRectMax() + new Vector2(8 * ImGuiHelpers.GlobalScale, 1),
+                        ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudViolet));
+                    
+                    dl.DrawEmptySlotIcon(slot, ImGui.GetItemRectMin(), ImGui.GetItemRectMax());
+
+                }
+                
+                if (ImGui.IsItemHovered()) {
+                    var dl = ImGui.GetWindowDrawList();
+                    dl.AddRect(ImGui.GetItemRectMin() - Vector2.One, ImGui.GetItemRectMax() + Vector2.One, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
+                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                }
+                
+                if (ImGui.IsItemClicked()) {
+                    ImGui.OpenPopup($"CustomItemPicker_{slot}");
+                    ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() with { Y = -1 } + new Vector2(5 * ImGuiHelpers.GlobalScale, 0));
+                }
+                
+                using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 2))
+                using (ImRaii.PushColor(ImGuiCol.Border, ImGuiColors.DalamudViolet))
+                using (var popup = ImRaii.Popup($"CustomItemPicker_{slot}")) {
+                    if (popup.Success) {
+                        using (ImRaii.Child($"CustomItemPickerScroll_{slot}", (s * 1.35f) with { Y = s.Y * 10 }, false, ImGuiWindowFlags.HorizontalScrollbar)) {
+
+                            if (ImGui.IsWindowHovered()) {
+                                ImGui.SetScrollX(ImGui.GetScrollX() - (ImGui.GetIO().MouseWheel * 50 * ImGuiHelpers.GlobalScale));
+                            }
+                            
+                            items.CreateValueIfNotCreated();
+                            sharedItems.CreateValueIfNotCreated();
+
+                            if (!items.IsValueCreated || !sharedItems.IsValueCreated) {
+                                ImGui.TextDisabled("Loading Items...");
+                            } else {
+                                var any = false;
+
+                                foreach (var entry in items.Value.Values.Concat(sharedItems.Value.Values).Where(i => i.Slot == slot).OrderBy(i => i.SortName).ThenBy(i => i.Name, StringComparer.InvariantCultureIgnoreCase)) {
+                                    
+                                    if (any) ImGui.SameLine();
+                                    
+                                    any = true;
+                                    var folder = entry.ConfigFile?.Folders.GetValueOrDefault(entry.Folder);
+                                    var style = folder?.OutfitPolaroidStyle ?? entry.ConfigFile?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+                                    
+                                    if (Polaroid.Button((entry as IImageProvider)?.GetImage(), entry.ImageDetail, entry.Name, entry.Guid, style.FitTo(ImGui.GetWindowContentRegionMax() - ImGui.GetWindowContentRegionMin()))) {
+                                        entry.Apply().ConfigureAwait(false);
+                                    }
+                                }
+                                
+                                if (!any) {
+                                    ImGui.TextDisabled($"No custom {slot.ToName()} saved.");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            var contextCharacter = character ?? ActiveCharacter;
+            if (contextCharacter != null && !flags.CheckAll(EquipmentDisplayFlags.ContextNoSetToCurrent | EquipmentDisplayFlags.ContextNoClearSlot)) {
+                dirty |= HandleSlotContextMenu($"{slot.ToName()}##ItemContext", slot, equipment, contextCharacter, folderGuid, flags, (a) => a.Equipment[slot]);
 
             }
+
             ImGui.SameLine();
-
-            var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
-
             using (ImRaii.Group()) {
                 ImGui.SetNextItemWidth(s.X - s.Y + ImGui.GetStyle().ItemSpacing.X - (equipment is ApplicableEquipment ? s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2 : 0));
 
@@ -142,40 +225,60 @@ public static class EquipmentDisplay {
         }
         return dirty;
     }
-    
-    private static bool HandleSlotContextMenu(string label, Applicable slot, CharacterConfigFile character, Guid? folderGuid = null, Func<OutfitConfigFile, Applicable>? getApplicable = null ) {
+
+    private static bool HandleSlotContextMenu(string label, HumanSlot slot, Applicable applicable, CharacterConfigFile character, Guid? folderGuid = null, EquipmentDisplayFlags flags = EquipmentDisplayFlags.None, Func<OutfitConfigFile, Applicable>? getApplicable = null ) {
         var dirty = false;
         if (ImGui.BeginPopupContextItem($"Context_{label}")) {
             ImGui.Text(label.Split("##")[0]);
             ImGui.Separator();
 
-            if (getApplicable != null && slot is ApplicableBonus or ApplicableEquipment && ImGui.MenuItem("Replace with Currently Equipped")) {
-                dirty = true;
-                try {
-                    var o = OutfitConfigFile.CreateFromLocalPlayer(character, folderGuid ?? Guid.Empty, character.GetOptionsProvider(folderGuid ?? Guid.Empty));
-                    var m = getApplicable(o);
 
-                    if (slot is ApplicableItem<HumanSlot> originalApplicableItem && m is ApplicableItem<HumanSlot> newApplicableItem) {
-                        originalApplicableItem.Materials = newApplicableItem.Materials;
-                        originalApplicableItem.ModConfigs = newApplicableItem.ModConfigs;
-                        switch (slot) {
-                            case ApplicableEquipment originalEquipment when m is ApplicableEquipment newEquipment:
-                                originalEquipment.ItemId = newEquipment.ItemId;
-                                originalEquipment.Stain = newEquipment.Stain;
-                                break;
-                            case ApplicableBonus originalBonus when m is ApplicableBonus newBonus:
-                                originalBonus.BonusItemId = newBonus.BonusItemId;
-                                break;
+            if (!flags.HasFlag(EquipmentDisplayFlags.ContextNoSetToCurrent)) {
+                if (getApplicable != null && applicable is ApplicableBonus or ApplicableEquipment && ImGui.MenuItem("Replace with Currently Equipped")) {
+                    dirty = true;
+                    try {
+                        var o = OutfitConfigFile.CreateFromLocalPlayer(character, folderGuid ?? Guid.Empty, character.GetOptionsProvider(folderGuid ?? Guid.Empty));
+                        var m = getApplicable(o);
+
+                        if (applicable is ApplicableItem<HumanSlot> originalApplicableItem && m is ApplicableItem<HumanSlot> newApplicableItem) {
+                            originalApplicableItem.Materials = newApplicableItem.Materials;
+                            originalApplicableItem.ModConfigs = newApplicableItem.ModConfigs;
+                            switch (applicable) {
+                                case ApplicableEquipment originalEquipment when m is ApplicableEquipment newEquipment:
+                                    originalEquipment.ItemId = newEquipment.ItemId;
+                                    originalEquipment.Stain = newEquipment.Stain;
+                                    break;
+                                case ApplicableBonus originalBonus when m is ApplicableBonus newBonus:
+                                    originalBonus.BonusItemId = newBonus.BonusItemId;
+                                    break;
+                            }
+
                         }
-
-                    }
                     
-                } catch (Exception ex) {
-                    PluginLog.Error(ex, "Error replacing equipment");
-                    //
+                    } catch (Exception ex) {
+                        PluginLog.Error(ex, "Error replacing equipment");
+                        //
+                    }
                 }
             }
-            
+
+            if (!flags.HasFlag(EquipmentDisplayFlags.ContextNoClearSlot)) {
+                if (getApplicable != null && applicable is ApplicableBonus or ApplicableEquipment && ImGui.MenuItem($"Clear {slot.ToName()} Equipment")) {
+                    dirty = true;
+                    try {
+                        if (applicable is ApplicableEquipment equipment) {
+                            equipment.ItemId = ItemManager.NothingId(slot.ToEquipSlot());
+                        } else if (applicable is ApplicableBonus bonus) {
+                            bonus.BonusItemId = 0;
+                        }
+                    
+                    } catch (Exception ex) {
+                        PluginLog.Error(ex, "Error replacing equipment");
+                        //
+                    }
+                }
+            }
+
             ImGui.EndPopup();
         }
 

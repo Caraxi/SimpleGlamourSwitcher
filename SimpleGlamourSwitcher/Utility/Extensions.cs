@@ -46,10 +46,12 @@ public static class Extensions {
     public static Vector2 FitTo(this Vector2 vector, float x, float? y = null) {
         return vector * MathF.Min(x / vector.X, y ?? x / vector.Y);
     }
+
+    public static Vector2 FitTo(this Vector2 vector, Vector2 other) {
+        if (vector.X == 0 || vector.Y == 0) return Vector2.Zero;
+        return vector * MathF.Min(other.X / vector.X, other.Y / vector.Y);
+    }
     
-    public static Vector2 FitTo(this Vector2 vector, Vector2 other) => FitTo(vector, other.X, other.Y);
-
-
     public static T? GetAttribute<TEnum, T>(this TEnum enumValue) where T : Attribute where TEnum : Enum {
         var type = enumValue.GetType();
         var memInfo = type.GetMember(enumValue.ToString());

@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Newtonsoft.Json;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
+using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.Configuration;
 
@@ -151,7 +152,7 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
     
     public void Save(bool force = false) {
         if (force) Dirty = true;
-        PluginLog.Debug($"Save Request {typeof(T).Name} - {GetConfigPath(parent, Guid)}");
+        PluginLog.Verbose($"Save Request {typeof(T).Name} - {GetConfigPath(parent, Guid)}");
         if (!Dirty) return;
 
         dirty = false;
@@ -165,6 +166,7 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
             var json = JsonConvert.SerializeObject(this, Formatting.Indented);
             if (!file.Directory.Exists) file.Directory.Create();
             File.WriteAllText(file.FullName, json);
+            PluginState.InvalidateEntryCaches();
         } catch (Exception ex) {
             PluginLog.Error(ex, $"Error saving {typeof(T).Name} - {Guid}");
         }

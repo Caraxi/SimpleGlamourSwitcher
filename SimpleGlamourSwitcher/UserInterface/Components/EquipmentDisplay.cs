@@ -10,7 +10,6 @@ using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.Service;
-using SimpleGlamourSwitcher.UserInterface.Windows;
 using SimpleGlamourSwitcher.Utility;
 using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
 
@@ -112,6 +111,8 @@ public static class EquipmentDisplay {
 
         return dirty;
     }
+
+    private static int _quickSwitchFrameCounter;
     
     private static bool ShowSlot(HumanSlot slot, ApplicableItem<HumanSlot> equipment, EquipmentDisplayFlags flags, CharacterConfigFile? character, Guid? folderGuid) {
         var dirty = false;
@@ -148,7 +149,9 @@ public static class EquipmentDisplay {
                 using (var popup = ImRaii.Popup($"CustomItemPicker_{slot}")) {
                     if (popup.Success) {
                         using (ImRaii.Child($"CustomItemPickerScroll_{slot}", (s * 1.35f) with { Y = s.Y * 10 }, false, ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysHorizontalScrollbar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
+                            if (ImGui.IsWindowAppearing()) _quickSwitchFrameCounter = 0;
 
+                            _quickSwitchFrameCounter++;
                             if (ImGui.IsWindowHovered()) {
                                 ImGui.SetScrollX(ImGui.GetScrollX() - (ImGui.GetIO().MouseWheel * 50 * ImGuiHelpers.GlobalScale));
                             }
@@ -178,8 +181,6 @@ public static class EquipmentDisplay {
                                                     ImGui.SameLine();
                                                     group = ImRaii.Group();
                                                     row = 0;
-                                                } else {
-                                                    
                                                 }
                                             }
 
@@ -194,7 +195,7 @@ public static class EquipmentDisplay {
                                                     entry.ImageDetail,
                                                     entry.Name,
                                                     entry.Guid,
-                                                    style.FitTo(contentRegionSize with { Y = rowHeight }))) {
+                                                    style.FitTo(contentRegionSize with { Y = rowHeight })) && _quickSwitchFrameCounter > 3) {
                                                 entry.Apply().ConfigureAwait(false);
                                             }
                                         }

@@ -41,7 +41,7 @@ public class PluginService {
     private static ServiceManager _serviceManager = null!;
 
     public void Initialize() {
-        var logger = new Logger();
+        var logger = new MainLogger(nameof(SimpleGlamourSwitcher));
         _serviceManager = new ServiceManager(logger)
             .AddDalamudServices(PluginInterface)
             .AddSingleton<DictAction>()

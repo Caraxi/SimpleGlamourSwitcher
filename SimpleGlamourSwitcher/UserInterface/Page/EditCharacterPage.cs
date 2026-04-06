@@ -58,6 +58,9 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private List<AutoCommandEntry> autoCommandBeforeOutfit = character?.AutoCommandBeforeOutfit.Clone() ?? [];
     private List<AutoCommandEntry> autoCommandAfterOutfit = character?.AutoCommandAfterOutfit.Clone() ?? [];
+    
+    private List<AutoCommandEntry> autoCommandOnCharacterLoad = character?.AutoCommandOnCharacterLoad.Clone() ?? [];
+    private List<AutoCommandEntry> autoCommandOnCharacterUnload = character?.AutoCommandOnCharacterUnload.Clone() ?? [];
 
     private OutfitLinksEditor? OutfitLinksEditor;
     
@@ -426,6 +429,20 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                         dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
                     }
                 }
+
+                ImGui.TextDisabled("On Character Load Commands:");
+                using (ImRaii.PushIndent()) {
+                    using (ImRaii.PushId("autoCommandOnCharacterLoad")) {
+                        dirty |= CommandEditor.Show(autoCommandOnCharacterLoad);
+                    }
+                }
+
+                ImGui.TextDisabled("On Character Unload Commands:");
+                using (ImRaii.PushIndent()) {
+                    using (ImRaii.PushId("autoCommandOnCharacterUnload")) {
+                        dirty |= CommandEditor.Show(autoCommandOnCharacterUnload);
+                    }
+                }
             }
             
             if (ImGui.CollapsingHeader("Image")) {
@@ -460,6 +477,10 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
                     autoCommandAfterOutfit.Cleanup();
                     Character.AutoCommandAfterOutfit = autoCommandAfterOutfit;
+                    autoCommandOnCharacterLoad.Cleanup();
+                    Character.AutoCommandOnCharacterLoad = autoCommandOnCharacterLoad;
+                    autoCommandOnCharacterUnload.Cleanup();
+                    Character.AutoCommandOnCharacterUnload = autoCommandOnCharacterUnload;
 
                     Character.ApplyOnLogin = applyOnLogin;
                     Character.ApplyOnPluginReload = applyOnPluginReload;

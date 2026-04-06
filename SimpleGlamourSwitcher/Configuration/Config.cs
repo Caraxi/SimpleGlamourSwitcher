@@ -34,6 +34,13 @@ public static class Config {
    
    
    public static bool SwitchCharacter(Guid? guid, bool setSaved = true, bool resetState = false) {
+
+      if (_activeCharacter != null) {
+         _activeCharacter.Save();
+         foreach (var c in _activeCharacter.AutoCommandOnCharacterUnload.Where(c => c.Enabled)) {
+            ActionQueue.QueueCommand(c.Command);
+         }
+      }
       _activeCharacter?.Save();
       _activeCharacter = null;
       
@@ -50,6 +57,13 @@ public static class Config {
             _pluginConfig.Save();
          }
          _activeCharacter = CharacterConfigFile.Load(guid.Value, _pluginConfig);
+      }
+
+
+      if (_activeCharacter != null) {
+         foreach (var c in _activeCharacter.AutoCommandOnCharacterLoad.Where(c => c.Enabled)) {
+            ActionQueue.QueueCommand(c.Command);
+         }
       }
       
       return _activeCharacter != null;

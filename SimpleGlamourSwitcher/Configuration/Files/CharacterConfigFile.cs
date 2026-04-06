@@ -30,6 +30,9 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
     public List<AutoCommandEntry> AutoCommandBeforeOutfit = new();
     public List<AutoCommandEntry> AutoCommandAfterOutfit = new();
+
+    public List<AutoCommandEntry> AutoCommandOnCharacterLoad = new();
+    public List<AutoCommandEntry> AutoCommandOnCharacterUnload = new();
     
     public bool Deleted;
     
@@ -45,6 +48,8 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public AutomationConfig Automation = new();
 
     public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Inherit;
+
+    public DefaultFolderConfiguration DefaultFolderConfiguration = new();
 
     public List<Guid> DefaultLinkBefore { get; set; } = [];
     public List<Guid> DefaultLinkAfter { get; set; } = [];

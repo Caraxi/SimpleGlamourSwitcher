@@ -17,7 +17,7 @@ using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs, IAdditionalLink {
+public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs, IAdditionalLink, ICreatableListEntry<ItemConfigFile> {
     public FontAwesomeIcon TypeIcon => Slot switch {
         HumanSlot.Head => FontAwesomeIcon.HatCowboy,
         HumanSlot.Body => FontAwesomeIcon.Tshirt,
@@ -41,9 +41,11 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         set => Name = value;
     }
 
-    public string Description = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; }
+    
+    public List<AutoCommandEntry> AutoCommands { get; set; } = new();
 
     public ImageDetail ImageDetail { get; set; } = new();
 
@@ -78,7 +80,11 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         
         return instance;
     }
-    
+
+    public static ItemConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider? defaultOptionsProvider = null) {
+        return Create(character, folderGuid);
+    }
+
     protected override void Setup() {
         base.Setup();
         (this as IHasModConfigs).UpdateHeliosphereMods();
@@ -90,6 +96,9 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
             await Framework.RunOnTick(async () => {
                 var redraw = false;
                 Item.ApplyToCharacter(Slot, ref redraw);
+                
+                EnqueueAutoCommands();
+                
                 if (redraw) {
                     await Framework.RunOnTick(() => {
                         PenumbraIpc.RedrawObject.Invoke(0);
@@ -99,8 +108,41 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         });
     }
 
-    public async Task<bool> ApplyMods() {
-        return false;
+    public void EnqueueAutoCommands() {
+        if (!PluginConfig.EnableOutfitCommands) return;
+        var parent = GetParent() ?? throw new Exception("Invalid ItemConfigFile");
+        
+        List<string> commands = [];
+        
+        if (parent.Folders.TryGetValue(Folder, out var folder)) {
+            if (folder.AutoCommandsSkipCharacter) {
+                commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(AutoCommands.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(folder.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+            } else {
+                commands.AddRange(parent.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(AutoCommands.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(folder.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+                commands.AddRange(parent.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+            }
+        } else {
+            commands.AddRange(parent.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
+            commands.AddRange(AutoCommands.Where(c => c.Enabled).Select(c => c.Command));
+            commands.AddRange(parent.AutoCommandAfterOutfit.Where(c => c.Enabled).Select(c => c.Command));
+        }
+
+        foreach (var c in commands) {
+            if (PluginConfig.DryRunOutfitCommands) {
+                Chat.Print($"{c}", "Dry Run - SGS");
+            } else {
+                ActionQueue.QueueCommand(c);
+            }
+        }
+    }
+    
+    public Task<bool> ApplyMods() {
+        return Task.FromResult(false);
     }
 
     public static string GetFileName(Guid? guid) {

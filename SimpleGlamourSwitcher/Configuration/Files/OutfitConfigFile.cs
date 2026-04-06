@@ -13,7 +13,7 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry {
+public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, ICreatableListEntry<OutfitConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.PersonHalfDress;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
@@ -22,7 +22,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         set => Name = value;
     }
 
-    public string Description = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
 
     public List<Guid> ApplyBefore = new();
@@ -30,7 +30,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     
     public string? SortName { get; set; } = string.Empty;
 
-    public List<AutoCommandEntry> AutoCommands = new();
+    public List<AutoCommandEntry> AutoCommands { get; set; } = new();
     
     public ImageDetail ImageDetail { get; set; } = new();
 
@@ -208,8 +208,8 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         Save();
     }
 
-    public static OutfitConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider defaultOptionsProvider) {
-        
+    public static OutfitConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider? defaultOptionsProvider) {
+        defaultOptionsProvider ??= character.GetOptionsProvider(folderGuid);
         var instance = Create(character, folderGuid);
         PluginLog.Debug("Creating Outfit from Local Player");
         var glamourerState = GlamourerIpc.GetState(0);

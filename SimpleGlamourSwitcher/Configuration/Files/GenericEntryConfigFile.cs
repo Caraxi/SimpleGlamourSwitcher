@@ -12,7 +12,7 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink {
+public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink, ICreatableListEntry<GenericEntryConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.Link;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
@@ -22,11 +22,11 @@ public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, Charact
         set => Name = value;
     }
 
-    public string Description = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; } = string.Empty;
 
-    public List<AutoCommandEntry> AutoCommands = new();
+    public List<AutoCommandEntry> AutoCommands { get; set; } = new();
 
     public ImageDetail ImageDetail { get; set; } = new();
     
@@ -39,7 +39,9 @@ public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, Charact
         instance.Folder = folderGuid;
         return instance;
     }
-    
+
+    public static GenericEntryConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider? defaultOptionsProvider = null) => Create(character, folderGuid);
+
     protected override void Setup() {
         base.Setup();
         (this as IHasModConfigs).UpdateHeliosphereMods();

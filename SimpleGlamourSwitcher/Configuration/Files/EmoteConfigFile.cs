@@ -15,7 +15,7 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs, IAdditionalLink {
+public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs, IAdditionalLink, ICreatableListEntry<EmoteConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.KissWinkHeart;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
@@ -25,11 +25,11 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         set => Name = value;
     }
 
-    public string Description = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; }
 
-    public List<AutoCommandEntry> AutoCommands = new();
+    public List<AutoCommandEntry> AutoCommands { get; set; } = new();
 
     public ImageDetail ImageDetail { get; set; } = new();
     
@@ -42,7 +42,9 @@ public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>,
         instance.Folder = folderGuid;
         return instance;
     }
-    
+
+    public static EmoteConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid guid, IDefaultOutfitOptionsProvider? defaultOptionsProvider) => CreateFromLocalPlayer(character, guid);
+
     protected override void Setup() {
         base.Setup();
         (this as IHasModConfigs).UpdateHeliosphereMods();

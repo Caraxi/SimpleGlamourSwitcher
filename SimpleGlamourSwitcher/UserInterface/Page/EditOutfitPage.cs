@@ -1,12 +1,9 @@
 using System.Numerics;
-using Dalamud.Interface;
-using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Lumina.Excel.Sheets;
-using Penumbra.GameData.Data;
 using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
 using SimpleGlamourSwitcher.Configuration.Enum;
@@ -18,189 +15,89 @@ using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Enums;
 using SimpleGlamourSwitcher.Utility;
 using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
-using UiBuilder = Dalamud.Interface.UiBuilder;
 
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
-public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, OutfitConfigFile? outfit) : Page {
+public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, OutfitConfigFile? outfit) : EntryEditorPage<OutfitConfigFile>(character, folderGuid, outfit) {
+    public override string TypeName => "Outfit";
     
-    public bool IsNewOutfit { get; } = outfit == null;
-    public OutfitConfigFile Outfit { get; } = outfit ?? OutfitConfigFile.CreateFromLocalPlayer(character, folderGuid, character.GetOptionsProvider(folderGuid));
-
-    private readonly string folderPath = character.ParseFolderPath(folderGuid);
-    private const float SubWindowWidth = 600f;
-
-    private readonly FileDialogManager fileDialogManager = new();
-
     private OutfitEquipment? equipment;
     private OutfitAppearance? appearance;
     private OutfitWeapons? weapons;
-    private string outfitName = outfit?.Name ?? string.Empty;
-    private string? sortName = outfit?.SortName ?? string.Empty;
 
     private List<Guid>? linkBefore;
     private List<Guid>? linkAfter;
-    private List<AutoCommandEntry> autoCommands = outfit?.AutoCommands ?? [];
-    
     private OutfitLinksEditor? linksEditor;
-    
-    private bool dirty;
-    
-    public override void DrawTop(ref WindowControlFlags controlFlags) {
-        base.DrawTop(ref controlFlags);
-        ImGuiExt.CenterText(IsNewOutfit ? "Creating" : "Editing Outfit", shadowed: true);
-        ImGuiExt.CenterText(IsNewOutfit ? $"New Outfit in {folderPath}" : $"{folderPath} / {Outfit.Name}", shadowed: true);
-    }
-    
-    public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
-            if (ImGuiExt.ButtonWithIcon(dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-                MainWindow.PopPage();
-            }
-        }
-        
-        #if DEBUG
-        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) && ImGui.IsMouseClicked(ImGuiMouseButton.Right)) {
-            dirty = false;
-        }
-        #endif
 
-        if (dirty && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
-            ImGui.SetTooltip("Hold SHIFT to confirm.");
-        }
-    }
-    
-    public override void DrawCenter(ref WindowControlFlags controlFlags) {
-        equipment ??= Outfit.Equipment.Clone();
-        appearance ??= Outfit.Appearance.Clone();
-        weapons ??= Outfit.Weapons.Clone();
-
-        linkBefore = Outfit.ApplyBefore;
-        linkAfter = Outfit.ApplyAfter;
+    protected override void DrawEditor(ref WindowControlFlags controlFlags) {
+        equipment ??= Entry.Equipment.Clone();
+        appearance ??= Entry.Appearance.Clone();
+        weapons ??= Entry.Weapons.Clone();
+        linkBefore ??= Entry.ApplyBefore.Clone();
+        linkAfter ??= Entry.ApplyAfter.Clone();
         
-        
-        fileDialogManager.Draw();
-        controlFlags |= WindowControlFlags.PreventClose;
-        ImGui.Spacing();
-        
-        var pad = (ImGui.GetContentRegionAvail().X - SubWindowWidth * ImGuiHelpers.GlobalScale) / 2f;
+        dirty |= ImGui.Checkbox("##applyAppearance", ref appearance.Apply);
+        ImGui.SameLine();
         using (ImRaii.Group()) {
-            ImGui.Dummy(new Vector2(pad, 1f));
+            if (ImGui.CollapsingHeader("Appearance")) {
+                using (ImRaii.PushIndent()) {
+                    ImGui.Checkbox("Revert to Game State##appearance", ref appearance.RevertToGame);
+                    DrawAppearance();
+                }
+            }
+            
+            if (ImGui.CollapsingHeader("Advanced Appearance")) {
+                using (ImRaii.PushIndent()) {
+                    DrawParameters();
+                }
+            }
         }
+            
+        dirty |= ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
         ImGui.SameLine();
-        using (ImRaii.Group())
-        using (ImRaii.ItemWidth(SubWindowWidth * ImGuiHelpers.GlobalScale)) {
-            dirty |= CustomInput.InputText("Outfit Name", ref outfitName, 100, errorMessage: outfitName.Length == 0 ? "Please enter a name" : string.Empty);
-            CustomInput.ReadOnlyInputText("Path", folderPath);
+        if (ImGui.CollapsingHeader("Equipment")) {
+            using (ImRaii.PushIndent()) {
+                ImGui.Checkbox("Revert to Game State##equipment", ref equipment.RevertToGame);
+                DrawEquipment();
+            }
+        }
+            
+        dirty |= ImGui.Checkbox("##applyWeapons", ref weapons.Apply);
+        ImGui.SameLine();
+        if (ImGui.CollapsingHeader("Weapons / Tools")) {
+            using (ImRaii.PushIndent()) {
+                DrawWeapons();
+            }
+        }
+            
+        if (ImGui.CollapsingHeader("Outfit Links")) {
+            linksEditor ??= new OutfitLinksEditor(Character, Entry, linkBefore, linkAfter);
+            dirty |= linksEditor.Draw(CommonDetailsEditor.Name.OrDefault("This Outfit"));
         }
         
-        ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
-
-        ImGui.Dummy(new Vector2(pad, 1f));
-        ImGui.SameLine();
-        if (ImGui.BeginChild("equipment", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {
-
-            dirty |= ImGui.Checkbox("##applyAppearance", ref appearance.Apply);
-            ImGui.SameLine();
-            using (ImRaii.Group()) {
-                if (ImGui.CollapsingHeader("Appearance")) {
-                    using (ImRaii.PushIndent()) {
-                        ImGui.Checkbox("Revert to Game State##appearance", ref appearance.RevertToGame);
-                        DrawAppearance();
-                    }
-                }
-            
-                if (ImGui.CollapsingHeader("Advanced Appearance")) {
-                    using (ImRaii.PushIndent()) {
-                        DrawParameters();
-                    }
-                }
-            }
-            
-            dirty |= ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
-            ImGui.SameLine();
-            if (ImGui.CollapsingHeader("Equipment")) {
-                using (ImRaii.PushIndent()) {
-                    ImGui.Checkbox("Revert to Game State##equipment", ref equipment.RevertToGame);
-                    DrawEquipment();
-                }
-            }
-            
-            dirty |= ImGui.Checkbox("##applyWeapons", ref weapons.Apply);
-            ImGui.SameLine();
-            if (ImGui.CollapsingHeader("Weapons / Tools")) {
-                using (ImRaii.PushIndent()) {
-                    DrawWeapons();
-                }
-            }
-            
-            if (ImGui.CollapsingHeader("Image")) {
-                var folder = character.Folders.GetValueOrDefault(folderGuid);
-                var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-                ImageEditor.Draw(Outfit, outfitStyle, Outfit.Name, ref controlFlags);
-            }
-
-            if (ImGui.CollapsingHeader("Outfit Links")) {
-                linksEditor ??= new OutfitLinksEditor(character, Outfit, linkBefore, linkAfter);
-                dirty |= linksEditor.Draw(outfitName.OrDefault("This Outfit"));
-            }
-            
-            if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
-                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing into this outfit.");
-                
-                ImGui.Spacing();
-                
-                using (ImRaii.PushId("autoCommands")) {
-                    dirty |= CommandEditor.Show(autoCommands);
-                }
-            }
-
-            
-            if (ImGui.CollapsingHeader("Details")) {
-                var guid = Outfit.Guid.ToString();
-                ImGui.InputText("GUID", ref guid, 128, ImGuiInputTextFlags.ReadOnly | ImGuiInputTextFlags.AutoSelectAll);
-                sortName ??= string.Empty;
-                dirty |= ImGui.InputTextWithHint("Custom Sort Name", outfitName, ref sortName, 128);
-            }
-            
-        }
-        ImGui.EndChild();
-        ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
-        
-        ImGui.Spacing();
-        ImGui.Dummy(new Vector2(pad, 1f));
-        ImGui.SameLine();
-        using (ImRaii.Group())
-        using (ImRaii.ItemWidth(SubWindowWidth * ImGuiHelpers.GlobalScale)) {
-
-            if (ImGuiExt.ButtonWithIcon("Save Outfit", FontAwesomeIcon.Save, new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-                Outfit.Name = outfitName;
-                Outfit.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();
-                Outfit.Equipment = equipment ?? Outfit.Equipment;
-                Outfit.Appearance = appearance ?? Outfit.Appearance;
-                Outfit.Weapons =  weapons ?? Outfit.Weapons;
-                Outfit.ApplyBefore = linkBefore;
-                Outfit.ApplyAfter = linkAfter;
-                Outfit.AutoCommands = autoCommands;
-                Outfit.Save(true);
-                MainWindow.PopPage();
-            }
-        }
     }
 
+    protected override void SaveEntry() {
+        Entry.Equipment = equipment ?? Entry.Equipment;
+        Entry.Appearance = appearance ?? Entry.Appearance;
+        Entry.Weapons =  weapons ?? Entry.Weapons;
+        Entry.ApplyBefore = linkBefore ?? Entry.ApplyBefore;
+        Entry.ApplyAfter = linkAfter ?? Entry.ApplyAfter;
+    }
+    
     private void DrawAppearance() {
-        appearance ??= Outfit.Appearance.Clone();
+        appearance ??= Entry.Appearance.Clone();
         dirty |= CustomizeEditor.Show(appearance);
     }
 
     private void DrawParameters() {
-        foreach (var v in System.Enum.GetValues<AppearanceParameterKind>()) {
+        foreach (var v in Enum.GetValues<AppearanceParameterKind>()) {
             DrawParameter(v);
         }
     }
 
     private void DrawParameter(AppearanceParameterKind kind) {
-        appearance ??= Outfit.Appearance.Clone();
+        appearance ??= Entry.Appearance.Clone();
         var param = appearance[kind];
         CustomizeEditor.ShowApplyEnableCheckbox(kind.PrettyName(), ref param.Apply, ref appearance.Apply);
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
@@ -208,12 +105,12 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     private void DrawEquipment() {
-        equipment ??= Outfit.Equipment.Clone();
-        EquipmentDisplay.DrawEquipment(equipment, EquipmentDisplayFlags.None, character, folderGuid); 
+        equipment ??= Entry.Equipment.Clone();
+        EquipmentDisplay.DrawEquipment(equipment, EquipmentDisplayFlags.None, Character, FolderGuid); 
     }
     
     private void DrawWeapons() {
-        weapons ??= Outfit.Weapons.Clone();
+        weapons ??= Entry.Weapons.Clone();
         
         foreach (var (classJobId, classWeapons) in weapons.ClassWeapons) {
             var classJob = DataManager.GetExcelSheet<ClassJob>().GetRow(classJobId);
@@ -299,7 +196,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     }
 
     private void ShowSlot(EquipSlot slot, uint classJobId, OutfitClassWeapons classWeapons) {
-        weapons ??= Outfit.Weapons.Clone();
+        weapons ??= Entry.Weapons.Clone();
         var equip = classWeapons[slot];
         var classJob = DataManager.GetExcelSheet<ClassJob>().GetRow(classJobId);
         using (ImRaii.Group()) {

@@ -9,7 +9,10 @@ namespace SimpleGlamourSwitcher.Configuration.Interface;
 public interface IListEntry {
     public Guid Guid { get; }
     public string Name { get; set; }
+    public string Description { get; set; }
     public string? SortName { get; set; }
+    
+    public List<AutoCommandEntry> AutoCommands { get; set; }
     
     public Guid Folder { get; set; }
     
@@ -29,3 +32,4 @@ public interface IListEntry {
     IListEntry? CloneTo(CharacterConfigFile characterConfigFile);
     public void SetImage(FileInfo fileInfo);
 }
+

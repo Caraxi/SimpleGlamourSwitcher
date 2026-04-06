@@ -16,7 +16,7 @@ using Companion = Lumina.Excel.Sheets.Companion;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink {
+public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink, ICreatableListEntry<MinionConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.Cat;
     public string Name = string.Empty;
     string IImageProvider.Name => Name;
@@ -26,11 +26,11 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         set => Name = value;
     }
 
-    public string Description = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; } = string.Empty;
 
-    public List<AutoCommandEntry> AutoCommands = new();
+    public List<AutoCommandEntry> AutoCommands { get; set; } = new();
 
     public ImageDetail ImageDetail { get; set; } = new();
 
@@ -202,7 +202,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         }) ?? throw new Exception("Failed to clone outfit.");
     }
 
-    public static MinionConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid) {
+    public static MinionConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider? defaultOptionsProvider = null) {
         var cfg = Create(character, folderGuid);
 
         if (CompanionHelper.GetActiveCompanionId().TryWaitResult(out var minionId)) {

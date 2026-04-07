@@ -186,6 +186,8 @@ public class Plugin : IDalamudPlugin {
     public void Dispose() {
         Commands.RemoveHandler("/sgs");
         MainWindow.IsOpen = false;
+        ActiveWindow.IsOpen = false;
+        ConfigWindow.IsOpen = false;
         AutomationManager.Dispose();
         ECommonsMain.Dispose();
         HotkeyHelper.Dispose();

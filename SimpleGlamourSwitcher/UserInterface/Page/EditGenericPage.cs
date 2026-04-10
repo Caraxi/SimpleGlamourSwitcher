@@ -15,9 +15,9 @@ public class EditGenericPage(CharacterConfigFile character, Guid folderGuid, Gen
     protected override void DrawEditor(ref WindowControlFlags controlFlags) {
         identifier ??= Entry.Identifier;
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-        dirty |= CustomInput.InputText("Identifier", ref identifier, 32);
+        Dirty |= CustomInput.InputText("Identifier", ref identifier, 32);
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One)) {
-            dirty |= ModListDisplay.Show(Entry, $"{CommonDetailsEditor.Name}", ImGui.GetContentRegionAvail().X);
+            Dirty |= ModListDisplay.Show(Entry, $"{CommonDetailsEditor.Name}", ImGui.GetContentRegionAvail().X);
         }
     }
 

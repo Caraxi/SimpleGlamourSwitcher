@@ -46,8 +46,8 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
         var s = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
         using (ImRaii.Group()) {
             ImGui.SetNextItemWidth(s.X - s.Y);
-            dirty |= CustomInput.Combo("Emote Selection", selectedEmoteName, DrawEmoteSearch, style: Style.Default.Combo with { PadTop = false });
-            dirty |= ModListDisplay.Show(this, selectedEmoteName);
+            Dirty |= CustomInput.Combo("Emote Selection", selectedEmoteName, DrawEmoteSearch, style: Style.Default.Combo with { PadTop = false });
+            Dirty |= ModListDisplay.Show(this, selectedEmoteName);
         }
     }
 

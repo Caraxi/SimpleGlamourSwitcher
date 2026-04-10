@@ -36,8 +36,8 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
         var s = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
         using (ImRaii.Group()) {
             ImGui.SetNextItemWidth(s.X - s.Y);
-            dirty |= CustomInput.Combo("Minion Selection", minionDataName, DrawMinionSearch, style: Style.Default.Combo with { PadTop = false });
-            dirty |= ModListDisplay.Show(Entry, $"{minionDataName}");
+            Dirty |= CustomInput.Combo("Minion Selection", minionDataName, DrawMinionSearch, style: Style.Default.Combo with { PadTop = false });
+            Dirty |= ModListDisplay.Show(Entry, $"{minionDataName}");
         }
         
         ImGui.Checkbox("Resummon Minion", ref resummon);

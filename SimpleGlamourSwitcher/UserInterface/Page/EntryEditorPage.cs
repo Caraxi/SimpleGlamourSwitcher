@@ -35,8 +35,7 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
     
     private readonly FileDialogManager fileDialogManager = new();
 
-    protected bool dirty;
-    
+    protected bool Dirty;
 
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
@@ -47,19 +46,19 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
     
     
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-        using (ImRaii.Disabled(dirty && !ImGui.GetIO().KeyShift)) {
-            if (ImGuiExt.ButtonWithIcon(dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+        using (ImRaii.Disabled(Dirty && !ImGui.GetIO().KeyShift)) {
+            if (ImGuiExt.ButtonWithIcon(Dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                 MainWindow.PopPage();
             }
         }
         
 #if DEBUG
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) && ImGui.IsMouseClicked(ImGuiMouseButton.Right)) {
-            dirty = false;
+            Dirty = false;
         }
 #endif
 
-        if (dirty && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+        if (Dirty && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
             ImGui.SetTooltip("Hold SHIFT to confirm.");
         }
     }
@@ -73,7 +72,7 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
         
         var pad = (ImGui.GetContentRegionAvail().X - SubWindowWidth * ImGuiHelpers.GlobalScale) / 2f;
         
-        dirty |= commonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth);
+        Dirty |= commonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth);
         
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();

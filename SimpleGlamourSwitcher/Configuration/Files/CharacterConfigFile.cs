@@ -320,11 +320,11 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         return new DirectoryInfo(configFile.Directory?.FullName ?? throw new InvalidOperationException());
     }
 
-    public string ParseFolderPath(Guid guid, bool characterName = true) => ParseFolderPath(guid, [], characterName);
-    private string ParseFolderPath(Guid guid, HashSet<Guid> folders, bool characterName = true) {
+    public string ParseFolderPath(Guid guid, bool characterName = true, bool compact = false) => ParseFolderPath(guid, [], characterName, compact);
+    private string ParseFolderPath(Guid guid, HashSet<Guid> folders, bool characterName, bool compact) {
         if (!folders.Add(guid)) throw new Exception("Folder loop caught");
         if (guid == Guid.Empty || !Folders.TryGetValue(guid, out var folder)) return characterName ? Name : string.Empty;
-        return characterName || folder.Parent != Guid.Empty ? $"{ParseFolderPath(folder.Parent, folders, characterName)} / {folder.Name}" : folder.Name;
+        return characterName || folder.Parent != Guid.Empty ? $"{ParseFolderPath(folder.Parent, folders, characterName, compact)}{(compact ? "/" : " / ")}{folder.Name}" : folder.Name;
     }
 
     

@@ -1,5 +1,6 @@
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using SimpleGlamourSwitcher.Configuration.ConfigSystem;
@@ -16,10 +17,10 @@ public class CommonDetailsEditor(CharacterConfigFile character, IListEntry entry
     public string Name => name;
     private string description =  entry?.Description ?? string.Empty;
     private string sortName = entry?.SortName ?? string.Empty;
-    private Guid folderGuid =  entry?.Folder ?? Guid.Empty;
-    public Guid FolderGuid => folderGuid;
-    private string folderPath = character.ParseFolderPath(entry?.Folder ?? Guid.Empty);
-    public string FolderPath => folderPath;
+    public Guid FolderGuid { get; private set; } = entry?.Folder ?? Guid.Empty;
+
+    public string FolderPath { get; private set; } = character.ParseFolderPath(entry?.Folder ?? Guid.Empty);
+
     private List<AutoCommandEntry> autoCommands = entry?.AutoCommands ?? [];
     
 
@@ -39,7 +40,30 @@ public class CommonDetailsEditor(CharacterConfigFile character, IListEntry entry
         using (ImRaii.Group())
         using (ImRaii.ItemWidth(width * ImGuiHelpers.GlobalScale)) {
             dirty |= CustomInput.InputText("Outfit Name", ref name, 100, errorMessage: name.Length == 0 ? "Please enter a name" : string.Empty);
-            CustomInput.ReadOnlyInputText("Path", folderPath);
+            CustomInput.Combo("Path", FolderPath, s => {
+                var folders = character.Folders.Select(f => {
+                    var path = character.ParseFolderPath(f.Key);
+                    return (Guid: f.Key, Path: path, CompactPath: character.ParseFolderPath(f.Key, compact: true));
+                });
+
+                if (character.Guid != CharacterConfigFile.SharedDataGuid) {
+                    folders = folders.Prepend(new ValueTuple<Guid, string, string>(Guid.Empty, character.Name, character.Name));
+                }
+                
+                foreach (var (guid, path, compactPath) in folders.OrderBy(f => f.CompactPath, StringComparer.InvariantCultureIgnoreCase)) {
+                    if (!string.IsNullOrWhiteSpace(s)) {
+                        if (!(path.Contains(s, StringComparison.CurrentCultureIgnoreCase) || compactPath.Contains(s, StringComparison.CurrentCultureIgnoreCase))) continue;
+                    }
+
+                    if (ImGui.Selectable($"{path}", guid == FolderGuid)) {
+                        dirty |= FolderGuid != guid;
+                        FolderGuid = guid;
+                        FolderPath = character.ParseFolderPath(guid);
+                    }
+                }
+
+                return false;
+            }, icon: FontAwesomeIcon.Folder);
         }
                 
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
@@ -51,13 +75,13 @@ public class CommonDetailsEditor(CharacterConfigFile character, IListEntry entry
     public bool ShowCommonDetails(ref WindowControlFlags controlFlags) {
         var dirty = false;
         if (entry is IImageProvider imageProvider && ImGui.CollapsingHeader("Image")) {
-            var folder = character.Folders.GetValueOrDefault(folderGuid);
+            var folder = character.Folders.GetValueOrDefault(FolderGuid);
             var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
             ImageEditor.Draw(imageProvider, outfitStyle, name, ref controlFlags);
         }
             
         if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
-            ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing into this outfit.");
+            ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when applying this outfit.");
                 
             ImGui.Spacing();
                 
@@ -77,7 +101,7 @@ public class CommonDetailsEditor(CharacterConfigFile character, IListEntry entry
 
     public void ApplyTo(IListEntry toEntry) {
         toEntry.Name = name;
-        toEntry.Folder = folderGuid;
+        toEntry.Folder = FolderGuid;
         toEntry.SortName = string.IsNullOrWhiteSpace(sortName) ? null : sortName.Trim();;
         toEntry.Description = description;
         toEntry.AutoCommands = autoCommands;

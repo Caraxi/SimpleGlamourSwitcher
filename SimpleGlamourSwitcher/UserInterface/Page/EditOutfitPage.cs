@@ -36,7 +36,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         linkBefore ??= Entry.ApplyBefore.Clone();
         linkAfter ??= Entry.ApplyAfter.Clone();
         
-        dirty |= ImGui.Checkbox("##applyAppearance", ref appearance.Apply);
+        Dirty |= ImGui.Checkbox("##applyAppearance", ref appearance.Apply);
         ImGui.SameLine();
         using (ImRaii.Group()) {
             if (ImGui.CollapsingHeader("Appearance")) {
@@ -53,7 +53,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             }
         }
             
-        dirty |= ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
+        Dirty |= ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
         ImGui.SameLine();
         if (ImGui.CollapsingHeader("Equipment")) {
             using (ImRaii.PushIndent()) {
@@ -62,7 +62,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             }
         }
             
-        dirty |= ImGui.Checkbox("##applyWeapons", ref weapons.Apply);
+        Dirty |= ImGui.Checkbox("##applyWeapons", ref weapons.Apply);
         ImGui.SameLine();
         if (ImGui.CollapsingHeader("Weapons / Tools")) {
             using (ImRaii.PushIndent()) {
@@ -72,7 +72,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             
         if (ImGui.CollapsingHeader("Outfit Links")) {
             linksEditor ??= new OutfitLinksEditor(Character, Entry, linkBefore, linkAfter);
-            dirty |= linksEditor.Draw(CommonDetailsEditor.Name.OrDefault("This Outfit"));
+            Dirty |= linksEditor.Draw(CommonDetailsEditor.Name.OrDefault("This Outfit"));
         }
         
     }
@@ -87,7 +87,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
     
     private void DrawAppearance() {
         appearance ??= Entry.Appearance.Clone();
-        dirty |= CustomizeEditor.Show(appearance);
+        Dirty |= CustomizeEditor.Show(appearance);
     }
 
     private void DrawParameters() {
@@ -101,7 +101,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         var param = appearance[kind];
         CustomizeEditor.ShowApplyEnableCheckbox(kind.PrettyName(), ref param.Apply, ref appearance.Apply);
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
-        dirty |= param.ShowEditor($"{kind}##paramEditor_{kind}", kind);
+        Dirty |= param.ShowEditor($"{kind}##paramEditor_{kind}", kind);
     }
 
     private void DrawEquipment() {
@@ -115,7 +115,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         foreach (var (classJobId, classWeapons) in weapons.ClassWeapons) {
             var classJob = DataManager.GetExcelSheet<ClassJob>().GetRow(classJobId);
             using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), !weapons.Apply)) {
-                dirty |= ImGui.Checkbox($"##applyWeapons_ClassJob#{classJobId}", ref classWeapons.Apply);
+                Dirty |= ImGui.Checkbox($"##applyWeapons_ClassJob#{classJobId}", ref classWeapons.Apply);
             }
             
             if (ImGui.IsItemHovered()) {
@@ -203,7 +203,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             using (ImRaii.Group()) {
                 ImGui.Dummy(new Vector2(ImGui.GetTextLineHeight() / 2f));
                 using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), !weapons.Apply || !classWeapons.Apply)) {
-                    dirty |= ImGui.Checkbox($"##enable_ClassJob#{classJobId}_{slot}", ref equip.Apply);
+                    Dirty |= ImGui.Checkbox($"##enable_ClassJob#{classJobId}_{slot}", ref equip.Apply);
                 }
         
                 if (ImGui.IsItemHovered()) {
@@ -254,20 +254,20 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     PluginLog.Warning($"Changed Item: {equipItem.Name}");
                     weapon.ItemId = PluginService.ItemManager.Resolve(slot, equipItem.ItemId.Id).ItemId;
                     
-                    dirty = true;
+                    Dirty = true;
                 }
 
                 AdvancedMaterialsDisplay.ShowAdvancedMaterialsDisplay(weapon, $"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()}");
                 if (weapon is { } ae) {
                     ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
+                    Dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 1##{slot}_stain1", ref ae.Stain.Stain, new Vector2(s.Y));
                     ImGui.SameLine();
-                    dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 2##{slot}_stain2", ref ae.Stain.Stain2, new Vector2(s.Y));
+                    Dirty |= StainPicker.Show($"{classJob.Abbreviation.ExtractText()} {slot}, Stain 2##{slot}_stain2", ref ae.Stain.Stain2, new Vector2(s.Y));
                 }
 
                 ImGui.EndGroup();
                 
-                dirty |= ModListDisplay.Show(weapon, $"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()}");
+                Dirty |= ModListDisplay.Show(weapon, $"{classJob.Abbreviation.ExtractText()} {slot.PrettyName()}");
             }
         }
     }

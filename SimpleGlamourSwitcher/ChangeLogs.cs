@@ -3,6 +3,9 @@ using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.3.3.3", () => {
+            Change("SGS will now notify penumbra which mods are being used by SGS Characters.");
+        });
         ChangelogFor("1.3.3.0", () => {
             Change("Added ability to save individual items.");
             Change("Added ability to recall saved individual items from the active equipment window.");

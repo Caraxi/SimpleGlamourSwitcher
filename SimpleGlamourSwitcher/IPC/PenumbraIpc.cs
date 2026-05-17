@@ -4,6 +4,11 @@ using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using API = Penumbra.Api.IpcSubscribers;
+using System.Diagnostics;
+using System.Reflection;
+using System.Text;
+using ECommons;
+using Lumina.Excel.Sheets;
 
 
 namespace SimpleGlamourSwitcher.IPC;
@@ -12,6 +17,7 @@ public static class PenumbraIpc {
     public static readonly EventSubscriber<string> ModAdded = API.ModAdded.Subscriber(PluginInterface, _ => InvalidateCache());
     public static readonly EventSubscriber<string> ModDeleted = API.ModDeleted.Subscriber(PluginInterface, _ => InvalidateCache());
     public static readonly EventSubscriber<string, string> ModMoved = API.ModMoved.Subscriber(PluginInterface, (_, _) => InvalidateCache(), QueueModMovedUpdate);
+    public static readonly EventSubscriber<string, string, Dictionary<Assembly, (bool, string)>> ModUsageQueried = API.ModUsageQueried.Subscriber(PluginInterface, OnModUsageQueried);
 
 
     private readonly static Dictionary<string, string> ModMovedParseList = new();
@@ -114,6 +120,7 @@ public static class PenumbraIpc {
         ModAdded.Dispose();
         ModDeleted.Dispose();
         ModMoved.Dispose();
+        ModUsageQueried.Dispose();
         ModSettingChanged.Dispose();
         _checkCurrentChangedItem = null;
     }
@@ -128,6 +135,101 @@ public static class PenumbraIpc {
         ModAdded.Enable();
         ModDeleted.Enable();
         ModMoved.Enable();
+        ModUsageQueried.Enable();
+    }
+    
+    private class CustomAssembly(string customName) : Assembly {
+        public static CustomAssembly Instance { get; } = new("S.G.S.");
+        private AssemblyName CustomName { get; } = new(GetExecutingAssembly().FullName ?? customName) { Name = customName };
+        public override AssemblyName GetName() => CustomName;
+    }
+
+    private static void OnModUsageQueried(string modName, string modDirectory, Dictionary<Assembly, (bool, string)> arg3) {
+        try {
+            if (DateTime.Now - _modUsageUpdateTime > TimeSpan.FromSeconds(30)) {
+                UpdateModUsageCache().Wait();
+            }
+        } catch (Exception e) {
+            PluginLog.Error(e, "Error parsing Mod Usage");
+        }
+
+        if (!ModUsageCache.TryGetValue(modDirectory, out var usageList)) return;
+
+        foreach (var (_, usage) in usageList) {
+            if (usage.UsageNote.Count == 1) {
+                arg3.TryAdd(CustomAssembly.Instance, (false, $"Used by {usage.CharacterName}/{usage.UsageNote.First()}"));
+            } else {
+                var str = new StringBuilder();
+                str.AppendLine($"Used by {usage.CharacterName}");
+                foreach (var u in usage.UsageNote) {
+                    str.AppendLine($" - {u}");
+                }
+
+                arg3.TryAdd(CustomAssembly.Instance, (false, str.ToString()));
+            }
+        }
+    }
+
+    private static DateTime _modUsageUpdateTime = DateTime.MinValue;
+    private static readonly Dictionary<string, Dictionary<Guid,(string CharacterName, HashSet<string> UsageNote)>> ModUsageCache = [];
+
+    private static async Task UpdateModUsageCache() {
+        ModUsageCache.Clear();
+        _modUsageUpdateTime = DateTime.Now;
+        var time = Stopwatch.StartNew();
+        foreach (var (characterGuid, characterFile) in await CharacterConfigFile.GetCharacterConfigurations(CharacterConfigFile.Filters.ShowHiddenCharacter)) {
+            PluginLog.Verbose($"Loading Mod Usage for {characterFile.Name} [{characterGuid}]");
+
+            foreach (var (entryGuid, entry) in await characterFile.GetEntries()) {
+                PluginLog.Verbose($" - Loading Mod Usage for {characterFile.Name} - {entry.Name} [{entryGuid}]");
+
+                switch (entry) {
+                    case IHasModConfigs m:
+                        Parse(m);
+                        break;
+                    case OutfitConfigFile outfitConfigFile: {
+                        foreach (var (n, applicable) in outfitConfigFile.Appearance) {
+                            if (applicable is IHasModConfigs mApplicable) {
+                                Parse(mApplicable, n);
+                            }
+                        }
+
+                        foreach (var (n, applicable) in outfitConfigFile.Equipment) {
+                            if (applicable is IHasModConfigs m) {
+                                Parse(m, n);
+                            }
+                        }
+
+                        foreach (var (classJobId, weaponSet) in outfitConfigFile.Weapons.ClassWeapons) {
+                            var classJob = DataManager.GetExcelSheet<ClassJob>().GetRowOrDefault(classJobId)?.Name.ExtractText() ?? $"ClassJob#{classJobId}";
+                            Parse(weaponSet.MainHand, $"{classJob} MainHand");
+                            Parse(weaponSet.OffHand, $"{classJob} OffHand");
+                        }
+                        break;
+                    }
+                    default:
+                        PluginLog.Error($"Unhandled Entry Type {entry.GetType().FullName}");
+                        break;
+                }
+                continue;
+
+                void Parse(IHasModConfigs modContainer, string? slotName = null) {
+                    foreach (var mod in modContainer.ModConfigs) {
+                        var modCache = ModUsageCache.GetOrCreate(mod.ModDirectory, []);
+                        var charCache = modCache.GetOrCreate(characterGuid, (characterFile.Name, []));
+                        
+                        if (string.IsNullOrWhiteSpace(slotName)) {
+                            charCache.UsageNote.Add($"{characterFile.ParseFolderPath(entry.Folder, false, true, true)}{entry.Name}");
+                        } else {
+                            charCache.UsageNote.Add($"{characterFile.ParseFolderPath(entry.Folder, false, true, true)}{entry.Name} [{slotName}]");
+                        }
+                    }
+                }
+            }
+        }
+
+        _modUsageUpdateTime = DateTime.Now;
+        PluginLog.Info($"Updated Mod Usage Cache in {time.Elapsed.TotalMilliseconds} milliseconds.");
     }
     
     public static readonly API.GetCollections GetCollections = new(PluginInterface);

@@ -50,7 +50,12 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
 
     public ImageDetail ImageDetail { get; set; } = new();
 
-    public List<OutfitModConfig> ModConfigs { get; set; } = new();
+    [JsonIgnore]
+    public List<OutfitModConfig> ModConfigs {
+        get => Item.ModConfigs;
+        set => Item.ModConfigs = value;
+    }
+    
     public HumanSlot Slot { get; set; } = HumanSlot.Body;
     
     public ApplicableEquipment? Equipment { get; set; } = new();

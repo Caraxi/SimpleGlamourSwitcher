@@ -1,13 +1,17 @@
-using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
+using Penumbra.Api.Enums;
+using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
+using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Page;
+using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
@@ -15,9 +19,9 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
 
     private OutfitConfigFile? OutfitCache { get; set; } = null;
     private OutfitConfigFile? updatedCache;
-    private bool updatingOutfit = false;
-    private Stopwatch updateOutfitTimer = Stopwatch.StartNew();
+    private bool updatingOutfit;
     private bool dirty;
+    private bool applyingOutfit;
 
     private bool compact;
     private bool locked;
@@ -52,6 +56,16 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         if (Plugin.IsDisposing) return;
         PluginConfig.EquippedWindowConfig.WindowOpen = false;
         PluginConfig.Save(true);
+        GlamourerIpc.StateChanged.Event -= OnGlamourerStateChanged;
+        PenumbraIpc.ModSettingChanged.Event -= OnPenumbraSettingChanged;
+    }
+    
+    private void OnPenumbraSettingChanged(ModSettingChange change, Guid collectionGuid, string modDirectory, bool inherited) {
+        if (PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id == collectionGuid) UpdateOutfit();
+    }
+    
+    private void OnGlamourerStateChanged(IntPtr obj) {
+        if (obj == Objects.LocalPlayer?.Address) UpdateOutfit();
     }
 
     public override bool DrawConditions() => ActiveCharacter != null && PlayerStateService.IsLoaded && Objects.LocalPlayer != null;
@@ -73,12 +87,14 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         
         dirty = false;
         updatingOutfit = false;
-        updateOutfitTimer.Restart();
         
         AllowClickthrough = false;
         AllowPinning = false;
         RespectCloseHotkey = false;
         UpdateOutfit();
+
+        GlamourerIpc.StateChanged.Event += OnGlamourerStateChanged;
+        PenumbraIpc.ModSettingChanged.Event += OnPenumbraSettingChanged;
     }
 
     private void ToggleLock(ImGuiMouseButton obj) {
@@ -124,15 +140,42 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         ImGui.PopStyleColor(3);
     }
 
-    private void UpdateOutfit() {
+    public void UpdateOutfit() {
         if (updatingOutfit || dirty) return;
-        updateOutfitTimer.Restart();
         updatingOutfit = true;
         Task.Run(() => {
-            var outfit = ActiveCharacter == null ? null : OutfitConfigFile.CreateFromLocalPlayer(ActiveCharacter, Guid.Empty, DefaultOptions.Equipment);
+
+            var outfit = OutfitCache;
+            var chr = ActiveCharacter;
+            if (chr == null) {
+                outfit = null;
+            } else if (outfit == null) {
+                outfit = OutfitConfigFile.CreateFromLocalPlayer(chr, Guid.Empty, DefaultOptions.Equipment);
+            } else {
+                var glamourerState = GlamourerIpc.GetState(0);
+                var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                if (glamourerState != null) {
+                    var newAppearance = OutfitEquipment.FromExistingState(DefaultOptions.Equipment, glamourerState, penumbraCollection.EffectiveCollection.Id);
+                    foreach (var a in Common.GetGearSlots()) {
+                        try {
+                            outfit.Equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                        } catch {
+                            //
+                        }
+                    }
+
+                    foreach (var a in Enum.GetValues<ToggleType>()) {
+                        try {
+                            outfit.Equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                        } catch {
+                            //
+                        }
+                    }
+                }
+            }
+
             updatedCache = outfit;
             updatingOutfit = false;
-            updateOutfitTimer.Restart();
         });
     }
     
@@ -141,19 +184,18 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
     public override void Draw() {
         collapsed = false;
         var outfit = OutfitCache;
-        if (updateOutfitTimer.ElapsedMilliseconds > 1000 && !updatingOutfit) {
-            if (dirty && outfit != null) {
-                outfit.Apply().ConfigureAwait(false);
+
+        if (!dirty && updatedCache != null && !applyingOutfit) {
+            OutfitCache = updatedCache;
+            outfit = OutfitCache;
+            updatedCache = null;
+        } else if (dirty && !applyingOutfit && outfit != null) {
+            applyingOutfit = true;
+            outfit.Apply().ContinueWith(_ => {
                 dirty = false;
                 updatedCache = null;
-                updateOutfitTimer.Restart();
-            } else if (updatedCache != null) {
-                OutfitCache = updatedCache;
-                updatedCache = null;
-                outfit = OutfitCache;
-            } else {
-                UpdateOutfit();
-            }
+                applyingOutfit = false;
+            });
         }
         
         if (outfit == null) {

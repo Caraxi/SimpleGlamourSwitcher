@@ -201,6 +201,7 @@ public class Plugin : IDalamudPlugin {
         ActionQueue.Dispose();
         Config.Shutdown();
         PenumbraIpc.Dispose();
+        GlamourerIpc.Dispose();
         PluginService.Dispose();
         CustomTextureProvider.DisposeAll();
     }

@@ -1,4 +1,5 @@
 ﻿using Glamourer.Api.Enums;
+using Glamourer.Api.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Penumbra.GameData.Enums;
@@ -22,6 +23,7 @@ public static class GlamourerIpc {
     public static readonly API.SetBonusItem SetBonusItem = new(PluginInterface);
     public static readonly API.SetMetaState SetMetaState = new(PluginInterface);
     public static readonly API.RevertStateName RevertStateName = new(PluginInterface);
+    public static readonly EventSubscriber<nint> StateChanged = API.StateChanged.Subscriber(PluginInterface);
 
     public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment, OutfitWeapons outfitWeapons) {
         
@@ -262,5 +264,9 @@ public static class GlamourerIpc {
         var designJson = File.ReadAllText(designFile);
         var design = JsonConvert.DeserializeObject<GlamourerDesignFile>(designJson);
         return design;
+    }
+
+    public static void Dispose() {
+        StateChanged.Dispose();
     }
 }

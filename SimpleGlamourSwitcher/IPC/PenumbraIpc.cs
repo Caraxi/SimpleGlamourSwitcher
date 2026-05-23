@@ -109,6 +109,7 @@ public static class PenumbraIpc {
         }
     }
 
+    /// <inheritdoc cref="Penumbra.Api.IpcSubscribers.ModSettingChanged"/>
     public static readonly EventSubscriber<ModSettingChange, Guid, string, bool> ModSettingChanged = API.ModSettingChanged.Subscriber(PluginInterface, OnModSettingChanged);
 
     private static void OnModSettingChanged(ModSettingChange type, Guid collectionId, string modDir, bool inherited) {

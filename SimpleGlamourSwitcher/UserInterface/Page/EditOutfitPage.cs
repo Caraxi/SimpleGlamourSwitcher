@@ -10,6 +10,7 @@ using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
+using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Enums;
@@ -39,14 +40,109 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
         Dirty |= ImGui.Checkbox("##applyAppearance", ref appearance.Apply);
         ImGui.SameLine();
         using (ImRaii.Group()) {
-            if (ImGui.CollapsingHeader("Appearance")) {
+            var appearanceOpen = ImGui.CollapsingHeader("Appearance");
+
+            if (ImGui.BeginPopupContextItem("appearanceContext")) {
+                ImGui.Text("Appearance");
+                ImGui.Separator();
+                if (ImGui.MenuItem("Update with current appearance")) {
+                    
+                    Dirty = true;
+
+                    try {
+                        var defaultOptionsProvider = character.GetOptionsProvider(folderGuid);
+                        var glamourerState = GlamourerIpc.GetState(0);
+                        var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                        if (glamourerState != null) {
+                            var newAppearance = OutfitAppearance.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
+                            appearance ??= Entry.Appearance.Clone();
+                            foreach (var a in Enum.GetValues<CustomizeIndex>()) {
+                                try {
+                                    appearance[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                                } catch {
+                                    //
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        PluginLog.Error(ex, "Error updating appearance.");
+                    }
+                    
+                }
+                
+                if (ImGui.MenuItem("Enable All")) {
+                    foreach (var a in Enum.GetValues<CustomizeIndex>()) {
+                        appearance[a].Apply = true;
+                    }
+                    Dirty = true;
+                }
+
+                if (ImGui.MenuItem("Disable All")) {
+                    foreach (var a in Enum.GetValues<CustomizeIndex>()) {
+                        appearance[a].Apply = false;
+                    }
+                    Dirty = true;
+                }
+                
+                ImGui.EndPopup();
+            }
+            
+            
+            if (appearanceOpen) {
                 using (ImRaii.PushIndent()) {
                     ImGui.Checkbox("Revert to Game State##appearance", ref appearance.RevertToGame);
                     DrawAppearance();
                 }
             }
             
-            if (ImGui.CollapsingHeader("Advanced Appearance")) {
+            var advAppearanceOpen = ImGui.CollapsingHeader("Advanced Appearance");
+            
+            if (ImGui.BeginPopupContextItem("advAppearanceContext")) {
+                appearance ??= Entry.Appearance.Clone();
+                ImGui.Text("Advanced Appearance");
+                ImGui.Separator();
+                if (ImGui.MenuItem("Update with current appearance")) {
+                    Dirty = true;
+
+                    try {
+                        var defaultOptionsProvider = character.GetOptionsProvider(folderGuid);
+                        var glamourerState = GlamourerIpc.GetState(0);
+                        var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                        if (glamourerState != null) {
+                            var newAppearance = OutfitAppearance.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
+                             foreach (var a in Enum.GetValues<AppearanceParameterKind>()) {
+                                try {
+                                    appearance[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                                } catch {
+                                    //
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        PluginLog.Error(ex, "Error updating appearance.");
+                    }
+                    
+                }
+                
+                if (ImGui.MenuItem("Enable All")) {
+                    foreach (var a in Enum.GetValues<AppearanceParameterKind>()) {
+                        appearance[a].Apply = true;
+                    }
+                    Dirty = true;
+                }
+
+                if (ImGui.MenuItem("Disable All")) {
+                    foreach (var a in Enum.GetValues<AppearanceParameterKind>()) {
+                        appearance[a].Apply = false;
+                    }
+                    Dirty = true;
+                }
+                
+                ImGui.EndPopup();
+            }
+            
+            
+            if (advAppearanceOpen) {
                 using (ImRaii.PushIndent()) {
                     DrawParameters();
                 }
@@ -55,7 +151,60 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
             
         Dirty |= ImGui.Checkbox("##applyEquipment", ref equipment.Apply);
         ImGui.SameLine();
-        if (ImGui.CollapsingHeader("Equipment")) {
+        var equipmentOpen =  ImGui.CollapsingHeader("Equipment");
+        if (ImGui.BeginPopupContextItem("equipmentContext")) {
+            equipment ??= Entry.Equipment.Clone();
+            ImGui.Text("Equipment");
+            ImGui.Separator();
+            if (ImGui.MenuItem("Update with current equipment")) {
+                Dirty = true;
+                
+                try {
+                    var defaultOptionsProvider = character.GetOptionsProvider(folderGuid);
+                    var glamourerState = GlamourerIpc.GetState(0);
+                    var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                    if (glamourerState != null) {
+                        var newAppearance = OutfitEquipment.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
+                        foreach (var a in Common.GetGearSlots()) {
+                            try {
+                                equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                            } catch {
+                                //
+                            }
+                        }
+                        
+                        foreach (var a in Enum.GetValues<ToggleType>()) {
+                            try {
+                                equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                            } catch {
+                                //
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    PluginLog.Error(ex, "Error updating equipment.");
+                }
+            }
+
+            if (ImGui.MenuItem("Enable All")) {
+                foreach (var a in Common.GetGearSlots()) {
+                        equipment[a].Apply = true;
+                }
+                Dirty = true;
+            }
+
+            if (ImGui.MenuItem("Disable All")) {
+                foreach (var a in Common.GetGearSlots()) {
+                    equipment[a].Apply = false;
+                }
+                Dirty = true;
+            }
+            
+                
+            ImGui.EndPopup();
+        }
+        
+        if (equipmentOpen) {
             using (ImRaii.PushIndent()) {
                 ImGui.Checkbox("Revert to Game State##equipment", ref equipment.RevertToGame);
                 DrawEquipment();

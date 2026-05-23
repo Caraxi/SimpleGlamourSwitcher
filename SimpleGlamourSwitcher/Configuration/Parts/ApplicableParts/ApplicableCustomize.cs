@@ -3,6 +3,7 @@ using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.IPC.Glamourer;
 using SimpleGlamourSwitcher.Service;
+using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
@@ -41,9 +42,13 @@ public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs, 
             ModConfigs = OutfitModConfig.GetModListFromCustomize(slot, customize, penumbraCollectionId),
         };
     }
-    
-    
-    
+
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableCustomizeModable applicableCustomize) return false;
+        ModConfigs = applicableCustomize.ModConfigs.Clone();
+        CustomizePlusTemplateConfigs = applicableCustomize.CustomizePlusTemplateConfigs.Clone();
+        return base.TryUpdate(newValues, flags);
+    }
 }
 
 
@@ -67,5 +72,10 @@ public record ApplicableCustomize : Applicable<CustomizeIndex> {
             Value = customize[slot]?.Value ?? 0,
         };
     }
-    
+
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableCustomize applicableCustomize) return false;
+        Value = applicableCustomize.Value;
+        return base.TryUpdate(newValues, flags);
+    }
 }

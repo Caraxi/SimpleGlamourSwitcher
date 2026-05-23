@@ -17,7 +17,19 @@ public abstract record Applicable<T, T2> : Applicable {
 }
 
 
+[Flags]
+public enum UpdateApplicableFlags {
+    None = 0,
+    SkipApply = 1
+}
+
 public abstract record Applicable {
     public abstract void ApplyToCharacter(ref bool requestRedraw);
     public bool Apply;
+
+
+    public virtual bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (!flags.HasFlag(UpdateApplicableFlags.SkipApply)) Apply = newValues.Apply;
+        return true;
+    }
 }

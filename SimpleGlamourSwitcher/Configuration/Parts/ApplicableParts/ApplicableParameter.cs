@@ -53,6 +53,12 @@ public record ApplicableParameterColorAlpha : ApplicableParameterColor {
 
         return false;
     }
+    
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableParameterColorAlpha n) return false;
+        Alpha = n.Alpha;
+        return base.TryUpdate(newValues, flags);
+    }
 }
 
 public record ApplicableParameterColor : ApplicableParameter {
@@ -91,6 +97,13 @@ public record ApplicableParameterColor : ApplicableParameter {
         return false;
     }
     
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableParameterColor n) return false;
+        Red = n.Red;
+        Green = n.Green;
+        Blue = n.Blue;
+        return base.TryUpdate(newValues, flags);
+    }
 };
 
 public record ApplicableParameterPercent : ApplicableParameter {
@@ -126,6 +139,11 @@ public record ApplicableParameterPercent : ApplicableParameter {
         return true;
     }
     
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableParameterPercent n) return false;
+        Percentage = n.Percentage;
+        return base.TryUpdate(newValues, flags);
+    }
 }
 
 public record ApplicableParameterFloat : ApplicableParameter {
@@ -148,5 +166,11 @@ public record ApplicableParameterFloat : ApplicableParameter {
     
     public override bool ShowEditor(string s, AppearanceParameterKind kind) {
         return ImGui.DragFloat(s, ref Value, 0.01f);
+    }
+    
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableParameterFloat n) return false;
+        Value = n.Value;
+        return base.TryUpdate(newValues, flags);
     }
 }

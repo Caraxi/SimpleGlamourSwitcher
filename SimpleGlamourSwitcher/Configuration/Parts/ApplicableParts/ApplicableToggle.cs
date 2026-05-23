@@ -73,4 +73,16 @@ public record ApplicableToggle : Applicable<ToggleType> {
 
         return false;
     }
+
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableToggle n) return false;
+
+        if (!flags.HasFlag(UpdateApplicableFlags.SkipApply) || Apply) {
+            Apply = n.Apply;
+            Toggle = n.Toggle;
+        } 
+        
+        return base.TryUpdate(newValues, flags);
+    }
+    
 }

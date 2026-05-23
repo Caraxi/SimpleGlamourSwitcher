@@ -12,4 +12,11 @@ public record ApplicableStain : Applicable<HumanSlot> {
     public override void ApplyToCharacter(HumanSlot slot, ref bool requestRedraw) {
         
     }
+
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableStain n) return false;
+        Stain = n.Stain;
+        Stain2 = n.Stain2;
+        return base.TryUpdate(newValues, flags);
+    }
 }

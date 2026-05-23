@@ -68,4 +68,11 @@ public record ApplicableEquipment : ApplicableItem<HumanSlot> {
             ItemId = ItemManager.NothingId(body.ToEquipSlot()),
         };
     }
+    
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableEquipment n) return false;
+        ItemId = n.ItemId;
+        Stain.TryUpdate(n.Stain, flags);
+        return base.TryUpdate(newValues, flags);
+    }
 }

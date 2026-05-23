@@ -69,4 +69,10 @@ public record ApplicableBonus : ApplicableItem<HumanSlot> {
             BonusItemId = 0
         };
     }
+    
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableBonus n) return false;
+        BonusItemId = n.BonusItemId;
+        return base.TryUpdate(newValues, flags);
+    }
 }

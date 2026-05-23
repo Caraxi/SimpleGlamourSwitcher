@@ -12,11 +12,12 @@ public static class Polaroid {
         return style.ImageSize + style.FramePadding * 2 + style.FramePadding * Vector2.UnitY + new Vector2(0, ImGui.GetTextLineHeightWithSpacing());
     }
 
-    public static bool Button(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, Guid guid, PolaroidStyle? style = null) {
+    public static bool Button(Func<IDalamudTextureWrap?>? getImage, ImageDetail imageDetail, string text, Guid guid, PolaroidStyle? style = null) {
         style ??= PolaroidStyle.Default;
         var totalSize = GetActualSize(style);
         
         ImGui.Dummy(totalSize);
+        if (!ImGui.IsItemVisible()) return false;
         var clicked = ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left);
         var hovered = ImGui.IsItemHovered();
         var active = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
@@ -28,14 +29,14 @@ public static class Polaroid {
             style = style with { FrameColour = style.FrameHoveredColour };
         }
         
-        DrawPolaroid(image, imageDetail, text, style);
+        DrawPolaroid(getImage, imageDetail, text, style);
         
         return clicked;
     }
 
-    public static void Draw(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
+    public static void Draw(Func<IDalamudTextureWrap?>? getImage, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
         DrawDummy(style);
-        DrawPolaroid(image, imageDetail, text, style);
+        DrawPolaroid(getImage, imageDetail, text, style);
     }
 
     public static void DrawDummy(PolaroidStyle? style = null) {
@@ -44,7 +45,7 @@ public static class Polaroid {
         ImGui.Dummy(totalSize);
     }
 
-    public static void DrawPolaroid(IDalamudTextureWrap? image, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
+    public static void DrawPolaroid(Func<IDalamudTextureWrap?>? getImage, ImageDetail imageDetail, string text, PolaroidStyle? style = null) {
         style ??= PolaroidStyle.Default;
         var tl = ImGui.GetItemRectMin();
         var br = ImGui.GetItemRectMax();
@@ -55,6 +56,7 @@ public static class Polaroid {
         drawList.PushClipRect(new Vector2(MathF.Max(tl.X, wTl.X), MathF.Max(tl.Y, wTl.Y)), new Vector2(MathF.Min(br.X, wBr.X), MathF.Min(br.Y, wBr.Y)));
         drawList.AddRectFilled(tl, br, style.FrameColour, style.FrameRounding);
         drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour, style.FrameRounding, ImDrawFlags.RoundCornersTop);
+        var image = getImage?.Invoke();
         if (image != null) {
             drawList.AddImageRounded(image.Handle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax, uint.MaxValue, style.FrameRounding, ImDrawFlags.RoundCornersTop);
             

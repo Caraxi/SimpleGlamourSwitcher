@@ -92,6 +92,8 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     
     
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid) => GetImage(characterConfig, folderGuid, out _);
+
+    private static readonly Dictionary<Guid, (DateTime TimeChecked, string? Path)> FolderCheckCache = new();
     
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid, out bool isDefault) {
         if (TempImagePath.TryGetValue(folderGuid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
@@ -101,17 +103,29 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
         
         isDefault = true;
         if (characterConfig == null || folderGuid == Guid.Empty) return GetDefaultFolderImage();
+
+        if (FolderCheckCache.TryGetValue(folderGuid, out var fcc) && DateTime.Now - fcc.TimeChecked < TimeSpan.FromMinutes(1)) {
+            if (fcc.Path != null) {
+                isDefault = false;
+                return CustomTextureProvider.GetFromFileAbsolute(fcc.Path).GetWrapOrDefault();
+            }
+
+            isDefault = true;
+            return GetDefaultFolderImage();
+        }
         
         var dir = characterConfig.ImagesDirectory;
         var fileName = Path.Join(dir.FullName, $"{folderGuid}");
 
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
+                FolderCheckCache[folderGuid] = (DateTime.Now, $"{fileName}.{type}");
                 isDefault = false;
                 return CustomTextureProvider.GetFromFileAbsolute($"{fileName}.{type}").GetWrapOrDefault();
             }
         }
 
+        FolderCheckCache[folderGuid] = (DateTime.Now, null);
         return GetDefaultFolderImage();
     }
 
@@ -147,6 +161,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     
     public void SetImage(FileInfo fileInfo) {
         if (ConfigFile == null || FolderGuid == null) return;
+        FolderCheckCache.Remove(FolderGuid.Value);
         
         var dir = ConfigFile.ImagesDirectory;
         if (!dir.Exists) Directory.CreateDirectory(dir.FullName);

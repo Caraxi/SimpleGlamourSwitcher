@@ -1,12 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
+using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Parts;
 
 namespace SimpleGlamourSwitcher.Configuration.Interface;
 
-public interface IListEntry {
+public interface IListEntry : IImageProvider {
     public Guid Guid { get; }
     public string Name { get; set; }
     public string Description { get; set; }

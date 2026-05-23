@@ -4,6 +4,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration;
+using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -53,8 +54,7 @@ public class CharacterListPage : Page {
     }
     
     public static void DrawCharacter(Guid guid, CharacterConfigFile characterConfig, PolaroidStyle polaroidStyle, Action? contextMenuAdditions, ref WindowControlFlags controlFlags) {
-        characterConfig.TryGetImage(out var image);
-        if (Polaroid.Button(image, characterConfig.ImageDetail, characterConfig.Name, guid, polaroidStyle with { FrameColour = ActiveCharacter?.Guid == guid ? ImGuiColors.HealerGreen : polaroidStyle.FrameColour})) {
+        if (Polaroid.Button((characterConfig as IImageProvider).GetImageOrNull, characterConfig.ImageDetail, characterConfig.Name, guid, polaroidStyle with { FrameColour = ActiveCharacter?.Guid == guid ? ImGuiColors.HealerGreen : polaroidStyle.FrameColour})) {
             controlFlags |= WindowControlFlags.PreventClose;
             Config.SwitchCharacter(guid);
             GlamourSystem.ApplyCharacter().ConfigureAwait(false);

@@ -137,7 +137,7 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
         using (ImRaii.Group()) {
             Polaroid.DrawDummy(ScaledStyle);
             var imageDetail = new ImageDetail() { UvMin = (ImGui.GetItemRectMin() + ScaledStyle.FramePadding) / ImGui.GetMainViewport().Size, UvMax = (ImGui.GetItemRectMin() + ScaledStyle.FramePadding + ScaledStyle.ImageSize) / ImGui.GetMainViewport().Size };
-            Polaroid.DrawPolaroid(wrap, imageDetail, "Screenshot", ScaledStyle);
+            Polaroid.DrawPolaroid(() => wrap, imageDetail, "Screenshot", ScaledStyle);
             if (PluginConfig.ScreenshotGridlineStyle != GridlineStyle.None) {
                 var tl = ImGui.GetItemRectMin() + ScaledStyle.FramePadding;
                 var br =  ImGui.GetItemRectMin() + ScaledStyle.ImageSize + ScaledStyle.FramePadding;

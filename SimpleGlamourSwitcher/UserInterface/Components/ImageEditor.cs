@@ -45,13 +45,13 @@ public static class ImageEditor {
             Vector2 buttonSize;
             var sideBySide = false;
             if (actualSize.X < ImGui.GetContentRegionAvail().X / 2) {
-                Polaroid.Draw(image, imageProvider.ImageDetail, previewName, style);
+                Polaroid.Draw(() => image, imageProvider.ImageDetail, previewName, style);
                 ImGui.SameLine();
                 sideBySide = true;
                 ImGui.BeginGroup();
                 buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2);
             } else {
-                Polaroid.Draw(image, imageProvider.ImageDetail, previewName, style);
+                Polaroid.Draw(() => image, imageProvider.ImageDetail, previewName, style);
                 buttonSize = new Vector2(ImGui.GetItemRectSize().X, ImGui.GetTextLineHeightWithSpacing() * 2);
             }
             

@@ -34,9 +34,9 @@ public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) 
 
         ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X / 2 - actualSize.X - ImGui.GetStyle().ItemSpacing.X / 2f);
 
-        Polaroid.Draw(imageProvider.GetImage(), imageProvider.ImageDetail, "Original", largeStyle);
+        Polaroid.Draw(imageProvider.GetImageOrNull, imageProvider.ImageDetail, "Original", largeStyle);
         ImGui.SameLine();
-        Polaroid.Draw(imageProvider.GetImage(), newDetail, "New", largeStyle);
+        Polaroid.Draw(imageProvider.GetImageOrNull, newDetail, "New", largeStyle);
 
         var editorSize = actualSize with { X = actualSize.X * 2 + ImGui.GetStyle().ItemSpacing.X };
         editorSize.Y = style.ImageSize.Y / style.ImageSize.X * editorSize.X;

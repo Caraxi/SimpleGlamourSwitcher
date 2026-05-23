@@ -246,7 +246,7 @@ public static class EquipmentDisplay {
                                                         entry.ConfigFile?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
                                             
                                             if (Polaroid.Button(
-                                                    (entry as IImageProvider)?.GetImage(),
+                                                    (entry as IImageProvider).GetImageOrNull,
                                                     entry.ImageDetail,
                                                     entry.Name,
                                                     entry.Guid,

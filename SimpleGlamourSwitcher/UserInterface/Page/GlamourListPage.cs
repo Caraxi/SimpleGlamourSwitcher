@@ -116,8 +116,7 @@ public class GlamourListPage : Page {
         if (ActiveCharacter == null) {
             ImGuiExt.CenterText("No Character Selected");
         } else {
-            ActiveCharacter.TryGetImage(out var image);
-            Polaroid.Draw(image, ActiveCharacter.ImageDetail, ActiveCharacter.Name, (PluginConfig.CustomStyle?.CharacterPolaroid ?? Style.Default.CharacterPolaroid).FitTo(ImGui.GetContentRegionAvail()));
+            Polaroid.Draw((ActiveCharacter as IImageProvider).GetImageOrNull, ActiveCharacter.ImageDetail, ActiveCharacter.Name, (PluginConfig.CustomStyle?.CharacterPolaroid ?? Style.Default.CharacterPolaroid).FitTo(ImGui.GetContentRegionAvail()));
 
             var buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2);
             if (ImGuiExt.ButtonWithIcon("Edit Character", FontAwesomeIcon.PencilAlt, buttonSize)) {
@@ -292,13 +291,11 @@ public class GlamourListPage : Page {
         void DrawFolders(List<KeyValuePair<Guid, CharacterFolder>> folders, ref WindowControlFlags controlFlags, bool isShared) {
             foreach (var (folderGuid, characterFolder) in folders) {
                 if (characterFolder.Hidden && !showHiddenFolders) continue;
-                    
                 using (ImRaii.PushId(folderGuid.ToString())) {
                     if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(folderStyle).X) ImGui.NewLine();
 
                     if (drag == null) {
-                            
-                        if (Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var folderImage) ? folderImage : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle)) {
+                        if (Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var folderImage) ? folderImage : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle)) {
 
                             if (characterFolder is PreviousCharacterFolder) {
                                 if (MainWindow?.PreviousPage is GlamourListPage page && page.ActiveFolder == folderGuid) {
@@ -472,14 +469,14 @@ public class GlamourListPage : Page {
                     } else {
                         var dragging = drag.Value;
                         if (IsSharedFolder) {
-                            Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
+                            Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
                                 FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
                                 BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
                                 FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
                                 FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour
                             });
                         } else {
-                            Polaroid.Button(characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
+                            Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
                                 FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
                                 BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
                                 FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
@@ -542,7 +539,7 @@ public class GlamourListPage : Page {
                 if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(outfitStyle).X) ImGui.NewLine();
                 
                 if (drag == null) {
-                    if (Polaroid.Button((entry as IImageProvider)?.GetImage(), entry.ImageDetail, entry.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, entry) })) {
+                    if (Polaroid.Button(entry.GetImageOrNull, entry.ImageDetail, entry.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, entry) })) {
                         entry.Apply().ConfigureAwait(false);
                         if (PluginConfig.AutoCloseAfterApplying) {
                             MainWindow!.IsOpen = false;
@@ -796,7 +793,7 @@ public class GlamourListPage : Page {
                     
                 } else {
                     var dragging = drag.Value;
-                    Polaroid.Draw((entry as IImageProvider)?.GetImage(), entry.ImageDetail, entry.Name, outfitStyle with {
+                    Polaroid.Draw(entry.GetImageOrNull, entry.ImageDetail, entry.Name, outfitStyle with {
                         FrameColour = outfitGuid == dragging.Guid && dragging.Type == ItemType.Outfit ? (0x8040FFFF) : (0x40FFFFFF & outfitStyle.FrameColour),
                         BlankImageColour = 0x40FFFFFF & outfitStyle.BlankImageColour
                     });
@@ -820,13 +817,13 @@ public class GlamourListPage : Page {
                 switch (dragItem.Value.Type) {
                     case ItemType.Folder:
                         if (character.Folders.TryGetValue(dragItem.Value.Guid, out var dragFolder)) {
-                            Polaroid.Draw(CharacterFolder.GetImage(character, dragItem.Value.Guid), dragFolder.ImageDetail, dragFolder.Name, folderStyle with {ImageSize = folderStyle.ImageSize.FitTo(72)});
+                            Polaroid.Draw(() => CharacterFolder.GetImage(character, dragItem.Value.Guid), dragFolder.ImageDetail, dragFolder.Name, folderStyle with {ImageSize = folderStyle.ImageSize.FitTo(72)});
                         }
                         break;
                     case ItemType.Outfit:
                         if (outfits?.TryGetValue(dragItem.Value.Guid, out var dragOutfit) ?? false) {
                             if (dragOutfit is IImageProvider imgProvider) {
-                                Polaroid.Draw(imgProvider.GetImage(), dragOutfit.ImageDetail, dragOutfit.Name, outfitStyle with { ImageSize = outfitStyle.ImageSize.FitTo(72) });
+                                Polaroid.Draw(imgProvider.GetImageOrNull, dragOutfit.ImageDetail, dragOutfit.Name, outfitStyle with { ImageSize = outfitStyle.ImageSize.FitTo(72) });
                             }
                         }
                         break;

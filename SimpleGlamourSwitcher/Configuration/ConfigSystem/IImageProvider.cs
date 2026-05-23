@@ -22,6 +22,8 @@ public interface IImageProvider {
     
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap);
 
+    public IDalamudTextureWrap? GetImageOrNull() => GetImage();
+
     public IDalamudTextureWrap? GetImage(IDalamudTextureWrap? defaultWrap = null) {
         return TryGetImage(out var wrap) ? wrap : defaultWrap;
     }

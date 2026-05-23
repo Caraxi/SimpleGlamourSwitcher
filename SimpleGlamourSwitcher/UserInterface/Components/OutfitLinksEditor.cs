@@ -259,9 +259,8 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                     }
 
                     if (ImGui.IsItemHovered()) {
-                        var hasImage = o.TryGetImage(out var wrap);
                         using (ImRaii.Tooltip()) {
-                            Polaroid.Draw(hasImage ? wrap : null, o.ImageDetail, o.Name, chr.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? chr.OutfitPolaroidStyle);
+                            Polaroid.Draw(o.GetImageOrNull, o.ImageDetail, o.Name, chr.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? chr.OutfitPolaroidStyle);
                         }
                     }
                 }
@@ -286,9 +285,8 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
         }
         
         if (ImGui.IsItemHovered() && otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(picked, out var o)) {
-            var hasImage = o.TryGetImage(out var wrap);
             using (ImRaii.Tooltip()) {
-                Polaroid.Draw(hasImage ? wrap : null, o.ImageDetail, o.Name, character.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle);
+                Polaroid.Draw(o.GetImageOrNull, o.ImageDetail, o.Name, character.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle);
             }
         }
         

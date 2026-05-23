@@ -276,7 +276,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         get {
             var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Generics));
             if (!dir.Exists) dir.Create();
-            PluginLog.Debug($"Character Emote Directory [{Guid}] is {dir.FullName}");
+            PluginLog.Debug($"Character Generic Directory [{Guid}] is {dir.FullName}");
             return dir;
         }
     }

@@ -59,7 +59,7 @@ public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, Charact
 
     public void EnqueueAutoCommands() {
         if (!PluginConfig.EnableOutfitCommands) return;
-        var parent = GetParent() ?? throw new Exception("Invalid MinionConfigFile");
+        var parent = GetParent() ?? throw new Exception("Invalid GenericEntryConfigFile");
         
         List<string> commands = [];
         

@@ -309,4 +309,19 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             OptionConfigs = optionConfigs,
         };
     }
+    public static List<OutfitModConfig> FromList(IEnumerable<string> modDirectories, Guid penumbraCollection) {
+        PluginLog.Warning("Creating From Mod List");
+        var list = new List<OutfitModConfig>();
+        foreach (var mod in modDirectories) {
+            PluginLog.Warning($" - {mod}");
+            var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod);
+            if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
+            var modSettings = getModSettings.Item2.Value;
+            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)){
+                ProteusModConfig = GetProteusModConfig(mod),
+            });
+        }
+
+        return list;
+    }
 }

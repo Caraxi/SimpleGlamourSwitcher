@@ -23,6 +23,7 @@ public class ButtonInfo {
     public Action Action { get; init; } = () => { };
     public FontAwesomeIcon Icon { get; init; } = 0;
     public string Id { get; init; } = Guid.NewGuid().ToString();
+    public Func<Action?>? Context { get; init; }
     
     public int DisplayPriority { get; init; } = 0;
 

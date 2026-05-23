@@ -74,6 +74,18 @@ public abstract class Page {
                         btn.Action();
                     }
                 }
+                if (ImGui.IsItemHovered()) {
+                    controlFlags |= WindowControlFlags.PreventClose;
+                }
+                
+                if (btn.Context != null && !btn.IsDisabled()) {
+                    var context = btn.Context();
+                    if (context != null && ImGui.BeginPopupContextItem($"popupButtonContext{btn.Id}")) {
+                        controlFlags |= WindowControlFlags.PreventClose;
+                        context();
+                        ImGui.EndPopup();
+                    }
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(btn.Tooltip)) {

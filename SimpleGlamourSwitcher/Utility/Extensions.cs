@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
+using FFXIVClientStructs.FFXIV.Common.Lua;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
+using Penumbra.GameData;
 using Penumbra.GameData.Enums;
 using SimpleGlamourSwitcher.Configuration.Enum;
 
@@ -210,4 +213,17 @@ public static class Extensions {
                 return item.ClassJobCategory.Value.Allows(classJob);
         }
     }
+
+    public static bool TryGetValueInsensitive<TVal>(this Dictionary<string, TVal> dict, string insensitiveKey, [NotNullWhen(true)] out TVal? value) {
+        var v = dict.FirstOrNull(kvp => kvp.Key.Equals(insensitiveKey, StringComparison.InvariantCultureIgnoreCase));
+        if (v == null) {
+            value = default;
+            return false;
+        }
+
+        value = v.Value.Value;
+        return value != null;
+    }
+    
+    
 }

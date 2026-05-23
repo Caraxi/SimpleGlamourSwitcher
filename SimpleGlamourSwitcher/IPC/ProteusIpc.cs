@@ -120,4 +120,11 @@ public static class ProteusIpc {
             return false;
         }
     }
+    
+    public static void FlushCache() {
+        isProteusModCache.Clear();
+        colourTableCache.Clear();
+        ActiveOverlays.Clear();
+        AllOverlays.Clear();
+    }
 }

@@ -12,6 +12,7 @@ using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
+using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
 using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
@@ -60,7 +61,7 @@ public class GlamourListPage : Page {
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.KissWinkHeart, "Create Other", () => {
             if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditGenericPage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Generic Mod Entry"} );
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Generic Mod Entry", Context = GetGenericContextMenu } );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
             MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null, IsSharedFolder));
@@ -72,6 +73,27 @@ public class GlamourListPage : Page {
             }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create Shared Folder, accessible from all characters" } );
         }
         LoadOutfits();
+    }
+    private Action? GetGenericContextMenu() {
+        if (!ProteusIpc.IsReady()) return null;
+        var character = SharedOrActiveCharacter;
+        if (character == null) return null;
+        
+        return () => {
+            using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(10, 20))) {
+                if (ImGui.MenuItem("Create from active Proteus Overlays")) {
+                    var entry = GenericEntryConfigFile.Create(character, ActiveFolder);
+                    entry.Identifier = "Overlay";
+                    var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                    if (penumbraCollection.ObjectValid) {
+                        ProteusIpc.FlushCache();
+                        entry.ModConfigs = OutfitModConfig.FromList(ProteusIpc.ActiveOverlays.Value.Keys, penumbraCollection.EffectiveCollection.Id);
+                    }
+                    
+                    MainWindow.OpenPage(new EditGenericPage(character, ActiveFolder, entry));
+                }
+            }
+        };
     }
 
     private void LoadOutfits() {

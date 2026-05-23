@@ -21,7 +21,7 @@ public static class ModListDisplay {
     private static string modSearch = string.Empty;
     
     private static bool TryParseModName(string modDirectory, out string modName) {
-        if (!CachedModList.Value.TryGetValue(modDirectory, out modName!)) {
+        if (!CachedModList.Value.TryGetValueInsensitive(modDirectory, out modName!)) {
             modName = modDirectory;
             return false;
         }

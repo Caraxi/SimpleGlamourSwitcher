@@ -7,6 +7,7 @@ using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.IPC;
+using SimpleGlamourSwitcher.IPC.Proteus;
 using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
@@ -165,6 +166,50 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                         ImGui.TextDisabled("Heliosphere ID:");
                         ImGui.SameLine();
                         ImGui.Text(heliosphereId);
+                    }
+                }
+            }
+        }
+
+        if (ImGui.CollapsingHeader("Proteus")) {
+            var activeProteusOverlays = ProteusIpc.ActiveOverlays.Value;
+
+            using (ImRaii.PushIndent()) {
+                foreach (var (key, overlay) in activeProteusOverlays) {
+                    using var id = ImRaii.PushId(overlay.ModDirectory);
+                    ImGui.Text(overlay.Name);
+                    if (!string.Equals(overlay.Name, overlay.ModDirectory, StringComparison.InvariantCultureIgnoreCase)) {
+                        ImGui.SameLine();
+                        ImGui.TextDisabled(overlay.ModDirectory);
+                    }
+
+                    void ShowColourSubRow(int row, char suffix, ProteusColorSubRow? subRow) {
+                        if (subRow == null) return;
+                        ImGui.TextDisabled($"{row:00}{suffix}");
+                        ImGui.SameLine();
+                        ImGui.ColorButton($"##Diffuse.{row}{suffix}", subRow.Diffuse.AsVector4(), ImGuiColorEditFlags.NoAlpha);
+                    }
+                    
+                    void ShowColourTable(ProteusModOptionDescriptor modOption) {
+                        var colourTable = modOption.ColorTable;
+                        if (colourTable == null) return;
+                        using (ImRaii.PushIndent()) {
+                            foreach (var r in colourTable.Rows) {
+                               ShowColourSubRow(r.Row, 'A', r.SubRowA);
+                               ShowColourSubRow(r.Row, 'B', r.SubRowB);
+                            }
+                        }
+                    }
+                    
+                    if (overlay.Options == null) {
+                        ShowColourTable(overlay);
+                    } else {
+                        using (ImRaii.PushIndent()) {
+                            foreach (var option in overlay.Options) {
+                                ImGui.Text($"{option.GroupName} / {option.OptionName}");
+                                ShowColourTable(option);
+                            }
+                        }
                     }
                 }
             }

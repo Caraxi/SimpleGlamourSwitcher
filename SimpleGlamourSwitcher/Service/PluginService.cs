@@ -40,6 +40,8 @@ public class PluginService {
     
     private static ServiceManager _serviceManager = null!;
 
+    public static CleanupManager CleanupManager { private set; get; }
+
     public void Initialize() {
         var logger = new MainLogger(nameof(SimpleGlamourSwitcher));
         _serviceManager = new ServiceManager(logger)
@@ -77,9 +79,12 @@ public class PluginService {
         
 
         _serviceManager.EnsureRequiredServices();
+
+        CleanupManager = new CleanupManager(Framework);
     }
 
     internal static void Dispose() {
         _serviceManager.Dispose();
+        CleanupManager.Dispose();
     }
 }

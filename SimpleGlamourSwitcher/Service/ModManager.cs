@@ -135,6 +135,12 @@ public static class ModManager {
             #endif
             
             AppliedMods[key].Add(modConfig);
+
+            if (modConfig.ProteusModConfig != null && ProteusIpc.IsProteusMod(modConfig.ModDirectory)) {
+                foreach (var o in modConfig.ProteusModConfig.OptionConfigs) {
+                    ProteusIpc.SetColorTable(o.OptionDescriptor.WithMod(modConfig.ModDirectory), o.ColorTable);
+                }
+            }
         }
     }
 }

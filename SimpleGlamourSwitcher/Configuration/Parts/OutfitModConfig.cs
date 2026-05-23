@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
+using JetBrains.Annotations;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
 using Penumbra.Api.Enums;
@@ -6,15 +7,30 @@ using Penumbra.GameData.Enums;
 using Penumbra.GameData.Structs;
 using SimpleGlamourSwitcher.IPC;
 using SimpleGlamourSwitcher.IPC.Glamourer;
+using SimpleGlamourSwitcher.IPC.Proteus;
 using SimpleGlamourSwitcher.Service;
 using CustomizeIndex = Penumbra.GameData.Enums.CustomizeIndex;
 using Race = Penumbra.GameData.Enums.Race;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts;
 
+public record ProteusModOptionConfig(ProteusOptionDescriptor OptionDescriptor, ProteusColorTable ColorTable);
+
+public class ProteusModConfig {
+    public bool Enabled { get; set; }
+    public int Priority { get; set; }
+    public List<ProteusModOptionConfig> OptionConfigs { get; set; } = [];
+}
+
 public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings, string? HeliosphereId) {
+
+    public ProteusModConfig? ProteusModConfig { get; set; }
+    [UsedImplicitly] public bool ShouldSerializeProteusConfig() => ProteusModConfig != null;
+    
     public static implicit operator OutfitModConfig((string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings) a) {
-        return new OutfitModConfig(a.ModDirectory, a.Enabled, a.Priority, a.Settings, Heliosphere.GetId(a.ModDirectory));
+        return new OutfitModConfig(a.ModDirectory, a.Enabled, a.Priority, a.Settings, Heliosphere.GetId(a.ModDirectory)) {
+            ProteusModConfig = GetProteusModConfig(a.ModDirectory),
+        };
     }
 
     public static implicit operator (string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings)(OutfitModConfig a) {
@@ -31,7 +47,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)) {
+                ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
+            });
         }
         
         return list;
@@ -48,7 +66,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+                ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
+            });
         }
         
         return list;
@@ -114,7 +134,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+                ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
+            });
         }
         
         
@@ -137,7 +159,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+                ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
+            });
         }
         
         return list;
@@ -161,7 +185,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)));
+            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)){
+                ProteusModConfig = GetProteusModConfig(mod),
+            });
         }
     }
     
@@ -231,7 +257,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
                             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
                             var modSettings = getModSettings.Item2.Value;
-                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)));
+                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+                                ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
+                            });
                         }
                     }
                 }
@@ -250,6 +278,35 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             return d;
         }
     }
+    
+    public static ProteusModConfig? GetProteusModConfig(string modDirectory) {
+        
+        var proteusModEnabled = ProteusIpc.ActiveOverlays.Value.TryGetValue(modDirectory.ToLowerInvariant(), out var proteusMod);
+        if (!proteusModEnabled) {
+            proteusMod = ProteusIpc.AllOverlays.Value.GetValueOrDefault(modDirectory.ToLowerInvariant());
+        }
+        
+        if (proteusMod == null) return null;
+        
+        var optionConfigs = new List<ProteusModOptionConfig>();
+        
+        if (proteusMod.Options == null) {
+            var colourTable = proteusMod.ColorTable;
+            if (colourTable != null) {
+                optionConfigs.Add(new ProteusModOptionConfig(proteusMod, colourTable));
+            }
+        } else {
+            foreach (var o in proteusMod.Options) {
+                var colourTable = o.ColorTable;
+                if (colourTable != null) 
+                    optionConfigs.Add(new ProteusModOptionConfig(o, colourTable));
+            }
+        }
 
-
+        return new ProteusModConfig {
+            Enabled = proteusModEnabled,
+            Priority = proteusMod.Priority,
+            OptionConfigs = optionConfigs,
+        };
+    }
 }

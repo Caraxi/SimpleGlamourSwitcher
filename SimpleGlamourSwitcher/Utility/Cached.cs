@@ -14,3 +14,22 @@ public class Cached<T>(TimeSpan maxAge, Func<T> getValue) {
         }
     } = getValue();
 }
+
+public class NullableCached<T>(TimeSpan maxAge, Func<T?> getValue) where T : class {
+    private readonly Stopwatch age = Stopwatch.StartNew();
+
+    private bool isFetched;
+
+    public bool HasValue => isFetched && age.Elapsed <= maxAge;
+    public TimeSpan Age => age.Elapsed;
+    
+    public T? Value {
+        get {
+            if (isFetched && age.Elapsed <= maxAge) return field;
+            field = getValue();
+            isFetched = true;
+            age.Restart();
+            return field;
+        }
+    } = getValue();
+}

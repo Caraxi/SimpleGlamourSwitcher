@@ -20,24 +20,34 @@ public class PreviousCharacterFolder : CharacterFolder, IDefaultOutfitOptionsPro
     }
 }
 
-public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
-
+public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
+    [JsonIgnore] public string TypeName => "Folder";
     [JsonIgnore] private bool usingDefaultTexture = true;
     
     [JsonIgnore]
     public CharacterConfigFile? ConfigFile { get; set; }
     
     [JsonIgnore]
-    public Guid? FolderGuid { get; set; }
+    public Guid Guid { get; set; }
     
+    [JsonIgnore]
+    public bool Dirty { get; set; }
     
-    public string Name = string.Empty;
-    string IImageProvider.Name => Name;
+    // public string Name = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    
+    public string Name { get; set; } = string.Empty;
 
     public PolaroidStyle? OutfitPolaroidStyle;
     public PolaroidStyle? FolderPolaroidStyle;
     
     public Guid Parent = Guid.Empty;
+
+    Guid ICommonDetails.Folder {
+        get => Parent;
+        set => Parent = value;
+    }
+    
     public bool Hidden;
 
     public static IDalamudTextureWrap? GetDefaultFolderImage() {
@@ -49,7 +59,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
     public HashSet<EquipSlot>? CustomDefaultDisabledWeaponSlots;
     public HashSet<AppearanceParameterKind>? CustomDefaultEnabledParameterKinds;
     public HashSet<ToggleType>? CustomDefaultEnabledToggles;
-    
+
     public List<AutoCommandEntry> AutoCommandBeforeOutfit = new();
     public List<AutoCommandEntry> AutoCommandAfterOutfit = new();
     public bool AutoCommandsSkipCharacter;
@@ -137,7 +147,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
 
     public ImageDetail ImageDetail { get; set; } = new();
 
-    public bool IsSharedFolder => ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid;
+    [JsonIgnore] public bool IsSharedFolder => ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid;
 
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) {
         if (this is PreviousCharacterFolder folder) {
@@ -146,26 +156,26 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
             return wrap != null;
         }
 
-        if (ConfigFile == null || FolderGuid == null) {
+        if (ConfigFile == null) {
             wrap = null;
             usingDefaultTexture = false;
             return false;
         }
 
 
-        wrap = GetImage(ConfigFile, FolderGuid.Value, out usingDefaultTexture);
+        wrap = GetImage(ConfigFile, Guid, out usingDefaultTexture);
         return wrap != null;
     }
 
     private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
     
     public void SetImage(FileInfo fileInfo) {
-        if (ConfigFile == null || FolderGuid == null) return;
-        FolderCheckCache.Remove(FolderGuid.Value);
+        if (ConfigFile == null) return;
+        FolderCheckCache.Remove(Guid);
         
         var dir = ConfigFile.ImagesDirectory;
         if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
-        var fileName = Path.Join(dir.FullName, $"{FolderGuid}");
+        var fileName = Path.Join(dir.FullName, $"{Guid}");
         
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
@@ -173,7 +183,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
             }
         }
 
-        TempImagePath[FolderGuid.Value] = (fileInfo.FullName, Stopwatch.StartNew());
+        TempImagePath[Guid] = (fileInfo.FullName, Stopwatch.StartNew());
         fileInfo.CopyTo(fileName + Path.GetExtension(fileInfo.FullName));
     }
 
@@ -210,11 +220,11 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
             clone.ConfigFile = character;
             clone.Parent = parentFolder ?? Guid.Empty;
             character.Folders.Add(guid, clone);
-            foreach(var (_, childFolder) in ConfigFile.Folders.Where(f => f.Value.Parent.Equals(this.FolderGuid))) {
+            foreach(var (_, childFolder) in ConfigFile.Folders.Where(f => f.Value.Parent.Equals(this.Guid))) {
                 childFolder.CloneTo(character, guid, false);
             }
 
-            foreach (var (entryGuid, entry) in await ConfigFile.GetEntries(FolderGuid)) {
+            foreach (var (entryGuid, entry) in await ConfigFile.GetEntries(Guid)) {
                 var entryClone = entry.CloneTo(character);
                 if (entryClone == null) continue;
                 
@@ -244,7 +254,7 @@ public class CharacterFolder : IImageProvider, IDefaultOutfitOptionsProvider {
         
         var dir = ConfigFile.ImagesDirectory;
         if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
-        var fileName = Path.Join(dir.FullName, $"{FolderGuid}");
+        var fileName = Path.Join(dir.FullName, $"{Guid}");
         
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {

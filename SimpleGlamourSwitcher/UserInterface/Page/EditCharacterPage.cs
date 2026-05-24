@@ -72,11 +72,20 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
     
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
-        ImGuiExt.CenterText(IsNewCharacter ? "Creating" : "Editing Character", shadowed: true);
-        ImGuiExt.CenterText(IsNewCharacter ? "New Character" : Character.Name, shadowed: true);
+
+        if (Character.Guid == CharacterConfigFile.SharedDataGuid) {
+            ImGuiExt.CenterText("Editing Shared Folder Settings", shadowed: true);
+        } else {
+            ImGuiExt.CenterText(IsNewCharacter ? "Creating" : "Editing Character", shadowed: true);
+            ImGuiExt.CenterText(IsNewCharacter ? "New Character" : Character.Name, shadowed: true);
+        }
+        
+        
     }
 
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
+        var isShared = Character.Guid == CharacterConfigFile.SharedDataGuid;
+        
         if (dirty) {
             controlFlags |= WindowControlFlags.PreventClose;
         }
@@ -91,284 +100,286 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
         if (ImGui.BeginChild("characterEdit", new Vector2(MathF.Min(maxW * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().X), ImGui.GetContentRegionAvail().Y))) {
             var a = WindowControlFlags.None;
-            using (ImRaii.ItemWidth(ImGui.GetContentRegionAvail().X)) {
-                dirty |= CustomInput.InputText("Character Name", ref characterName, 100);
-                dirty |= CustomInput.Combo("Penumbra Collection", penumbraCollection == null ? "No Collection Selected" : penumbraCollections.TryGetValue(penumbraCollection.Value, out var selectedName) ? selectedName : $"{penumbraCollection}", (search) => {
-                    a |= WindowControlFlags.PreventClose;
-                    var r = false;
-
-                    if (ImGuiExt.SelectableWithNote("No Collection", "Collection will not be changed", penumbraCollection == null)) {
-                        r = true;
-                        penumbraCollection = null;
-                    }
-                    
-                    foreach (var (guid, name) in penumbraCollections.OrderBy(kvp => kvp.Value)) {
-                        if (!string.IsNullOrWhiteSpace(search) && !name.Contains(search, StringComparison.InvariantCultureIgnoreCase)) continue;
-                        if (ImGuiExt.SelectableWithNote($"{name}##{guid}", $"{guid}", guid == penumbraCollection, PluginInterface.UiBuilder.MonoFontHandle)) {
-                            r = true;
-                            penumbraCollection = guid;
-                        }
-                    }
-
-                    return r;
-                });
-
-                var honorificReady = HonorificIpc.IsReady();
-                
-                using (ImRaii.Disabled(!honorificReady))
-                using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (honorificReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
-                    dirty |= CustomInput.InputText("Honorific Identity:", ref honorificIdentity.Name, 100);
-                    ImGui.SameLine();
-                    var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(honorificIdentity.World);
-                    dirty |= CustomInput.Combo("##HonorificIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{honorificIdentity.World}", () => {
-                        var m = false;
-                        var appearing = ImGui.IsWindowAppearing();
-                        var lastDc = uint.MaxValue;
-
-                        void World(string name, uint worldId, WorldDCGroupType? dc = null) {
-                            
-                            if (dc != null) {
-                                if (lastDc != dc.Value.RowId) {
-                                    lastDc = dc.Value.RowId;
-                                    ImGui.TextDisabled($"{dc.Value.Name.ExtractText()}");
-                                }
-                            }
-
-                            if (ImGui.Selectable($"    {name}", honorificIdentity.World == worldId)) {
-                                honorificIdentity.World = worldId;
-                                m = true;
-                                ImGui.CloseCurrentPopup();
-                            }
-
-                            if (appearing && honorificIdentity.World == worldId) {
-                                ImGui.SetScrollHereY();
-                            }
-                        }
-
-                        foreach (var w in DataManager.GetExcelSheet<World>()!.Where(w => w.IsPlayerWorld()).OrderBy(w => w.DataCenter.Value.Name.ExtractText()).ThenBy(w => w.Name.ExtractText())) {
-                            World(w.Name.ExtractText(), w.RowId, w.DataCenter.Value);
-                        }
-
-                        return m;
-                    });
-                }
-
-                if (!honorificReady) {
-                    ImGui.SameLine();
-                    ImGuiComponents.HelpMarker("A supported version of Honorific is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
-                }
-                
-                var heelsReady = HeelsIpc.IsReady();
-                using (ImRaii.Disabled(!heelsReady))
-                using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (heelsReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
-                    dirty |= CustomInput.InputText("Simple Heels Identity:", ref heelsIdentity.Name, 100);
-                    ImGui.SameLine();
-                    var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(heelsIdentity.World);
-                    dirty |= CustomInput.Combo("##heelsIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{heelsIdentity.World}", () => {
-                        var m = false;
-                        var appearing = ImGui.IsWindowAppearing();
-                        var lastDc = uint.MaxValue;
-
-                        void World(string name, uint worldId, WorldDCGroupType? dc = null) {
-                            
-                            if (dc != null) {
-                                if (lastDc != dc.Value.RowId) {
-                                    lastDc = dc.Value.RowId;
-                                    ImGui.TextDisabled($"{dc.Value.Name.ExtractText()}");
-                                }
-                            }
-
-                            if (ImGui.Selectable($"    {name}", heelsIdentity.World == worldId)) {
-                                heelsIdentity.World = worldId;
-                                m = true;
-                                ImGui.CloseCurrentPopup();
-                            }
-
-                            if (appearing && heelsIdentity.World == worldId) {
-                                ImGui.SetScrollHereY();
-                            }
-                        }
-
-                        foreach (var w in DataManager.GetExcelSheet<World>()!.Where(w => w.IsPlayerWorld()).OrderBy(w => w.DataCenter.Value.Name.ExtractText()).ThenBy(w => w.Name.ExtractText())) {
-                            World(w.Name.ExtractText(), w.RowId, w.DataCenter.Value);
-                        }
-
-                        return m;
-                    });
-                }
-                if (!heelsReady) {
-                    ImGui.SameLine();
-                    ImGuiComponents.HelpMarker("A supported version of Simple Heels is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
-                }
-                
-                var customizeReady = CustomizePlus.IsReady();
-                using (ImRaii.Disabled(!customizeReady)) {
-                    var profileName = "Not Set";
-                    if (customizeReady) {
-                        if (customizePlusProfile != null) {
-                            if (customizePlusProfile == Guid.Empty) {
-                                profileName = "No Profile";
-                            } else {
-                                if (CustomizePlus.TryGetProfileDataByUniqueId(customizePlusProfile.Value, out var profile)) {
-                                    profileName = profile.Name;
-                                } else {
-                                    profileName = $"{customizePlusProfile}";
-                                }
-                            }
-                        }
-                    } else {
-                        profileName = "A supported version of Customize+ is not detected";
-                    }
-                    
-                    dirty |= CustomInput.Combo("Customize Plus Profile", profileName, () => {
-
+            if (!isShared) {
+                using (ImRaii.ItemWidth(ImGui.GetContentRegionAvail().X)) {
+                    dirty |= CustomInput.InputText("Character Name", ref characterName, 100);
+                    dirty |= CustomInput.Combo("Penumbra Collection", penumbraCollection == null ? "No Collection Selected" : penumbraCollections.TryGetValue(penumbraCollection.Value, out var selectedName) ? selectedName : $"{penumbraCollection}", (search) => {
+                        a |= WindowControlFlags.PreventClose;
                         var r = false;
-                        var list = CustomizePlus.GetProfileList();
 
-                        if (ImGuiExt.SelectableWithNote("Not Set", "Leave profile as is", customizePlusProfile == null)) {
-                            customizePlusProfile = null;
+                        if (ImGuiExt.SelectableWithNote("No Collection", "Collection will not be changed", penumbraCollection == null)) {
                             r = true;
+                            penumbraCollection = null;
                         }
-                        
-                        if (ImGuiExt.SelectableWithNote("No Profile", "Use empty profile", customizePlusProfile == Guid.Empty)) {
-                            customizePlusProfile = Guid.Empty;
-                            r = true;
-                        }
-                        
-                        foreach (var p in list) {
-                            if (ImGuiExt.SelectableWithNote(p.VirtualPath + $"##{p.UniqueId}", p.UniqueId.ToString(), customizePlusProfile == p.UniqueId, PluginInterface.UiBuilder.MonoFontHandle)) {
-                                customizePlusProfile = p.UniqueId;
+
+                        foreach (var (guid, name) in penumbraCollections.OrderBy(kvp => kvp.Value)) {
+                            if (!string.IsNullOrWhiteSpace(search) && !name.Contains(search, StringComparison.InvariantCultureIgnoreCase)) continue;
+                            if (ImGuiExt.SelectableWithNote($"{name}##{guid}", $"{guid}", guid == penumbraCollection, PluginInterface.UiBuilder.MonoFontHandle)) {
                                 r = true;
+                                penumbraCollection = guid;
                             }
                         }
-                        
+
                         return r;
                     });
-                }
-            }
 
-            if (ImGui.CollapsingHeader("Automatic Applications")) {
-                dirty |= ImGui.Checkbox("Apply Default Outfit on Login", ref applyOnLogin);
-                dirty |= ImGui.Checkbox("Apply Default Outfit when Simple Glamour Switcher reloads", ref applyOnPluginReload);
-            }
-            
+                    var honorificReady = HonorificIpc.IsReady();
 
-            if (ImGui.CollapsingHeader("Default Appearance Toggles")) {
-                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
-                    ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
-                }
+                    using (ImRaii.Disabled(!honorificReady))
+                    using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (honorificReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
+                        dirty |= CustomInput.InputText("Honorific Identity:", ref honorificIdentity.Name, 100);
+                        ImGui.SameLine();
+                        var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(honorificIdentity.World);
+                        dirty |= CustomInput.Combo("##HonorificIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{honorificIdentity.World}", () => {
+                            var m = false;
+                            var appearing = ImGui.IsWindowAppearing();
+                            var lastDc = uint.MaxValue;
 
-                dirty |= ImGui.Checkbox("Revert to Game", ref defaultRevertCustomize);
-                
-                ImGui.Columns(3, "defaultAppearanceToggles", false);
-                foreach (var ci in Enum.GetValues<CustomizeIndex>()) {
-                    var v = defaultEnabledCustomizeIndexes.Contains(ci);
-                    if (ImGui.Checkbox($"{ci}##defaultEnabledCustomize", ref v)) {
-                        dirty = true; 
-                        if (v) {
-                            defaultEnabledCustomizeIndexes.Add(ci);
-                        } else {
-                            defaultEnabledCustomizeIndexes.Remove(ci);
-                        }
+                            void World(string name, uint worldId, WorldDCGroupType? dc = null) {
+
+                                if (dc != null) {
+                                    if (lastDc != dc.Value.RowId) {
+                                        lastDc = dc.Value.RowId;
+                                        ImGui.TextDisabled($"{dc.Value.Name.ExtractText()}");
+                                    }
+                                }
+
+                                if (ImGui.Selectable($"    {name}", honorificIdentity.World == worldId)) {
+                                    honorificIdentity.World = worldId;
+                                    m = true;
+                                    ImGui.CloseCurrentPopup();
+                                }
+
+                                if (appearing && honorificIdentity.World == worldId) {
+                                    ImGui.SetScrollHereY();
+                                }
+                            }
+
+                            foreach (var w in DataManager.GetExcelSheet<World>()!.Where(w => w.IsPlayerWorld()).OrderBy(w => w.DataCenter.Value.Name.ExtractText()).ThenBy(w => w.Name.ExtractText())) {
+                                World(w.Name.ExtractText(), w.RowId, w.DataCenter.Value);
+                            }
+
+                            return m;
+                        });
                     }
-                    ImGui.NextColumn();
+
+                    if (!honorificReady) {
+                        ImGui.SameLine();
+                        ImGuiComponents.HelpMarker("A supported version of Honorific is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
+                    }
+
+                    var heelsReady = HeelsIpc.IsReady();
+                    using (ImRaii.Disabled(!heelsReady))
+                    using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (heelsReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
+                        dirty |= CustomInput.InputText("Simple Heels Identity:", ref heelsIdentity.Name, 100);
+                        ImGui.SameLine();
+                        var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(heelsIdentity.World);
+                        dirty |= CustomInput.Combo("##heelsIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{heelsIdentity.World}", () => {
+                            var m = false;
+                            var appearing = ImGui.IsWindowAppearing();
+                            var lastDc = uint.MaxValue;
+
+                            void World(string name, uint worldId, WorldDCGroupType? dc = null) {
+
+                                if (dc != null) {
+                                    if (lastDc != dc.Value.RowId) {
+                                        lastDc = dc.Value.RowId;
+                                        ImGui.TextDisabled($"{dc.Value.Name.ExtractText()}");
+                                    }
+                                }
+
+                                if (ImGui.Selectable($"    {name}", heelsIdentity.World == worldId)) {
+                                    heelsIdentity.World = worldId;
+                                    m = true;
+                                    ImGui.CloseCurrentPopup();
+                                }
+
+                                if (appearing && heelsIdentity.World == worldId) {
+                                    ImGui.SetScrollHereY();
+                                }
+                            }
+
+                            foreach (var w in DataManager.GetExcelSheet<World>()!.Where(w => w.IsPlayerWorld()).OrderBy(w => w.DataCenter.Value.Name.ExtractText()).ThenBy(w => w.Name.ExtractText())) {
+                                World(w.Name.ExtractText(), w.RowId, w.DataCenter.Value);
+                            }
+
+                            return m;
+                        });
+                    }
+                    if (!heelsReady) {
+                        ImGui.SameLine();
+                        ImGuiComponents.HelpMarker("A supported version of Simple Heels is not detected.", FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
+                    }
+
+                    var customizeReady = CustomizePlus.IsReady();
+                    using (ImRaii.Disabled(!customizeReady)) {
+                        var profileName = "Not Set";
+                        if (customizeReady) {
+                            if (customizePlusProfile != null) {
+                                if (customizePlusProfile == Guid.Empty) {
+                                    profileName = "No Profile";
+                                } else {
+                                    if (CustomizePlus.TryGetProfileDataByUniqueId(customizePlusProfile.Value, out var profile)) {
+                                        profileName = profile.Name;
+                                    } else {
+                                        profileName = $"{customizePlusProfile}";
+                                    }
+                                }
+                            }
+                        } else {
+                            profileName = "A supported version of Customize+ is not detected";
+                        }
+
+                        dirty |= CustomInput.Combo("Customize Plus Profile", profileName, () => {
+
+                            var r = false;
+                            var list = CustomizePlus.GetProfileList();
+
+                            if (ImGuiExt.SelectableWithNote("Not Set", "Leave profile as is", customizePlusProfile == null)) {
+                                customizePlusProfile = null;
+                                r = true;
+                            }
+
+                            if (ImGuiExt.SelectableWithNote("No Profile", "Use empty profile", customizePlusProfile == Guid.Empty)) {
+                                customizePlusProfile = Guid.Empty;
+                                r = true;
+                            }
+
+                            foreach (var p in list) {
+                                if (ImGuiExt.SelectableWithNote(p.VirtualPath + $"##{p.UniqueId}", p.UniqueId.ToString(), customizePlusProfile == p.UniqueId, PluginInterface.UiBuilder.MonoFontHandle)) {
+                                    customizePlusProfile = p.UniqueId;
+                                    r = true;
+                                }
+                            }
+
+                            return r;
+                        });
+                    }
                 }
-                
-                ImGui.Columns(1);
-            }
-            
-            if (ImGui.CollapsingHeader("Default Advanced Appearance Toggles")) {
-                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
-                    ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+
+                if (ImGui.CollapsingHeader("Automatic Applications")) {
+                    dirty |= ImGui.Checkbox("Apply Default Outfit on Login", ref applyOnLogin);
+                    dirty |= ImGui.Checkbox("Apply Default Outfit when Simple Glamour Switcher reloads", ref applyOnPluginReload);
                 }
-                ImGui.Columns(3, "defaultAdvancedAppearanceToggles", false);
-                foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
-                    var v = defaultEnabledParameterKinds.Contains(ci);
-                    if (ImGui.Checkbox($"{ci}##defaultEnabledParameters", ref v)) {
+
+
+                if (ImGui.CollapsingHeader("Default Appearance Toggles")) {
+                    using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                        ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                    }
+
+                    dirty |= ImGui.Checkbox("Revert to Game", ref defaultRevertCustomize);
+
+                    ImGui.Columns(3, "defaultAppearanceToggles", false);
+                    foreach (var ci in Enum.GetValues<CustomizeIndex>()) {
+                        var v = defaultEnabledCustomizeIndexes.Contains(ci);
+                        if (ImGui.Checkbox($"{ci}##defaultEnabledCustomize", ref v)) {
+                            dirty = true;
+                            if (v) {
+                                defaultEnabledCustomizeIndexes.Add(ci);
+                            } else {
+                                defaultEnabledCustomizeIndexes.Remove(ci);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+
+                    ImGui.Columns(1);
+                }
+
+                if (ImGui.CollapsingHeader("Default Advanced Appearance Toggles")) {
+                    using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                        ImGui.TextWrapped("Set to have outfits created for this character apply their appearance attributes. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                    }
+                    ImGui.Columns(3, "defaultAdvancedAppearanceToggles", false);
+                    foreach (var ci in Enum.GetValues<AppearanceParameterKind>()) {
+                        var v = defaultEnabledParameterKinds.Contains(ci);
+                        if (ImGui.Checkbox($"{ci}##defaultEnabledParameters", ref v)) {
+                            dirty = true;
+                            if (v) {
+                                defaultEnabledParameterKinds.Add(ci);
+                            } else {
+                                defaultEnabledParameterKinds.Remove(ci);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+
+                    ImGui.Columns(1);
+                }
+
+                if (ImGui.CollapsingHeader("Default Equipment Toggles")) {
+                    using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                        ImGui.TextWrapped("Set to have outfits created for this character apply their equipment. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                    }
+
+                    dirty |= ImGui.Checkbox("Revert to Game", ref defaultRevertEquip);
+
+                    ImGui.Columns(2, "defaultEquipmentToggles", false);
+                    foreach (var hs in Common.GetGearSlots()) {
+                        var v = !defaultDisableEquipSlots.Contains(hs);
+                        if (ImGui.Checkbox($"{hs.PrettyName()}##defaultEnabledEquip", ref v)) {
+                            dirty = true;
+                            if (v) {
+                                defaultDisableEquipSlots.Remove(hs);
+                            } else {
+                                defaultDisableEquipSlots.Add(hs);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+
+                    ImGui.Columns(1);
+                }
+
+                if (ImGui.CollapsingHeader("Default Weapon Toggles")) {
+                    using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
+                        ImGui.TextWrapped("Set to have outfits created for this character apply their weapons. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
+                    }
+
+                    ImGui.Columns(2, "defaultWeaponToggles", false);
+                    foreach (var es in Common.Set(EquipSlot.MainHand, EquipSlot.OffHand)) {
+                        var v = !defaultDisableWeaponSlots.Contains(es);
+                        if (ImGui.Checkbox($"{es.PrettyName()}##defaultEnabledEquip", ref v)) {
+                            dirty = true;
+                            if (v) {
+                                defaultDisableWeaponSlots.Remove(es);
+                            } else {
+                                defaultDisableWeaponSlots.Add(es);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+
+                    ImGui.Columns(1);
+                }
+
+                if (ImGui.CollapsingHeader("Other Default Toggles")) {
+                    ImGui.Columns(2, "defaultToggles", false);
+                    foreach (var hs in Enum.GetValues<ToggleType>()) {
+                        var v = defaultEnabledToggles.Contains(hs);
+                        if (ImGui.Checkbox($"{hs}##defaultEnabledToggle", ref v)) {
+                            dirty = true;
+                            if (v) {
+                                defaultEnabledToggles.Add(hs);
+                            } else {
+                                defaultEnabledToggles.Remove(hs);
+                            }
+                        }
+                        ImGui.NextColumn();
+                    }
+
+                    ImGui.Columns(1);
+                }
+
+                if (ImGui.CollapsingHeader("Default Outfit Links")) {
+                    OutfitLinksEditor ??= new OutfitLinksEditor(Character, linkBefore, linkAfter);
+                    if (OutfitLinksEditor.Draw($"New Outfits for {Character.Name.OrDefault("This Character")}")) {
                         dirty = true;
-                        if (v) {
-                            defaultEnabledParameterKinds.Add(ci);
-                        } else {
-                            defaultEnabledParameterKinds.Remove(ci);
-                        }
                     }
-                    ImGui.NextColumn();
-                }
-                
-                ImGui.Columns(1);
-            }
-            
-            if (ImGui.CollapsingHeader("Default Equipment Toggles")) {
-                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
-                    ImGui.TextWrapped("Set to have outfits created for this character apply their equipment. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
-                }
-                
-                dirty |= ImGui.Checkbox("Revert to Game", ref defaultRevertEquip);
-                
-                ImGui.Columns(2, "defaultEquipmentToggles", false);
-                foreach (var hs in Common.GetGearSlots()) {
-                    var v = !defaultDisableEquipSlots.Contains(hs);
-                    if (ImGui.Checkbox($"{hs.PrettyName()}##defaultEnabledEquip", ref v)) {
-                        dirty = true;
-                        if (v) {
-                            defaultDisableEquipSlots.Remove(hs);
-                        } else {
-                            defaultDisableEquipSlots.Add(hs);
-                        }
-                    }
-                    ImGui.NextColumn();
-                }
-                
-                ImGui.Columns(1);
-            }
-            
-            if (ImGui.CollapsingHeader("Default Weapon Toggles")) {
-                using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
-                    ImGui.TextWrapped("Set to have outfits created for this character apply their weapons. Individual outfits can toggle these separately, this only changes the default values when making new outfits.");
                 }
 
-                ImGui.Columns(2, "defaultWeaponToggles", false);
-                foreach (var es in Common.Set(EquipSlot.MainHand, EquipSlot.OffHand)) {
-                    var v = !defaultDisableWeaponSlots.Contains(es);
-                    if (ImGui.Checkbox($"{es.PrettyName()}##defaultEnabledEquip", ref v)) {
-                        dirty = true;
-                        if (v) {
-                            defaultDisableWeaponSlots.Remove(es);
-                        } else {
-                            defaultDisableWeaponSlots.Add(es);
-                        }
-                    }
-                    ImGui.NextColumn();
-                }
-                
-                ImGui.Columns(1);
             }
-
-            if (ImGui.CollapsingHeader("Other Default Toggles")) {
-                ImGui.Columns(2, "defaultToggles", false);
-                foreach (var hs in Enum.GetValues<ToggleType>()) {
-                    var v = defaultEnabledToggles.Contains(hs);
-                    if (ImGui.Checkbox($"{hs}##defaultEnabledToggle", ref v)) {
-                        dirty = true;
-                        if (v) {
-                            defaultEnabledToggles.Add(hs);
-                        } else {
-                            defaultEnabledToggles.Remove(hs);
-                        }
-                    }
-                    ImGui.NextColumn();
-                }
-                
-                ImGui.Columns(1);
-            }
-
-            if (ImGui.CollapsingHeader("Default Outfit Links")) {
-                OutfitLinksEditor ??= new OutfitLinksEditor(Character, linkBefore, linkAfter);
-                if (OutfitLinksEditor.Draw($"New Outfits for {Character.Name.OrDefault("This Character")}")) {
-                    dirty = true;
-                }
-            }
-            
             var useCustomOutfitPolaroid = outfitStyle != null;
             var useCustomFolderPolaroid = folderStyle != null;
             
@@ -408,46 +419,50 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     }
                 }
             }
-
-            ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string>() {
-                { FolderSortStrategy.Inherit, $"Inherit ({PluginConfig.FolderSortStrategy})" }
-            });
             
-            if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
-                ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit is applied with this character.");
-                ImGui.Spacing();
-                ImGui.TextDisabled("Before Outfit Commands:");
-                using (ImRaii.PushIndent()) {
-                    using (ImRaii.PushId("autoCommandBeforeOutfit")) {
-                        dirty |= CommandEditor.Show(autoCommandBeforeOutfit, down: autoCommandAfterOutfit);
+            if (!isShared) {
+                
+                ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string>() {
+                    { FolderSortStrategy.Inherit, $"Inherit ({PluginConfig.FolderSortStrategy})" }
+                });
+                
+                if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
+                    ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit is applied with this character.");
+                    ImGui.Spacing();
+                    ImGui.TextDisabled("Before Outfit Commands:");
+                    using (ImRaii.PushIndent()) {
+                        using (ImRaii.PushId("autoCommandBeforeOutfit")) {
+                            dirty |= CommandEditor.Show(autoCommandBeforeOutfit, down: autoCommandAfterOutfit);
+                        }
+                    }
+                    
+                    ImGui.TextDisabled("After Outfit Commands:");
+                    using (ImRaii.PushIndent()) {
+                        using (ImRaii.PushId("autoCommandAfterOutfit")) {
+                            dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
+                        }
+                    }
+
+                    ImGui.TextDisabled("On Character Load Commands:");
+                    using (ImRaii.PushIndent()) {
+                        using (ImRaii.PushId("autoCommandOnCharacterLoad")) {
+                            dirty |= CommandEditor.Show(autoCommandOnCharacterLoad);
+                        }
+                    }
+
+                    ImGui.TextDisabled("On Character Unload Commands:");
+                    using (ImRaii.PushIndent()) {
+                        using (ImRaii.PushId("autoCommandOnCharacterUnload")) {
+                            dirty |= CommandEditor.Show(autoCommandOnCharacterUnload);
+                        }
                     }
                 }
                 
-                ImGui.TextDisabled("After Outfit Commands:");
-                using (ImRaii.PushIndent()) {
-                    using (ImRaii.PushId("autoCommandAfterOutfit")) {
-                        dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
-                    }
+                if (ImGui.CollapsingHeader("Image")) {
+                    var style = (PluginConfig.CustomStyle ?? Style.Default).CharacterPolaroid;
+                    ImageEditor.Draw(Character, style, characterName, ref controlFlags);
                 }
-
-                ImGui.TextDisabled("On Character Load Commands:");
-                using (ImRaii.PushIndent()) {
-                    using (ImRaii.PushId("autoCommandOnCharacterLoad")) {
-                        dirty |= CommandEditor.Show(autoCommandOnCharacterLoad);
-                    }
-                }
-
-                ImGui.TextDisabled("On Character Unload Commands:");
-                using (ImRaii.PushIndent()) {
-                    using (ImRaii.PushId("autoCommandOnCharacterUnload")) {
-                        dirty |= CommandEditor.Show(autoCommandOnCharacterUnload);
-                    }
-                }
-            }
             
-            if (ImGui.CollapsingHeader("Image")) {
-                var style = (PluginConfig.CustomStyle ?? Style.Default).CharacterPolaroid;
-                ImageEditor.Draw(Character, style, characterName, ref controlFlags);
             }
             
             controlFlags |= a;
@@ -455,35 +470,39 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             using (ImRaii.Disabled(!(dirty || IsNewCharacter))) {
                 if (ImGuiExt.ButtonWithIcon(IsNewCharacter ? "Create Character" : "Save Character", FontAwesomeIcon.Save, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                     controlFlags |= WindowControlFlags.PreventClose;
-                    Character.Name = characterName;
-                    Character.PenumbraCollection = penumbraCollection;
-                    Character.HonorificIdentity = honorificIdentity;
-                    Character.HeelsIdentity = heelsIdentity;
-                    Character.DefaultEnabledCustomizeIndexes = defaultEnabledCustomizeIndexes;
-                    Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
-                    Character.DefaultDisabledWeaponSlots = defaultDisableWeaponSlots;
-                    Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;
-                    Character.DefaultEnabledToggles = defaultEnabledToggles;
-                    Character.CustomizePlusProfile = customizePlusProfile;
-                    Character.OutfitPolaroidStyle = outfitStyle;
-                    Character.FolderPolaroidStyle = folderStyle;
-                    Character.DefaultLinkBefore = linkBefore;
-                    Character.DefaultLinkAfter = linkAfter;
-                    Character.DefaultRevertCustomize = defaultRevertCustomize;
-                    Character.DefaultRevertEquip =  defaultRevertEquip;
-                    Character.FolderSortStrategy = folderSortStrategy;
 
-                    autoCommandBeforeOutfit.Cleanup();
-                    Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
-                    autoCommandAfterOutfit.Cleanup();
-                    Character.AutoCommandAfterOutfit = autoCommandAfterOutfit;
-                    autoCommandOnCharacterLoad.Cleanup();
-                    Character.AutoCommandOnCharacterLoad = autoCommandOnCharacterLoad;
-                    autoCommandOnCharacterUnload.Cleanup();
-                    Character.AutoCommandOnCharacterUnload = autoCommandOnCharacterUnload;
-
-                    Character.ApplyOnLogin = applyOnLogin;
-                    Character.ApplyOnPluginReload = applyOnPluginReload;
+                    if (isShared) {
+                        Character.OutfitPolaroidStyle = outfitStyle;
+                        Character.FolderPolaroidStyle = folderStyle;
+                    } else {
+                        Character.Name = characterName;
+                        Character.PenumbraCollection = penumbraCollection;
+                        Character.HonorificIdentity = honorificIdentity;
+                        Character.HeelsIdentity = heelsIdentity;
+                        Character.DefaultEnabledCustomizeIndexes = defaultEnabledCustomizeIndexes;
+                        Character.DefaultDisabledEquipmentSlots = defaultDisableEquipSlots;
+                        Character.DefaultDisabledWeaponSlots = defaultDisableWeaponSlots;
+                        Character.DefaultEnabledParameterKinds = defaultEnabledParameterKinds;
+                        Character.DefaultEnabledToggles = defaultEnabledToggles;
+                        Character.CustomizePlusProfile = customizePlusProfile;
+                        Character.OutfitPolaroidStyle = outfitStyle;
+                        Character.FolderPolaroidStyle = folderStyle;
+                        Character.DefaultLinkBefore = linkBefore;
+                        Character.DefaultLinkAfter = linkAfter;
+                        Character.DefaultRevertCustomize = defaultRevertCustomize;
+                        Character.DefaultRevertEquip =  defaultRevertEquip;
+                        Character.FolderSortStrategy = folderSortStrategy;
+                        autoCommandBeforeOutfit.Cleanup();
+                        Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
+                        autoCommandAfterOutfit.Cleanup();
+                        Character.AutoCommandAfterOutfit = autoCommandAfterOutfit;
+                        autoCommandOnCharacterLoad.Cleanup();
+                        Character.AutoCommandOnCharacterLoad = autoCommandOnCharacterLoad;
+                        autoCommandOnCharacterUnload.Cleanup();
+                        Character.AutoCommandOnCharacterUnload = autoCommandOnCharacterUnload;
+                        Character.ApplyOnLogin = applyOnLogin;
+                        Character.ApplyOnPluginReload = applyOnPluginReload;
+                    }
                     
                     Character.Dirty = true;
                     Character.Save(true);

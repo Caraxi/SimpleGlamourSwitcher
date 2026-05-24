@@ -14,14 +14,8 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class GenericEntryConfigFile : ConfigFile<GenericEntryConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink, ICreatableListEntry<GenericEntryConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.Link;
-    public string Name = string.Empty;
-    string IImageProvider.Name => Name;
-    
-    string IListEntry.Name {
-        get => Name;
-        set => Name = value;
-    }
-
+    public string TypeName => "Generic Entry";
+    public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; } = string.Empty;

@@ -15,19 +15,18 @@ namespace SimpleGlamourSwitcher.UserInterface.Page;
 public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid folderGuid, T? entry) : Page where T : ICreatableListEntry<T>, IListEntry {
 
     protected CharacterConfigFile Character => character;
-    protected Guid FolderGuid => commonDetailsEditor?.FolderGuid ?? folderGuid;
-    private CommonDetailsEditor? commonDetailsEditor;
+    protected Guid FolderGuid => CommonDetailsEditor.FolderGuid;
 
     protected CommonDetailsEditor CommonDetailsEditor {
         get {
-            return commonDetailsEditor ??= new CommonDetailsEditor(character, Entry);
+            return field ??= new CommonDetailsEditor(character, Entry);
         }
     }
     
 
     protected virtual float SubWindowWidth => 600;
 
-    public bool IsNew { get; protected set; }
+    public bool IsNew { get; protected set; } = entry == null;
     
     public abstract string TypeName { get; }
 
@@ -40,7 +39,7 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
         ImGuiExt.CenterText(IsNew ? "Creating" : $"Editing {TypeName}", shadowed: true);
-        ImGuiExt.CenterText(IsNew ? $"New {TypeName} in {commonDetailsEditor?.FolderPath}" : $"{commonDetailsEditor?.FolderPath} / {Entry.Name}", shadowed: true);
+        ImGuiExt.CenterText(IsNew ? $"New {TypeName} in {CommonDetailsEditor?.FolderPath}" : $"{CommonDetailsEditor?.FolderPath} / {Entry.Name}", shadowed: true);
     }
 
     
@@ -66,20 +65,19 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
     protected abstract void DrawEditor(ref WindowControlFlags controlFlags);
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
-        commonDetailsEditor ??= new CommonDetailsEditor(character, Entry);
         fileDialogManager.Draw();
         controlFlags |= WindowControlFlags.PreventClose;
         
         var pad = (ImGui.GetContentRegionAvail().X - SubWindowWidth * ImGuiHelpers.GlobalScale) / 2f;
         
-        Dirty |= commonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth);
+        Dirty |= CommonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth);
         
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();
         
         using (ImRaii.Child("entryEditor", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {        
             DrawEditor(ref controlFlags);
-            CommonDetailsEditor.ShowCommonDetails(ref controlFlags);
+            Dirty |= CommonDetailsEditor.ShowCommonDetails(ref controlFlags);
         }
         
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
@@ -92,7 +90,7 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
         using (ImRaii.ItemWidth(SubWindowWidth * ImGuiHelpers.GlobalScale)) {
 
             if (ImGuiExt.ButtonWithIcon($"Save {TypeName}", FontAwesomeIcon.Save, new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
-                commonDetailsEditor.ApplyTo(Entry);
+                CommonDetailsEditor.ApplyTo(Entry);
                 SaveEntry();
                 Entry.Save(true);
                 MainWindow.PopPage();

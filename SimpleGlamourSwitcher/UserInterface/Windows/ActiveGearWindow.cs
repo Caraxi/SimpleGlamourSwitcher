@@ -17,16 +17,13 @@ namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
 public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", ImGuiWindowFlags.AlwaysAutoResize) {
 
-    private OutfitConfigFile? OutfitCache { get; set; } = null;
+    private OutfitConfigFile? OutfitCache { get; set; }
     private OutfitConfigFile? updatedCache;
     private bool updatingOutfit;
     private bool dirty;
     private bool applyingOutfit;
-
     private bool compact;
     private bool locked;
-    private bool collapsed;
-
 
     private void UpdateButtons() {
         TitleBarButtons = [];
@@ -127,8 +124,6 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         lockButton.Icon = locked ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen;
         ShowCloseButton = !compact;
         WindowName = compact ? "SGS###SimpleGlamourSwitcherEquipped" : "Simple Glamour Switcher | Equipped###SimpleGlamourSwitcherEquipped";
-        collapsed = true;
-
         if (locked) {
             Flags |= ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove;
         } else {
@@ -140,7 +135,7 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         ImGui.PopStyleColor(3);
     }
 
-    public void UpdateOutfit() {
+    private void UpdateOutfit() {
         if (updatingOutfit || dirty) return;
         updatingOutfit = true;
         Task.Run(() => {
@@ -182,9 +177,7 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
 
     
     public override void Draw() {
-        collapsed = false;
         var outfit = OutfitCache;
-
         if (!dirty && updatedCache != null && !applyingOutfit) {
             OutfitCache = updatedCache;
             outfit = OutfitCache;
@@ -198,9 +191,7 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
             });
         }
         
-        if (outfit == null) {
-            outfit = OutfitConfigFile.Create(ActiveCharacter);
-        }
+        outfit ??= OutfitConfigFile.Create(ActiveCharacter);
         
         dirty |= EquipmentDisplay.DrawEquipment(outfit.Equipment, EquipmentDisplayFlags.Simple | EquipmentDisplayFlags.EnableCustomItemPicker | EquipmentDisplayFlags.ContextShowSaveSlot | (compact ? EquipmentDisplayFlags.Compact : EquipmentDisplayFlags.None));
 

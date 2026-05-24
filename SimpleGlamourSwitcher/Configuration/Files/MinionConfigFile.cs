@@ -18,14 +18,8 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IHasModConfigs, IAdditionalLink, ICreatableListEntry<MinionConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.Cat;
-    public string Name = string.Empty;
-    string IImageProvider.Name => Name;
-    
-    string IListEntry.Name {
-        get => Name;
-        set => Name = value;
-    }
-
+    public string TypeName => "Minion";
+    public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; } = string.Empty;

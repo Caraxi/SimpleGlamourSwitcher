@@ -33,15 +33,10 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         HumanSlot.Face => FontAwesomeIcon.Glasses,
         _ => FontAwesomeIcon.QuestionCircle,
     };
-    
-    public string Name = string.Empty;
-    string IImageProvider.Name => Name;
-    
-    string IListEntry.Name {
-        get => Name;
-        set => Name = value;
-    }
 
+    public string TypeName => "Item";
+    
+    public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; }

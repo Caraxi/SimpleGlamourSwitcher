@@ -16,8 +16,6 @@ public interface IImageProvider {
     
     public bool IsUsingDefaultImage() => false;
     
-    public string Name { get; }
-    
     public ImageDetail ImageDetail { get; }
     
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap);

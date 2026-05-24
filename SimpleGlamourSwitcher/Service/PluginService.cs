@@ -40,7 +40,7 @@ public class PluginService {
     
     private static ServiceManager _serviceManager = null!;
 
-    public static CleanupManager CleanupManager { private set; get; }
+    public static CleanupManager CleanupManager { private set; get; } = null!;
 
     public void Initialize() {
         var logger = new MainLogger(nameof(SimpleGlamourSwitcher));

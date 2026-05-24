@@ -39,8 +39,6 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     public PolaroidStyle? OutfitPolaroidStyle;
     public PolaroidStyle? FolderPolaroidStyle;
     
-    string IImageProvider.Name => Name;
-
     public ImageDetail ImageDetail { get; set; } = new();
     
     public OrderedDictionary<Guid, CharacterFolder> Folders = new();
@@ -131,7 +129,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     protected override void Setup() {
         foreach (var (fGuid, f) in Folders) {
             f.ConfigFile = this;
-            f.FolderGuid = fGuid;
+            f.Guid = fGuid;
             
             if (f.Parent == Guid.Empty) continue;
             if (!Folders.ContainsKey(f.Parent)) f.Parent = Guid.Empty;

@@ -17,13 +17,8 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class EmoteConfigFile : ConfigFile<EmoteConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, IHasModConfigs, IAdditionalLink, ICreatableListEntry<EmoteConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.KissWinkHeart;
-    public string Name = string.Empty;
-    string IImageProvider.Name => Name;
-    
-    string IListEntry.Name {
-        get => Name;
-        set => Name = value;
-    }
+    public string TypeName => "Emote";
+    public string Name { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;

@@ -64,13 +64,13 @@ public class GlamourListPage : Page {
         }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Generic Mod Entry", Context = GetGenericContextMenu } );
         
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
-            MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null, IsSharedFolder));
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditFolderPage(SharedOrActiveCharacter, ActiveFolder, null));
         }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Folder" } );
 
         if (folderGuid == Guid.Empty) {
             BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Shared Folder", () => {
-                MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, null, true));
-            }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create Shared Folder, accessible from all characters" } );
+                if (SharedCharacter != null) MainWindow.OpenPage(new EditFolderPage(SharedCharacter, Guid.Empty, null));
+            }) { IsDisabled = () => SharedCharacter == null, Tooltip = "Create Shared Folder, accessible from all characters" } );
         }
         LoadOutfits();
     }
@@ -98,7 +98,6 @@ public class GlamourListPage : Page {
 
     private void LoadOutfits() {
         var character = IsSharedFolder ? SharedCharacter : ActiveCharacter;
-
         scrollTop = true;
         if (character != null) {
             folderSortStrategy = PluginConfig.FolderSortStrategy;
@@ -113,7 +112,6 @@ public class GlamourListPage : Page {
 
     private bool allowContextMenu;
     
-    
     public override void Refresh() {
         allowContextMenu = false;
         LoadOutfits();
@@ -126,7 +124,6 @@ public class GlamourListPage : Page {
     private OrderedDictionary<Guid, IListEntry>? outfits;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
-
         if (ImGuiExt.ButtonWithIcon(ActiveCharacter == null ? "Select Character" : "Switch Character", FontAwesomeIcon.PersonDressBurst, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
             MainWindow?.OpenPage(new CharacterListPage());
         }
@@ -143,6 +140,13 @@ public class GlamourListPage : Page {
             var buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2);
             if (ImGuiExt.ButtonWithIcon("Edit Character", FontAwesomeIcon.PencilAlt, buttonSize)) {
                 MainWindow?.OpenPage(new EditCharacterPage(ActiveCharacter));
+            }
+            if (ImGui.IsItemHovered()) controlFlags |= WindowControlFlags.PreventClose;
+            if (ImGui.BeginPopupContextItem("editCharacter")) {
+                if (ImGui.MenuItem("Edit Shared Character")) {
+                    MainWindow?.OpenPage(new EditCharacterPage(SharedCharacter));
+                }
+                ImGui.EndPopup();
             }
             
             if (ImGuiExt.ButtonWithIcon("Configure Automations", FontAwesomeIcon.Robot, buttonSize)) {
@@ -176,11 +180,8 @@ public class GlamourListPage : Page {
     
     
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
-
         var errors = ConfigFile.GetBadFiles<ConfigFile<OutfitConfigFile, CharacterConfigFile>>(ActiveCharacter?.Guid ?? Guid.Empty);
-
         if (errors.Count > 0) {
-
             var errListOpen = false;
             using (ImRaii.PushColor(ImGuiCol.Header, 0xAA3333AA)) 
             using (ImRaii.PushColor(ImGuiCol.HeaderActive, 0xBB3333BB)) 
@@ -225,23 +226,16 @@ public class GlamourListPage : Page {
                         }
                     }
                 }
-               
             }
-            
         }
         
-        
         using var child = ImRaii.Child("glamourListScroll", ImGui.GetContentRegionAvail());
-
         if (scrollTop) {
             scrollTop = false;
             ImGui.SetScrollHereY();
         }
         
-        
-        
         var character = SharedOrActiveCharacter;
-
         var drag = dragItem;
         if (drag != null) {
             controlFlags |= WindowControlFlags.PreventMove;
@@ -257,32 +251,8 @@ public class GlamourListPage : Page {
         }
         
         var folderStyle = folder?.FolderPolaroidStyle ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
+        var sharedFolderStyle = (ActiveFolder == Guid.Empty ? SharedCharacter?.FolderPolaroidStyle : null) ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
         var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-        
-        /*
-        if (ActiveFolder != Guid.Empty && character.Folders.TryGetValue(ActiveFolder, out var folder)) {
-            var parentGuid = Guid.Empty;
-            var parentName = character.Name;
-            if (folder.Parent != Guid.Empty && character.Folders.TryGetValue(folder.Parent, out var parentFolder)) {
-                parentName = parentFolder.Name;
-                parentGuid = folder.Parent;
-            }
-            
-            // Parent Folder
-            
-            
-            if (Polaroid.Button(Commom.GetEmbeddedTexture("resources/previousFolder.png").GetWrapOrDefault(), $"[Back] {parentName}", parentGuid == Guid.Empty ? character.Guid : parentGuid, folderStyle)) {
-                if (MainWindow?.PreviousPage is GlamourListPage page && page.ActiveFolder == parentGuid) {
-                    MainWindow?.PopPage();
-                } else {
-                    MainWindow?.PopPage();
-                    MainWindow?.OpenPage(new GlamourListPage(folder.Parent));
-                }
-            }
-            ImGui.SameLine();
-        }
-        */
-        
         var localFolders = character.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || (ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent)))).ToList();
 
         if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
@@ -311,13 +281,14 @@ public class GlamourListPage : Page {
         }
         
         void DrawFolders(List<KeyValuePair<Guid, CharacterFolder>> folders, ref WindowControlFlags controlFlags, bool isShared) {
+            var style = isShared && ActiveFolder == Guid.Empty ? sharedFolderStyle : folderStyle;
             foreach (var (folderGuid, characterFolder) in folders) {
                 if (characterFolder.Hidden && !showHiddenFolders) continue;
                 using (ImRaii.PushId(folderGuid.ToString())) {
-                    if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(folderStyle).X) ImGui.NewLine();
+                    if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(style).X) ImGui.NewLine();
 
                     if (drag == null) {
-                        if (Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var folderImage) ? folderImage : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle)) {
+                        if (Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var folderImage) ? folderImage : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, style)) {
 
                             if (characterFolder is PreviousCharacterFolder) {
                                 if (MainWindow?.PreviousPage is GlamourListPage page && page.ActiveFolder == folderGuid) {
@@ -354,11 +325,10 @@ public class GlamourListPage : Page {
                             ImGuiExt.CenterText(characterFolder.Name, centerVertically: true, centerHorizontally: false, size: ImGui.GetItemRectSize() + ImGui.GetStyle().ItemSpacing);
                             ImGui.Separator();
 
-                            if (characterFolder is not PreviousCharacterFolder && ImGui.MenuItem("Edit Folder")) {
-                                MainWindow?.OpenPage(new EditFolderPage(ActiveFolder, characterFolder));
+                            if (characterFolder is not PreviousCharacterFolder && characterFolder.ConfigFile != null && ImGui.MenuItem("Edit Folder")) {
+                                MainWindow?.OpenPage(new EditFolderPage(characterFolder.ConfigFile, ActiveFolder, characterFolder));
                             }
 
-                            
                             var folderCharacter = isShared ? SharedCharacter : ActiveCharacter;
                             if (folderSortStrategy == FolderSortStrategy.Manual && folderCharacter != null) {
                                 var displayIndex = folders.FindIndex(f => f.Key ==  folderGuid);
@@ -438,8 +408,8 @@ public class GlamourListPage : Page {
                                             void DeleteSharedFolder(Guid guid) {
                                                 if (SharedCharacter == null) return;
                                                 SharedCharacter?.Folders.Remove(guid);
-                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
-                                                    if (f.FolderGuid != null) DeleteSharedFolder(f.FolderGuid.Value);
+                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) { 
+                                                    DeleteSharedFolder(f.Guid);
                                                 }
                                             }
                                                 
@@ -491,18 +461,18 @@ public class GlamourListPage : Page {
                     } else {
                         var dragging = drag.Value;
                         if (IsSharedFolder) {
-                            Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
-                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
-                                BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
-                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
-                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour
+                            Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, style with {
+                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & style.FrameColour),
+                                BlankImageColour = 0x40FFFFFF & style.BlankImageColour,
+                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour,
+                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour
                             });
                         } else {
-                            Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, folderStyle with {
-                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & folderStyle.FrameColour),
-                                BlankImageColour = 0x40FFFFFF & folderStyle.BlankImageColour,
-                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour,
-                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : folderStyle.FrameColour
+                            Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, style with {
+                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & style.FrameColour),
+                                BlankImageColour = 0x40FFFFFF & style.BlankImageColour,
+                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour,
+                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour
                             });
                         }
                             
@@ -918,7 +888,7 @@ public class GlamourListPage : Page {
                     if (SharedCharacter == null) return;
                     SharedCharacter?.Folders.Remove(guid);
                     foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
-                        if (f.FolderGuid != null) DeleteSharedFolder(f.FolderGuid.Value);
+                        DeleteSharedFolder(f.Guid);
                     }
                 }
                     

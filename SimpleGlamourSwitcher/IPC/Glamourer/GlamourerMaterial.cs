@@ -2,7 +2,7 @@
 
 public class GlamourerMaterial {
     public bool Revert;
-    public string Mode;
+    public string Mode = "Legacy";
     public float DiffuseR;
     public float DiffuseG;
     public float DiffuseB;

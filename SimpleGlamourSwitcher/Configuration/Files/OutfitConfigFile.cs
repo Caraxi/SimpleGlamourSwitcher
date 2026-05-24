@@ -15,12 +15,8 @@ namespace SimpleGlamourSwitcher.Configuration.Files;
 
 public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile>, INamedConfigFile, IImageProvider, IListEntry, ICreatableListEntry<OutfitConfigFile> {
     public FontAwesomeIcon TypeIcon => FontAwesomeIcon.PersonHalfDress;
-    public string Name = string.Empty;
-    string IImageProvider.Name => Name;
-    string IListEntry.Name {
-        get => Name;
-        set => Name = value;
-    }
+    public string TypeName => "Outfit";
+    public string Name { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;

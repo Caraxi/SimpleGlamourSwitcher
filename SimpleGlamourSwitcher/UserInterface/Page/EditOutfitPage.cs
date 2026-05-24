@@ -50,7 +50,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     Dirty = true;
 
                     try {
-                        var defaultOptionsProvider = character.GetOptionsProvider(folderGuid);
+                        var defaultOptionsProvider = Character.GetOptionsProvider(FolderGuid);
                         var glamourerState = GlamourerIpc.GetState(0);
                         var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
                         if (glamourerState != null) {
@@ -105,7 +105,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                     Dirty = true;
 
                     try {
-                        var defaultOptionsProvider = character.GetOptionsProvider(folderGuid);
+                        var defaultOptionsProvider = Character.GetOptionsProvider(FolderGuid);
                         var glamourerState = GlamourerIpc.GetState(0);
                         var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
                         if (glamourerState != null) {
@@ -160,7 +160,7 @@ public class EditOutfitPage(CharacterConfigFile character, Guid folderGuid, Outf
                 Dirty = true;
                 
                 try {
-                    var defaultOptionsProvider = character.GetOptionsProvider(folderGuid);
+                    var defaultOptionsProvider = Character.GetOptionsProvider(FolderGuid);
                     var glamourerState = GlamourerIpc.GetState(0);
                     var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
                     if (glamourerState != null) {

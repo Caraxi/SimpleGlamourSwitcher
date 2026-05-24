@@ -11,7 +11,7 @@ public class ButtonInfo {
         Icon = icon;
         Action = onClick;
     }
-    
+
     public ButtonInfo(string text, Action onClick) {
         Text = text;
         Icon = 0;
@@ -24,7 +24,7 @@ public class ButtonInfo {
     public FontAwesomeIcon Icon { get; init; } = 0;
     public string Id { get; init; } = Guid.NewGuid().ToString();
     public Func<Action?>? Context { get; init; }
-    
+
     public int DisplayPriority { get; init; } = 0;
 
     public bool Disabled {

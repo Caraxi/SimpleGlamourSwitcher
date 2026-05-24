@@ -18,12 +18,12 @@ namespace SimpleGlamourSwitcher.UserInterface.Windows;
 public class ConfigWindow : Window {
 
     public ConfigWindow() : base("Config | Simple Glamour Switcher") {
-        SizeConstraints = new WindowSizeConstraints() {
+        SizeConstraints = new WindowSizeConstraints {
             MinimumSize = new Vector2(640, 400),
-            MaximumSize = new Vector2(640, 4000)
+            MaximumSize = new Vector2(640, 4000),
         };
     }
-    
+
     public override void Draw() {
         PluginConfig.Dirty = ImGui.ColorEdit4("Background Colour", ref PluginConfig.BackgroundColour);
         if (HotkeyHelper.DrawHotkeyConfigEditor("Hotkey", PluginConfig.Hotkey, out var newHotkey)) {
@@ -43,8 +43,8 @@ public class ConfigWindow : Window {
                 PluginConfig.Dirty |= ImGui.DragFloat2("Screen Padding##fullscreenPadding", ref PluginConfig.FullscreenPadding);
             }
         }
-        
-        
+
+
         PluginConfig.Dirty |= ImGui.Checkbox("Close window after applying outfit", ref PluginConfig.AutoCloseAfterApplying);
         PluginConfig.Dirty |= ImGui.Checkbox("Enable Outfit Commands", ref PluginConfig.EnableOutfitCommands);
         if (PluginConfig.EnableOutfitCommands) {
@@ -76,7 +76,7 @@ public class ConfigWindow : Window {
         if (useCustomFolderPolaroid && !ImGui.GetIO().KeyShift && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
             ImGui.SetTooltip("Custom style will be lost if disabled.\nHold SHIFT to confirm.");
         }
-        
+
         if (PluginConfig.CustomCharacterPolaroidStyle != null) {
             ImGui.SameLine();
             if (ImGui.CollapsingHeader("Custom Character Image Style")) {
@@ -84,7 +84,7 @@ public class ConfigWindow : Window {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                     ImGui.TextWrapped("Customize the display of the character switcher preview images. Changing this will cause all existing images to be stretched to the new size.");
                 }
-               
+
                 using (ImRaii.PushIndent()) {
                     if (PolaroidStyle.DrawEditor("Character", PluginConfig.CustomCharacterPolaroidStyle)) {
                         PluginConfig.Dirty = true;
@@ -114,7 +114,7 @@ public class ConfigWindow : Window {
                             PluginConfig.Dirty = true;
                         }
                     }
-                    
+
                     ImGui.EndCombo();
                 }
             }
@@ -131,11 +131,11 @@ public class ConfigWindow : Window {
             PluginConfig.Dirty = true;
             PluginConfig.DebugDefaultPage = debugPages[debugPage];
         }
-        
+
         PluginConfig.Dirty |= ImGui.Checkbox("Open Debug Window at Startup", ref PluginConfig.OpenDebugOnStartup);
-        
+
         #endif
-        
+
         DrawAutomaticModDetectionSettings();
         DrawEquippedWindowSettings();
 
@@ -145,7 +145,7 @@ public class ConfigWindow : Window {
         if (!ImGui.CollapsingHeader("Equipped Window Settings")) return;
 
         PluginConfig.Dirty |= ImGui.Checkbox("Show 'Save Outfit' Button", ref PluginConfig.EquippedWindowConfig.ShowSaveButton);
-        
+
         ImGui.Text("Quick Switch Row Count:");
         using (ImRaii.PushIndent()) {
             foreach (var slot in Common.GetGearSlots()) {
@@ -163,13 +163,13 @@ public class ConfigWindow : Window {
         if (!ImGui.CollapsingHeader("Automatic Mod Detection")) return;
         ImGuiExt.TextDisabledWrapped("Simple Glamour Switcher will try to detect mods automatically when creating new outfits.");
         using var _ = ImRaii.PushIndent();
-        
+
         ImGui.Text("Enable Automatic Detection for Appearance:");
         using (ImRaii.PushIndent()) {
             foreach (var (customizeIndex, label) in CustomizeEditor.GetCustomizeTypes()) {
                 if (_appearance[customizeIndex] is not IHasModConfigs) continue;
                 if (customizeIndex is CustomizeIndex.Clan or CustomizeIndex.SkinColor) continue; // No Automatic Detection
-                
+
                 var e = !PluginConfig.DisableAutoModsCustomize.Contains(customizeIndex);
                 if (ImGui.Checkbox($"{label}##autoModDetectCustomize_{customizeIndex}", ref e)) {
                     if (e) {
@@ -180,7 +180,7 @@ public class ConfigWindow : Window {
                 }
             }
         }
-        
+
         ImGui.Text("Enable Automatic Detection for Equipment:");
         using (ImRaii.PushIndent()) {
             foreach (var slot in Common.GetGearSlots()) {

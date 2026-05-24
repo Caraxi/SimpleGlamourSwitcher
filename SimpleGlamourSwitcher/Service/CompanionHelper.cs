@@ -7,7 +7,7 @@ public static class CompanionHelper {
         uint activeCompanion = 0;
         await Framework.RunOnFrameworkThread(() => {
             unsafe {
-                var chr = (Character*) (Objects.LocalPlayer?.Address ?? 0);
+                var chr = (Character*)(Objects.LocalPlayer?.Address ?? 0);
                 if (chr != null) {
                     activeCompanion = chr->CompanionData.CompanionObject != null
                         ? chr->CompanionData.CompanionObject->BaseId
@@ -15,7 +15,7 @@ public static class CompanionHelper {
                 }
             }
         });
-        
+
         return activeCompanion;
     }
 }

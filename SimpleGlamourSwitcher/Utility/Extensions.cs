@@ -14,15 +14,13 @@ using SimpleGlamourSwitcher.Configuration.Enum;
 namespace SimpleGlamourSwitcher.Utility;
 
 public static class Extensions {
-    public static string OrDefault(this string? str, string defaultValue) {
-        return string.IsNullOrEmpty(str) ? defaultValue : str;
-    }
+    public static string OrDefault(this string? str, string defaultValue) => string.IsNullOrEmpty(str) ? defaultValue : str;
 
 
     public static void OpenInExplorer(this FileInfo fileInfo) {
         Process.Start("explorer.exe", $"/select,\"" + fileInfo.FullName + "\"");
     }
-    
+
     public static void OpenInExplorer(this DirectoryInfo dirInfo) {
         Process.Start("explorer.exe", dirInfo.FullName);
     }
@@ -30,10 +28,8 @@ public static class Extensions {
     public static void OpenWithDefaultApplication(this FileInfo fileInfo) {
         Process.Start("explorer.exe", "\"" + fileInfo.FullName + "\"");
     }
-    
-    public static string RemoveImGuiId(this string label) {
-        return label.Split("##")[0];
-    }
+
+    public static string RemoveImGuiId(this string label) => label.Split("##")[0];
 
     public static BonusItemFlag ToBonusSlot(this HumanSlot slot) {
         return slot switch {
@@ -42,40 +38,32 @@ public static class Extensions {
         };
     }
 
-    public static Vector4 ToVector4(this uint color) {
-        return ImGui.ColorConvertU32ToFloat4(color);
-    }
-    
-    public static Vector2 FitTo(this Vector2 vector, float x, float? y = null) {
-        return vector * MathF.Min(x / vector.X, y ?? x / vector.Y);
-    }
+    public static Vector4 ToVector4(this uint color) => ImGui.ColorConvertU32ToFloat4(color);
+
+    public static Vector2 FitTo(this Vector2 vector, float x, float? y = null) => vector * MathF.Min(x / vector.X, y ?? x / vector.Y);
 
     public static Vector2 FitTo(this Vector2 vector, Vector2 other) {
         if (vector.X == 0 || vector.Y == 0) return Vector2.Zero;
         return vector * MathF.Min(other.X / vector.X, other.Y / vector.Y);
     }
-    
+
     public static T? GetAttribute<TEnum, T>(this TEnum enumValue) where T : Attribute where TEnum : Enum {
         var type = enumValue.GetType();
         var memInfo = type.GetMember(enumValue.ToString());
         var attributes = memInfo[0].GetCustomAttributes(typeof(T), false);
-        return (attributes.Length > 0) ? (T)attributes[0] : null;
-    }
-    
-    public static string GetDescriptionOrName<TEnum>(this TEnum e) where TEnum : Enum {
-        return e.GetAttribute<TEnum, DescriptionAttribute>()?.Description ?? e.ToString();
+        return attributes.Length > 0 ? (T)attributes[0] : null;
     }
 
-    public static T Clone<T>(this T obj) {
-        return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj))!;
-    }
+    public static string GetDescriptionOrName<TEnum>(this TEnum e) where TEnum : Enum => e.GetAttribute<TEnum, DescriptionAttribute>()?.Description ?? e.ToString();
+
+    public static T Clone<T>(this T obj) => JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj))!;
 
     public static string PrettyName(this HumanSlot slot) {
         return slot switch {
             HumanSlot.LFinger => "Left Ring",
             HumanSlot.RFinger => "Right Ring",
             HumanSlot.Face => "Glasses",
-            _ => slot.ToString()
+            _ => slot.ToString(),
         };
     }
 
@@ -83,7 +71,7 @@ public static class Extensions {
         return slot switch {
             EquipSlot.LFinger => "Left Ring",
             EquipSlot.RFinger => "Right Ring",
-            _ => slot.ToString()
+            _ => slot.ToString(),
         };
     }
 
@@ -91,13 +79,13 @@ public static class Extensions {
         return cIndex switch {
             CustomizeIndex.BustSize => "Bust Size",
             CustomizeIndex.EyeShape => "Eye Shape",
-            _ => cIndex.ToName()
+            _ => cIndex.ToName(),
         };
     }
 
     public static string PrettyName(this AppearanceParameterKind kind) {
         return kind switch {
-            _ => kind.ToString()
+            _ => kind.ToString(),
         };
     }
 
@@ -105,7 +93,7 @@ public static class Extensions {
         windowSystem.AddWindow(window);
         return window;
     }
-    
+
     public static bool IsPlayerWorld(this World world) {
         if (world.Name.Data.IsEmpty) return false;
         if (world.DataCenter.RowId == 0) return false;
@@ -114,22 +102,21 @@ public static class Extensions {
     }
 
     public static uint Get(this ImGuiCol col) => ImGui.GetColorU32(col);
-    
+
     public static bool TryWaitResult<T>(this Task<T> task, out T? result) {
         task.Wait();
         if (task.IsCompletedSuccessfully) {
             result = task.Result;
             return true;
         }
-        
+
         result = default;
         return false;
-        
+
     }
-    
-    internal static FullEquipType ToEquipType(this Item item)
-    {
-        var slot   = (EquipSlot)item.EquipSlotCategory.RowId;
+
+    internal static FullEquipType ToEquipType(this Item item) {
+        var slot = (EquipSlot)item.EquipSlotCategory.RowId;
         var weapon = (WeaponCategory)item.ItemUICategory.RowId;
         return slot.ToEquipType(weapon);
     }
@@ -192,21 +179,29 @@ public static class Extensions {
             }
         }
     }
-    
+
     public static bool IsEquipableWeaponOrToolForClassSlot(this Item item, ClassJob classJob, EquipSlot equipSlot) {
         var equipType = item.ToEquipType();
-        
+
         switch (classJob.RowId) {
-            /* GLA / PLD */ case 1 or 19: return equipType == FullEquipType.Sword && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.Shield && equipSlot == EquipSlot.OffHand;
-            /* PGL / PLD */ case 2 or 20: return equipType == FullEquipType.Fists && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.FistsOff && equipSlot == EquipSlot.OffHand;
-            /* MRD / PLD */ case 3 or 21: return equipType == FullEquipType.Axe && equipSlot == EquipSlot.MainHand;
-            /* LNC / PLD */ case 4 or 22: return equipType == FullEquipType.Lance && equipSlot == EquipSlot.MainHand;
-            /* ARC / PLD */ case 5 or 23: return equipType == FullEquipType.Bow && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.BowOff && equipSlot == EquipSlot.OffHand;
-            /* CNJ / WHM / THM / BLM */ case 6 or 7 or 24 or 25: return equipType is FullEquipType.StaffBlm or FullEquipType.StaffWhm or FullEquipType.Wand && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.Shield && equipSlot == EquipSlot.OffHand; 
-            /* ACN / SMN / SCH */ case 26 or 27 or 28: return equipType == FullEquipType.Book && equipSlot == EquipSlot.MainHand;
-            /* ROG / NIN */ case 29 or 30: return equipType == FullEquipType.Daggers && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.DaggersOff && equipSlot == EquipSlot.OffHand;
+            /* GLA / PLD */
+            case 1 or 19: return equipType == FullEquipType.Sword && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.Shield && equipSlot == EquipSlot.OffHand;
+            /* PGL / PLD */
+            case 2 or 20: return equipType == FullEquipType.Fists && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.FistsOff && equipSlot == EquipSlot.OffHand;
+            /* MRD / PLD */
+            case 3 or 21: return equipType == FullEquipType.Axe && equipSlot == EquipSlot.MainHand;
+            /* LNC / PLD */
+            case 4 or 22: return equipType == FullEquipType.Lance && equipSlot == EquipSlot.MainHand;
+            /* ARC / PLD */
+            case 5 or 23: return equipType == FullEquipType.Bow && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.BowOff && equipSlot == EquipSlot.OffHand;
+            /* CNJ / WHM / THM / BLM */
+            case 6 or 7 or 24 or 25: return equipType is FullEquipType.StaffBlm or FullEquipType.StaffWhm or FullEquipType.Wand && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.Shield && equipSlot == EquipSlot.OffHand;
+            /* ACN / SMN / SCH */
+            case 26 or 27 or 28: return equipType == FullEquipType.Book && equipSlot == EquipSlot.MainHand;
+            /* ROG / NIN */
+            case 29 or 30: return equipType == FullEquipType.Daggers && equipSlot == EquipSlot.MainHand || equipType == FullEquipType.DaggersOff && equipSlot == EquipSlot.OffHand;
         }
-        
+
         if (!(equipType.IsWeapon() || equipType.IsTool())) return false;
         switch (equipSlot) {
             default:
@@ -224,6 +219,6 @@ public static class Extensions {
         value = v.Value.Value;
         return value != null;
     }
-    
-    
+
+
 }

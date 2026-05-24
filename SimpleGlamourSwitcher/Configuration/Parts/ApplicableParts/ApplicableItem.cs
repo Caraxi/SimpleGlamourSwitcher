@@ -12,7 +12,7 @@ public abstract record ApplicableItem<T> : Applicable<T>, IHasModConfigs, IHasCu
     public abstract EquipItem GetEquipItem(HumanSlot slot);
     public abstract EquipItem GetEquipItem(EquipSlot slot);
 
-    public abstract override void ApplyToCharacter(T slot, ref bool requestRedraw);
+    public override abstract void ApplyToCharacter(T slot, ref bool requestRedraw);
 
     public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
         if (newValues is not ApplicableItem<T> n) return false;
@@ -20,7 +20,7 @@ public abstract record ApplicableItem<T> : Applicable<T>, IHasModConfigs, IHasCu
         ModConfigs = n.ModConfigs.Clone();
         CustomizePlusTemplateConfigs = n.CustomizePlusTemplateConfigs.Clone();
         Materials = n.Materials.Clone();
-        
+
         return base.TryUpdate(newValues, flags);
     }
 }

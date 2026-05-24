@@ -49,7 +49,7 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
                         var gs = GameHelper.GetGearsetById(gsId);
                         using (ImRaii.PushId($"gearsetAutomation_{gs}")) {
                             var automation = gsAutomation;
-                            if (ShowAutomation(ref automation, $"Gearset #{gsId + 1}: {gs?.Name ?? "Unknown"}", (ImGui.GetTextLineHeight() + 16 * ImGuiHelpers.GlobalScale + ImGui.GetStyle().ItemSpacing.X))) {
+                            if (ShowAutomation(ref automation, $"Gearset #{gsId + 1}: {gs?.Name ?? "Unknown"}", ImGui.GetTextLineHeight() + 16 * ImGuiHelpers.GlobalScale + ImGui.GetStyle().ItemSpacing.X)) {
                                 automationConfig.Gearsets[gsId] = automation;
                                 dirty = true;
                             }
@@ -98,7 +98,7 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
                         }
 
                         return false;
-                    }, errorMessage: currentGearset == null ? "No Gearset Selected" : automationConfig.Gearsets.ContainsKey(currentGearset.Value.Id) ? "Gearset Already Added" : string.Empty, style: new ComboStyle() { FramePadding = new Vector2(16, 8), PadTop = false });
+                    }, errorMessage: currentGearset == null ? "No Gearset Selected" : automationConfig.Gearsets.ContainsKey(currentGearset.Value.Id) ? "Gearset Already Added" : string.Empty, style: new ComboStyle { FramePadding = new Vector2(16, 8), PadTop = false });
 
                     ImGui.SameLine();
 
@@ -197,7 +197,7 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
         ImGui.Spacing();
         ImGui.Spacing();
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - leaveSpace);
-        if (CustomInput.Combo(label, GetDisplayName(guid), Draw, style: new ComboStyle() { FramePadding = new Vector2(16, 8), PadTop = false })) {
+        if (CustomInput.Combo(label, GetDisplayName(guid), Draw, style: new ComboStyle { FramePadding = new Vector2(16, 8), PadTop = false })) {
             editGuid = guid;
             dirty = true;
             return true;
@@ -222,7 +222,7 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
         }
 
         if (!dirty || ImGui.GetIO().KeyShift) return;
-        
+
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
             ImGui.SetTooltip("Hold SHIFT to confirm");
         }

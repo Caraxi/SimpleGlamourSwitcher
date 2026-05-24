@@ -24,7 +24,7 @@ public static class HotkeyHelper {
         NativeKeyState.Enable();
         NativeKeyState.OnKeystroke += NativeKeyStateOnOnKeystroke;
     }
-    
+
     private static void NativeKeyStateOnOnKeystroke(VirtualKey key, bool down, ref NativeKeyState.KeyHandleType handleType) {
         if (down) return;
 
@@ -34,60 +34,60 @@ public static class HotkeyHelper {
             _newKeys = [];
             return;
         }
-        
-        
+
+
         if (key is VirtualKey.LMENU or VirtualKey.RMENU or VirtualKey.LSHIFT or VirtualKey.RSHIFT or VirtualKey.LCONTROL or VirtualKey.RCONTROL) return; // Ignore keyboard side
         if (key is VirtualKey.LWIN or VirtualKey.RWIN) return; // Ignore windows key
-        
+
         if (IsSettingHotkey) {
             _newKeys.Add(key);
             handleType = NativeKeyState.KeyHandleType.Block;
         } else {
-            
+
             // if (PlayerStateService.ContentId == 0) return;
             // if (Objects.LocalPlayer == null) return;
             if (IsSettingHotkey) return;
-            
+
             if (Condition.Any(ConditionFlag.LoggingOut, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51, ConditionFlag.InCombat, PluginConfig.AllowHotkeyInGpose && ClientState.IsGPosing ? ConditionFlag.None : ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent)) return;
             if (HeldKeys.SetEquals(PluginConfig.Hotkey)) {
                 PluginState.ShowGlamourSwitcher();
                 handleType = NativeKeyState.KeyHandleType.Block;
             }
-            
+
         }
-        
+
     }
 
     public static bool IsSettingHotkey => !string.IsNullOrEmpty(_settingKey);
-    
+
     private static void CheckSafety() {
         if (Safety is { IsRunning: true, ElapsedMilliseconds: > 500 }) {
             PluginLog.Verbose("Hotkey editor safety triggered.");
             _settingKey = null;
             _focused = null;
             Safety.Reset();
-        } 
+        }
     }
 
     private static readonly Dictionary<VirtualKey, string> NamedKeys = new() {
-        { VirtualKey.KEY_0, "0"},
-        { VirtualKey.KEY_1, "1"},
-        { VirtualKey.KEY_2, "2"},
-        { VirtualKey.KEY_3, "3"},
-        { VirtualKey.KEY_4, "4"},
-        { VirtualKey.KEY_5, "5"},
-        { VirtualKey.KEY_6, "6"},
-        { VirtualKey.KEY_7, "7"},
-        { VirtualKey.KEY_8, "8"},
-        { VirtualKey.KEY_9, "9"},
-        { VirtualKey.CONTROL, "Ctrl"},
-        { VirtualKey.MENU, "Alt"},
-        { VirtualKey.SHIFT, "Shift"},
-        { VirtualKey.OEM_3, "Tilde"}
+        { VirtualKey.KEY_0, "0" },
+        { VirtualKey.KEY_1, "1" },
+        { VirtualKey.KEY_2, "2" },
+        { VirtualKey.KEY_3, "3" },
+        { VirtualKey.KEY_4, "4" },
+        { VirtualKey.KEY_5, "5" },
+        { VirtualKey.KEY_6, "6" },
+        { VirtualKey.KEY_7, "7" },
+        { VirtualKey.KEY_8, "8" },
+        { VirtualKey.KEY_9, "9" },
+        { VirtualKey.CONTROL, "Ctrl" },
+        { VirtualKey.MENU, "Alt" },
+        { VirtualKey.SHIFT, "Shift" },
+        { VirtualKey.OEM_3, "Tilde" },
     };
-    
+
     public static string GetKeyName(this VirtualKey k) => NamedKeys.TryGetValue(k, out var value) ? value : k.ToString();
-    
+
     public static bool DrawHotkeyConfigEditor(string name, HashSet<VirtualKey> keys, [NotNullWhen(true)] out HashSet<VirtualKey>? outKeys) {
         outKeys = [];
         var modified = false;
@@ -130,9 +130,9 @@ public static class HotkeyHelper {
             */
             var sorted = _newKeys.ToList();
             sorted.Sort();
-            
+
             strKeybind = string.Join("+", sorted.Select(k => k.GetKeyName()));
-            
+
         }
 
         using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, 2))
@@ -149,8 +149,8 @@ public static class HotkeyHelper {
             } else {
                 Safety.Restart();
                 ImGui.SameLine();
-                
-                if (ImGui.Button(_newKeys.Count > 0 ?  $"Confirm##{identifier}" : $"Cancel##{identifier}")) {
+
+                if (ImGui.Button(_newKeys.Count > 0 ? $"Confirm##{identifier}" : $"Cancel##{identifier}")) {
                     Safety.Reset();
                     _settingKey = null;
                     if (_newKeys.Count > 0) {
@@ -181,16 +181,16 @@ public static class HotkeyHelper {
                 _settingKey = identifier;
                 _newKeys = [];
             }
-            
+
             ImGui.SameLine();
             if (ImGui.Button($"Clear Keybind###clearKeybind_{identifier}")) {
                 modified = true;
                 _newKeys = [];
                 outKeys = [];
             }
-            
+
             return modified;
-           
+
         }
 
         return modified;
@@ -202,6 +202,6 @@ public static class HotkeyHelper {
     }
 
     public static void Initialize() {
-        
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Penumbra.GameData.Enums;
+
 // ReSharper disable UnassignedField.Global
 
 namespace SimpleGlamourSwitcher.IPC.Glamourer;
@@ -42,7 +43,7 @@ public class GlamourerCustomize {
     public GlamourerCustomizeOption? FacePaint;
     public GlamourerCustomizeOption? FacePaintReversed;
     public GlamourerCustomizeOption? FacePaintColor;
-    
+
     public GlamourerCustomizeOption? this[CustomizeIndex index] =>
         index switch {
             CustomizeIndex.Race => Race,
@@ -81,6 +82,6 @@ public class GlamourerCustomize {
             CustomizeIndex.FacePaint => FacePaint,
             CustomizeIndex.FacePaintReversed => FacePaintReversed,
             CustomizeIndex.FacePaintColor => FacePaintColor,
-            _ => null
+            _ => null,
         };
 }

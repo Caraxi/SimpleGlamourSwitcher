@@ -14,7 +14,7 @@ public static class GlamourSystem {
 
     public static async Task ApplyCharacter(bool revert = true, bool isLogin = false) {
         if (ActiveCharacter == null) return;
-        
+
         Notice.Show($"Applying Character: {ActiveCharacter.Name}");
 
         if (revert) {
@@ -22,7 +22,7 @@ public static class GlamourSystem {
             GlamourerIpc.RevertStateName.Invoke(GameHelper.PlayerNameString);
             await Task.Delay(250);
         }
-        
+
         if (ActiveCharacter.PenumbraCollection != null) {
             PluginLog.Debug($"Set Penumbra Collection: {ActiveCharacter.PenumbraCollection}");
             PenumbraIpc.SetCollection.Invoke(ApiCollectionType.Current, ActiveCharacter.PenumbraCollection);
@@ -39,14 +39,14 @@ public static class GlamourSystem {
 
                     var playerName = player.Name.TextValue;
                     var playerHomeWorld = player.HomeWorld.RowId;
-                    
+
                     foreach (var p in CustomizePlus.GetProfileList()) {
                         if (!p.IsEnabled) continue;
                         PluginLog.Debug($"Remove {playerName} @ {playerHomeWorld} from Customize Profile {p.UniqueId} / {p.Name}");
                         CustomizePlus.TryRemovePlayerCharacterFromProfile(p.UniqueId, playerName, playerHomeWorld);
                         CustomizePlus.TryRemovePlayerCharacterFromProfile(p.UniqueId, playerName, ushort.MaxValue);
                     }
-                    
+
                     if (profileId != Guid.Empty) {
                         PluginLog.Debug($"Add {playerName} @ {playerHomeWorld} to Customize Profile {profileId}");
                         CustomizePlus.TryAddPlayerCharacterToProfile(profileId, playerName, playerHomeWorld);
@@ -65,32 +65,32 @@ public static class GlamourSystem {
         } catch (Exception ex) {
             PluginLog.Warning(ex, "Failed to set honorific identity.");
         }
-        
+
         try {
             HeelsIpc.SetLocalPlayerIdentity?.Invoke(ActiveCharacter.HeelsIdentity.Name, ActiveCharacter.HeelsIdentity.World);
         } catch (Exception ex) {
             PluginLog.Warning(ex, "Failed to set heels identity.");
         }
-        
+
         await Task.Delay(1000);
         PluginLog.Warning("Redrawing Character");
         await Framework.RunOnFrameworkThread(() => {
             PenumbraIpc.RedrawObject.Invoke(0);
         });
     }
-    
+
     public static async Task<List<IListEntry>> GetOutfitLinks(OutfitConfigFile outfit, bool throwOnCircular = true) {
         if (outfit.ConfigFile == null) return [];
-        
+
         List<IListEntry> outfitList = [];
         HashSet<Guid> guids = [];
-        
+
         var outfits = await outfit.ConfigFile.GetEntries();
         var sharedOutfits = SharedCharacter != null ? await SharedCharacter.GetEntries() : new OrderedDictionary<Guid, IListEntry>();
-        
+
         void AddOutfit(OutfitConfigFile addOutfit) {
             if (guids.Contains(addOutfit.Guid)) return;
-            
+
             foreach (var pre in addOutfit.ApplyBefore) {
                 if (guids.Contains(pre)) {
                     if (throwOnCircular) throw new Exception("Circular Link Detected");
@@ -111,17 +111,17 @@ public static class GlamourSystem {
                 if (throwOnCircular) throw new Exception("Circular Link Detected");
                 return;
             }
-            
+
             outfitList.Add(addOutfit);
             guids.Add(addOutfit.Guid);
-            
+
             foreach (var post in addOutfit.ApplyAfter) {
 
                 if (guids.Contains(post)) {
                     if (throwOnCircular) throw new Exception("Circular Link Detected");
                     continue;
                 }
-                
+
                 if (outfits.TryGetValue(post, out var postEntry) || sharedOutfits.TryGetValue(post, out postEntry)) {
                     if (postEntry is OutfitConfigFile postOutfit) {
                         AddOutfit(postOutfit);
@@ -137,20 +137,20 @@ public static class GlamourSystem {
 
         return outfitList;
     }
-    
-    
+
+
     public static async Task<(OutfitAppearance Appearance, OutfitEquipment Equipment, OutfitWeapons Weapons, List<IAdditionalLink> Additionals)> HandleLinks(OutfitConfigFile outfit, bool throwOnCircular = true) {
         if (outfit.ConfigFile == null) return (outfit.Appearance, outfit.Equipment, outfit.Weapons, []);
         var outfitList = await GetOutfitLinks(outfit, throwOnCircular);
         return StackOutfits(outfitList.ToArray());
     }
-    
+
     public static (OutfitAppearance Appearance, OutfitEquipment Equipment, OutfitWeapons Weapons, List<IAdditionalLink> Additionals) StackOutfits(params IListEntry[] entries) {
         var appearance = new OutfitAppearance();
         var equipment = new OutfitEquipment();
         var weapons = new OutfitWeapons();
         var additionals = new List<IAdditionalLink>();
-        
+
         foreach (var entry in entries) {
             if (entry is ItemConfigFile item) {
                 equipment.Apply = true;
@@ -172,18 +172,18 @@ public static class GlamourSystem {
                         default: throw new ArgumentOutOfRangeException(nameof(item.Slot), item.Slot, null);
                     }
                 }
-                
+
                 continue;
             }
-            
+
             if (entry is not OutfitConfigFile outfit) {
                 if (entry is IAdditionalLink additionalLink) {
                     additionals.Add(additionalLink);
                 }
-                
+
                 continue;
             }
-            
+
             if (outfit.Appearance.Apply) {
                 appearance.Apply = true;
 
@@ -191,7 +191,7 @@ public static class GlamourSystem {
 
                 foreach (var e in Enum.GetValues<CustomizeIndex>()) {
                     if (!outfit.Appearance[e].Apply) continue;
-                    
+
                     appearance[e].Apply = outfit.Appearance[e].Apply;
                     appearance[e].Value = outfit.Appearance[e].Value;
 
@@ -201,7 +201,7 @@ public static class GlamourSystem {
                             am.ModConfigs.Add(modConfig with { });
                         }
                     }
-                    
+
                     if (outfit.Appearance[e] is IHasCustomizePlusTemplateConfigs c1 && appearance[e] is IHasCustomizePlusTemplateConfigs c2) {
                         c2.CustomizePlusTemplateConfigs = c1.CustomizePlusTemplateConfigs;
                     }
@@ -209,7 +209,7 @@ public static class GlamourSystem {
 
                 foreach (var e in Enum.GetValues<AppearanceParameterKind>()) {
                     if (!outfit.Appearance[e].Apply) continue;
-                    
+
                     appearance[e].Apply = outfit.Appearance[e].Apply;
                     switch (outfit.Appearance[e]) {
                         case ApplicableParameterColorAlpha aColorAlpha when appearance[e] is ApplicableParameterColorAlpha bColorAlpha:
@@ -239,7 +239,7 @@ public static class GlamourSystem {
                 equipment.Apply = true;
 
                 equipment.RevertToGame |= outfit.Equipment.RevertToGame;
-                
+
                 foreach (var s in Common.GetGearSlots()) {
                     var i = outfit.Equipment[s];
                     if (!i.Apply) continue;
@@ -279,18 +279,18 @@ public static class GlamourSystem {
                 weapons.Apply = true;
                 foreach (var (cjId, cjWeapons) in outfit.Weapons.ClassWeapons) {
                     if (!cjWeapons.Apply) continue;
-                    weapons.ClassWeapons.TryAdd(cjId, new OutfitClassWeapons() {
-                        Apply = true
+                    weapons.ClassWeapons.TryAdd(cjId, new OutfitClassWeapons {
+                        Apply = true,
                     });
-                    
+
                     if (cjWeapons.MainHand.Apply) weapons.ClassWeapons[cjId].MainHand = cjWeapons.MainHand;
                     if (cjWeapons.OffHand.Apply) weapons.ClassWeapons[cjId].OffHand = cjWeapons.OffHand;
                 }
             }
-            
+
         }
-        
+
         return (appearance, equipment, weapons, additionals);
-    } 
-    
+    }
+
 }

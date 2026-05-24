@@ -21,7 +21,7 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
     private CharacterConfigFile Character => character;
     protected Guid FolderGuid => CommonDetailsEditor.FolderGuid;
     private readonly FileDialogManager fileDialogManager = new();
-    
+
     private bool dirty;
     private PolaroidStyle? outfitStyle = folder?.OutfitPolaroidStyle.Clone();
     private PolaroidStyle? folderStyle = folder?.FolderPolaroidStyle.Clone();
@@ -38,9 +38,9 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
     private bool? defaultRevertCustomize = folder?.CustomDefaultRevertCustomize;
     private bool hidden = folder?.Hidden ?? false;
     private FolderSortStrategy folderSortStrategy = folder?.FolderSortStrategy ?? FolderSortStrategy.Inherit;
-    
+
     private OutfitLinksEditor? outfitLinksEditor;
-    
+
     private CharacterFolder Folder {
         get {
             if (folder != null) return folder;
@@ -263,7 +263,7 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
         if (ImGui.Checkbox(useCustomDefaultLinks ? "##useCustomOutfitLinks" : "Use Custom Defaults for Outfit Links", ref useCustomDefaultLinks)) {
             dirty = true;
             outfitLinksEditor = null;
-            defaultLinks = useCustomDefaultLinks ? new CharacterFolder.DefaultLinks() {
+            defaultLinks = useCustomDefaultLinks ? new CharacterFolder.DefaultLinks {
                 Before = Character.DefaultLinkBefore.Clone(),
                 After = Character.DefaultLinkAfter.Clone(),
             } : null;
@@ -279,9 +279,11 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
             }
         }
 
-        ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string> {{
-            FolderSortStrategy.Inherit, $"Inherit ({folder?.GetFolderSortStrategy()})"
-        }});
+        ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string> {
+            {
+                FolderSortStrategy.Inherit, $"Inherit ({folder?.GetFolderSortStrategy()})"
+            },
+        });
 
         if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
             ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit from this folder is applied.");
@@ -298,7 +300,7 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
             ImGui.TextDisabled("After Outfit Commands:");
             using (ImRaii.PushIndent()) {
                 using (ImRaii.PushId("autoCommandAfterOutfit")) {
-                    dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
+                    dirty |= CommandEditor.Show(autoCommandAfterOutfit, autoCommandBeforeOutfit);
                 }
             }
 

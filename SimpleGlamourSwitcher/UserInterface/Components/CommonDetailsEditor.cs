@@ -15,28 +15,28 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
 
     private string name = entry?.Name ?? string.Empty;
     public string Name => name;
-    private string description =  entry?.Description ?? string.Empty;
+    private string description = entry?.Description ?? string.Empty;
     private string sortName = entry is ISortNameProvider snp ? snp.SortName ?? string.Empty : string.Empty;
     public Guid FolderGuid { get; private set; } = entry?.Folder ?? Guid.Empty;
 
     public string FolderPath { get; private set; } = character.ParseFolderPath(entry?.Folder ?? Guid.Empty);
 
     private List<AutoCommandEntry> autoCommands = entry is IAutoCommandProvider acp ? acp.AutoCommands : [];
-    
+
 
     public bool ShowNameAndFolderEditors(float width = 0) {
         var dirty = false;
-        
+
         ImGui.Spacing();
-        
+
         var pad = (ImGui.GetContentRegionAvail().X - width * ImGuiHelpers.GlobalScale) / 2f;
         using (ImRaii.Group()) {
             ImGui.Dummy(new Vector2(pad, 1f));
         }
 
         ImGui.SameLine();
-        
-        
+
+
         using (ImRaii.Group())
         using (ImRaii.ItemWidth(width * ImGuiHelpers.GlobalScale)) {
             dirty |= CustomInput.InputText($"{entry.TypeName} Name", ref name, 100, errorMessage: name.Length == 0 ? "Please enter a name" : string.Empty);
@@ -49,7 +49,7 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
                 if (entry is CharacterFolder || character.Guid != CharacterConfigFile.SharedDataGuid) {
                     folders = folders.Prepend(new ValueTuple<Guid, string, string>(Guid.Empty, character.Name, character.Name));
                 }
-                
+
                 foreach (var (guid, path, compactPath) in folders.OrderBy(f => f.CompactPath, StringComparer.InvariantCultureIgnoreCase)) {
                     if (!string.IsNullOrWhiteSpace(s)) {
                         if (!(path.Contains(s, StringComparison.CurrentCultureIgnoreCase) || compactPath.Contains(s, StringComparison.CurrentCultureIgnoreCase))) continue;
@@ -65,7 +65,7 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
                 return false;
             }, icon: FontAwesomeIcon.Folder);
         }
-                
+
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
 
         ImGui.Spacing();
@@ -123,5 +123,5 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
         if (toEntry is IAutoCommandProvider acp) acp.AutoCommands = autoCommands;
         toEntry.Dirty = true;
     }
-    
+
 }

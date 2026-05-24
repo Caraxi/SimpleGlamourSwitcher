@@ -11,9 +11,9 @@ public record Style {
 
     public PolaroidStyle CharacterPolaroid = new() { ImageSize = PolaroidStyle.Default.ImageSize * new Vector2(0.5f, 1f) };
     public PolaroidStyle FolderPolaroid = new() { ImageSize = GetDefaultFolderSize() };
-    
+
     public OutfitListStyle OutfitList = new();
-    
+
     public ShadowTextStyle ShadowText = new();
     public TextInputStyle TextInput = new();
     public ComboStyle Combo = new();

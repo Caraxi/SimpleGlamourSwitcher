@@ -22,13 +22,13 @@ public static class ImageEditor {
 
 
     private static readonly bool NoScreenshot = typeof(IDalamudPlugin).Assembly.GetName().Version <= new Version(13, 0, 0, 3);
-    
+
     public static void Draw(IImageProvider imageProvider, PolaroidStyle style, string previewName, ref WindowControlFlags controlFlags) {
-        
+
         imageProvider.TryGetImage(out var image);
 
         var actualSize = Polaroid.GetActualSize(style);
-        
+
         if (ImGui.GetContentRegionAvail().X < actualSize.X) {
             style = style.FitTo(ImGui.GetContentRegionAvail());
             actualSize = Polaroid.GetActualSize(style);
@@ -41,7 +41,7 @@ public static class ImageEditor {
         using (ImRaii.Group()) {
 
             var confirmReplace = image == null || ImGui.GetIO().KeyShift;
-            
+
             Vector2 buttonSize;
             var sideBySide = false;
             if (actualSize.X < ImGui.GetContentRegionAvail().X / 2) {
@@ -54,7 +54,7 @@ public static class ImageEditor {
                 Polaroid.Draw(() => image, imageProvider.ImageDetail, previewName, style);
                 buttonSize = new Vector2(ImGui.GetItemRectSize().X, ImGui.GetTextLineHeightWithSpacing() * 2);
             }
-            
+
             using (ImRaii.Disabled(NoScreenshot && !ImGui.GetIO().KeyAlt)) {
                 if (ImGuiExt.ButtonWithIcon("Take Screenshot", FontAwesomeIcon.Image, buttonSize)) {
                     Plugin.ScreenshotWindow.BeginScreenshot(style, imageProvider);
@@ -69,9 +69,9 @@ public static class ImageEditor {
                 controlFlags |= WindowControlFlags.PreventClose;
                 Plugin.MainWindow.AllowAutoClose = false;
                 _fileDialogManager.Reset();
-                _fileDialogManager.OpenFileDialog("Select Image...", $"Image Files ({string.Join(' ', IImageProvider.SupportedImageFileTypes)}){{{string.Join(',', IImageProvider.SupportedImageFileTypes.Select(t => $".{t}"))}}}", imageProvider.LoadFile, 1, startPath: PluginConfig.ImageFilePickerLastPath.OrDefault(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)));
+                _fileDialogManager.OpenFileDialog("Select Image...", $"Image Files ({string.Join(' ', IImageProvider.SupportedImageFileTypes)}){{{string.Join(',', IImageProvider.SupportedImageFileTypes.Select(t => $".{t}"))}}}", imageProvider.LoadFile, 1, PluginConfig.ImageFilePickerLastPath.OrDefault(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)));
             }
-            
+
             using (ImRaii.Disabled(image == null || imageProvider.IsUsingDefaultImage())) {
                 if (ImGuiExt.ButtonWithIcon("Crop Image", FontAwesomeIcon.Crop, buttonSize)) {
                     Plugin.MainWindow.OpenPage(new ImageEditorPage(imageProvider, style));
@@ -81,12 +81,12 @@ public static class ImageEditor {
             if (sideBySide) {
                 ImGui.EndGroup();
             }
-            
-        }
-            
-            
 
-        
-        
+        }
+
+
+
+
+
     }
 }

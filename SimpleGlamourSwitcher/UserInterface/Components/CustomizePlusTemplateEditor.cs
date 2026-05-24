@@ -34,10 +34,10 @@ public static class CustomizePlusTemplateEditor {
                 }
 
                 if (CustomizePlus.TryGetTemplatesFromProfile(profile, out var templates)) {
-                                    
+
                     foreach (var config in equipment.CustomizePlusTemplateConfigs) {
                         if (!templates.FindFirst(t => t.UniqueId == config.TemplateId, out var template)) continue;
-                        ImGui.TextColored(config.Enable ? ImGuiColors.HealerGreen : ImGuiColors.DPSRed, $"{(config.Enable?"Enable":"Disable")}");
+                        ImGui.TextColored(config.Enable ? ImGuiColors.HealerGreen : ImGuiColors.DPSRed, $"{(config.Enable ? "Enable" : "Disable")}");
                         ImGuiExt.SameLineNoSpace();
                         ImGui.Text($": {template.Name}");
                     }
@@ -55,13 +55,13 @@ public static class CustomizePlusTemplateEditor {
                 using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                     ImGui.TextWrapped($"Toggle customize+ templates when this item is equipped. Simple Glamour Switcher will attempt to revert changes when switching to another item in the same slot.");
                 }
-                
+
                 ImGui.Separator();
-                var inputStyle = new TextInputStyle() { PadTop = false, FramePadding = new Vector2(8, 4), BorderSize = 1};
-                
+                var inputStyle = new TextInputStyle { PadTop = false, FramePadding = new Vector2(8, 4), BorderSize = 1 };
+
                 if (CustomizePlus.TryGetTemplatesFromProfile(profile, out var templates)) {
                     using var _ = ImRaii.Child("scrolling_templates", new Vector2(ImGui.GetContentRegionAvail().X, 260 * ImGuiHelpers.GlobalScale));
-                    
+
                     foreach (var template in templates) {
                         var configured = equipment.CustomizePlusTemplateConfigs.Find(tc => tc.TemplateId == template.UniqueId);
                         ImGui.Spacing();
@@ -69,12 +69,12 @@ public static class CustomizePlusTemplateEditor {
                         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - ImGui.GetTextLineHeightWithSpacing() * 2 - ImGui.GetStyle().ItemSpacing.X);
                         if (configured != null) {
                             enable = configured.Enable;
-                            CustomInput.ReadOnlyInputText($"##template_{template.UniqueId}", template.Name, style: inputStyle with { TextColour = enable ? ImGuiColors.HealerGreen : ImGuiColors.DPSRed});
-                            
+                            CustomInput.ReadOnlyInputText($"##template_{template.UniqueId}", template.Name, style: inputStyle with { TextColour = enable ? ImGuiColors.HealerGreen : ImGuiColors.DPSRed });
+
                         } else {
-                            CustomInput.ReadOnlyInputText($"##template_{template.UniqueId}", template.Name, style: inputStyle with { TextColour = ImGui.GetColorU32(ImGuiCol.TextDisabled)});
+                            CustomInput.ReadOnlyInputText($"##template_{template.UniqueId}", template.Name, style: inputStyle with { TextColour = ImGui.GetColorU32(ImGuiCol.TextDisabled) });
                         }
-                        
+
                         ImGui.SameLine();
                         if (ImGui.Checkbox($"##enable_{template.UniqueId}", ref enable)) {
                             if (configured == null) {
@@ -87,11 +87,11 @@ public static class CustomizePlusTemplateEditor {
                         if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) {
                             equipment.CustomizePlusTemplateConfigs.RemoveAll(p => p.TemplateId == template.UniqueId);
                         }
-                        
+
                         if (ImGui.IsItemHovered()) {
                             using (ImRaii.Tooltip()) {
                                 if (configured != null) {
-                                    ImGui.Text($"Template '{template.Name}' will be {(configured.Enable?"enabled":"disabled")}\nwhen this outfit equips {slotName}.");
+                                    ImGui.Text($"Template '{template.Name}' will be {(configured.Enable ? "enabled" : "disabled")}\nwhen this outfit equips {slotName}.");
                                     ImGui.TextDisabled("Right Click to Clear");
                                 } else {
                                     ImGui.Text($"Template '{template.Name}' will be unchanged\nwhen this outfit equips {slotName}.");
@@ -106,7 +106,7 @@ public static class CustomizePlusTemplateEditor {
                 }
             }
         }
-        
+
         return false;
     }
 }

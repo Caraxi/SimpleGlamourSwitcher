@@ -12,19 +12,19 @@
         <Version>1.3.3.5</Version>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-      <ProjectReference Include="..\Glamourer.Api\Glamourer.Api.csproj" />
-      <ProjectReference Include="..\Glamourer.GameData\Glamourer.GameData.csproj" />
-      <ProjectReference Include="..\Penumbra.Api\Penumbra.Api.csproj" />
-      <ProjectReference Include="..\Penumbra.GameData\Penumbra.GameData.csproj" />
-      <PackageReference Include="ECommons" Version="3.2.0.10" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12"/>
+        <ProjectReference Include="..\Glamourer.Api\Glamourer.Api.csproj"/>
+        <ProjectReference Include="..\Glamourer.GameData\Glamourer.GameData.csproj"/>
+        <ProjectReference Include="..\Penumbra.Api\Penumbra.Api.csproj"/>
+        <ProjectReference Include="..\Penumbra.GameData\Penumbra.GameData.csproj"/>
+        <PackageReference Include="ECommons" Version="3.2.0.10"/>
     </ItemGroup>
     <ItemGroup>
-      <Compile Remove="PenumbraPathResolve.cs" />
+        <Compile Remove="PenumbraPathResolve.cs"/>
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="resources\folder.png" />
-      <None Remove="resources\previousFolder.png" />
-      <EmbeddedResource Include="resources\previousFolder.png" />
+        <EmbeddedResource Include="resources\folder.png"/>
+        <None Remove="resources\previousFolder.png"/>
+        <EmbeddedResource Include="resources\previousFolder.png"/>
     </ItemGroup>
 </Project>

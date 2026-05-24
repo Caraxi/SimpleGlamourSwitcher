@@ -20,23 +20,23 @@ public static class PenumbraIpc {
     public static readonly EventSubscriber<string, string, Dictionary<Assembly, (bool, string)>> ModUsageQueried = API.ModUsageQueried.Subscriber(PluginInterface, OnModUsageQueried);
 
 
-    private readonly static Dictionary<string, string> ModMovedParseList = new();
+    private static readonly Dictionary<string, string> ModMovedParseList = new();
     private static CancellationTokenSource? _modMovedCancellationTokenSource = new();
-    
+
     public static void QueueModMovedUpdate(string oldDir, string newDir) {
         _modMovedCancellationTokenSource?.Cancel();
         ModMovedParseList[oldDir] = newDir;
         _modMovedCancellationTokenSource = new CancellationTokenSource();
         Task.Delay(TimeSpan.FromSeconds(1), _modMovedCancellationTokenSource.Token).ContinueWith(ProcessModMoved);
     }
-    
+
     private static async void ProcessModMoved(Task previous) {
         try {
             if (!previous.IsCompletedSuccessfully) return;
             var token = _modMovedCancellationTokenSource?.Token ?? CancellationToken.None;
-            
+
             PluginLog.Info($"Processing Moved Mod(s)...");
-            var characters = await CharacterConfigFile.GetCharacterConfigurations(CharacterConfigFile.Filters.ShowHiddenCharacter, cancellationToken: token);
+            var characters = await CharacterConfigFile.GetCharacterConfigurations(CharacterConfigFile.Filters.ShowHiddenCharacter, token);
             foreach (var chr in characters) {
                 if (token.IsCancellationRequested) return;
                 PluginLog.Info($"Processing Character: {chr.Value.Name}");
@@ -71,7 +71,7 @@ public static class PenumbraIpc {
                                     edited |= UpdateModConfigs($"{outfit.Name} [{name}]", m.ModConfigs);
                                 }
                             }
-                            
+
                             foreach (var (name, applicable) in outfit.Equipment) {
                                 if (applicable is IHasModConfigs m) {
                                     edited |= UpdateModConfigs($"{outfit.Name} [{name}]", m.ModConfigs);
@@ -82,7 +82,7 @@ public static class PenumbraIpc {
                                 edited |= UpdateModConfigs($"{outfit.Name} [{cj}, MainHand]", weaponSet.MainHand.ModConfigs);
                                 edited |= UpdateModConfigs($"{outfit.Name} [{cj}, OffHand]", weaponSet.OffHand.ModConfigs);
                             }
-                            
+
                             break;
                         case EmoteConfigFile emote:
                             edited |= UpdateModConfigs(emote.Name, emote.ModConfigs);
@@ -97,7 +97,7 @@ public static class PenumbraIpc {
                             PluginLog.Error($"Error. {entry.Value.GetType().Name} is not supported for automatic migration.");
                             break;
                     }
-                    
+
                     if (edited) {
                         entry.Value.Save(true);
                     }
@@ -128,8 +128,8 @@ public static class PenumbraIpc {
 
     private static void InvalidateCache() {
         PluginLog.Verbose("Clearing Penumbra Caches");
-       _checkCurrentChangedItem = null;
-       Heliosphere.UpdateModList();
+        _checkCurrentChangedItem = null;
+        Heliosphere.UpdateModList();
     }
 
     public static void EnableEvents() {
@@ -138,7 +138,7 @@ public static class PenumbraIpc {
         ModMoved.Enable();
         ModUsageQueried.Enable();
     }
-    
+
     private class CustomAssembly(string customName) : Assembly {
         public static CustomAssembly Instance { get; } = new("S.G.S.");
         private AssemblyName CustomName { get; } = new(GetExecutingAssembly().FullName ?? customName) { Name = customName };
@@ -172,7 +172,7 @@ public static class PenumbraIpc {
     }
 
     private static DateTime _modUsageUpdateTime = DateTime.MinValue;
-    private static readonly Dictionary<string, Dictionary<Guid,(string CharacterName, HashSet<string> UsageNote)>> ModUsageCache = [];
+    private static readonly Dictionary<string, Dictionary<Guid, (string CharacterName, HashSet<string> UsageNote)>> ModUsageCache = [];
 
     private static async Task UpdateModUsageCache() {
         ModUsageCache.Clear();
@@ -218,7 +218,7 @@ public static class PenumbraIpc {
                     foreach (var mod in modContainer.ModConfigs) {
                         var modCache = ModUsageCache.GetOrCreate(mod.ModDirectory, []);
                         var charCache = modCache.GetOrCreate(characterGuid, (characterFile.Name, []));
-                        
+
                         if (string.IsNullOrWhiteSpace(slotName)) {
                             charCache.UsageNote.Add($"{characterFile.ParseFolderPath(entry.Folder, false, true, true)}{entry.Name}");
                         } else {
@@ -232,17 +232,17 @@ public static class PenumbraIpc {
         _modUsageUpdateTime = DateTime.Now;
         PluginLog.Info($"Updated Mod Usage Cache in {time.Elapsed.TotalMilliseconds} milliseconds.");
     }
-    
+
     public static readonly API.GetCollections GetCollections = new(PluginInterface);
     public static readonly API.GetCollection GetCollection = new(PluginInterface);
-    public static readonly API.GetCollectionForObject  GetCollectionForObject = new(PluginInterface);
+    public static readonly API.GetCollectionForObject GetCollectionForObject = new(PluginInterface);
     public static readonly API.SetCollectionForObject SetCollectionForObject = new(PluginInterface);
     public static readonly API.Legacy.SetCollectionForObject LegacySetCollectionForObject = new(PluginInterface);
     public static readonly API.SetCollection SetCollection = new(PluginInterface);
     public static readonly API.GetCurrentModSettings GetCurrentModSettings = new(PluginInterface);
     public static readonly API.ResolvePlayerPaths ResolvePlayerPaths = new(PluginInterface);
     public static readonly API.GetModDirectory GetModDirectory = new(PluginInterface);
-    
+
     private static readonly API.CheckCurrentChangedItemFunc CheckCurrentChangedItemFunc = new(PluginInterface);
     private static Func<string, (string ModDirectory, string ModName)[]>? _checkCurrentChangedItem;
 
@@ -250,30 +250,29 @@ public static class PenumbraIpc {
         _checkCurrentChangedItem ??= CheckCurrentChangedItemFunc.Invoke();
         return _checkCurrentChangedItem(changedItem);
     }
-    
+
     public static readonly API.GetCurrentModSettingsWithTemp GetCurrentModSettingsWithTemp = new(PluginInterface);
-    
+
     public static readonly API.CreateTemporaryCollection CreateTemporaryCollection = new(PluginInterface);
     public static readonly API.AssignTemporaryCollection AssignTemporaryCollection = new(PluginInterface);
-    
+
     public static readonly API.RedrawObject RedrawObject = new(PluginInterface);
-    
-    
+
+
     public static readonly API.GetChangedItemsForCollection GetChangedItemsForCollection = new(PluginInterface);
     public static readonly API.GetChangedItemAdapterDictionary GetChangedItemAdapterDictionary = new(PluginInterface);
     public static readonly API.GetGameObjectResourceTrees GetGameObjectResourceTrees = new(PluginInterface);
     public static readonly API.GetModList GetModList = new(PluginInterface);
     public static readonly API.GetAllModSettings GetAllModSettings = new(PluginInterface);
-    
+
     public static readonly API.SetTemporaryModSettingsPlayer SetTemporaryModSettingsPlayer = new(PluginInterface);
     public static readonly API.SetTemporaryModSettings SetTemporaryModSettings = new(PluginInterface);
-    
+
     public static readonly API.RemoveTemporaryModSettings RemoveTemporaryModSettings = new(PluginInterface);
     public static readonly API.RemoveTemporaryModSettingsPlayer RemoveTemporaryModSettingsPlayer = new(PluginInterface);
-    
+
     public static readonly API.RemoveAllTemporaryModSettings RemoveAllTemporaryModSettings = new(PluginInterface);
     public static readonly API.RemoveAllTemporaryModSettingsPlayer RemoveAllTemporaryModSettingsPlayer = new(PluginInterface);
-    
+
     public static readonly API.OpenMainWindow OpenMainWindow = new(PluginInterface);
 }
-    

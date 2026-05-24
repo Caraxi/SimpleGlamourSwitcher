@@ -26,12 +26,12 @@ public static class GlamourerIpc {
     public static readonly EventSubscriber<nint> StateChanged = API.StateChanged.Subscriber(PluginInterface);
 
     public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment, OutfitWeapons outfitWeapons) {
-        
+
         var state = GetState(0);
         if (state == null) return null;
 
         var stateMaterials = state.Materials ?? new Dictionary<MaterialValueIndex, GlamourerMaterial>();
-        
+
         // var appearance = config.Appearance;
 
         var obj = new JObject();
@@ -39,10 +39,10 @@ public static class GlamourerIpc {
         var parameters = new JObject();
         var equipment = new JObject();
         var materials = new JObject();
-        
+
         if (appearance.Apply) {
             if (appearance.Clan.Apply) {
-                customize.Add("Race", new JObject() {
+                customize.Add("Race", new JObject {
                     { "Apply", true }, {
                         "Value", appearance.Clan.Value switch {
                             1 or 2 => 1,
@@ -55,9 +55,9 @@ public static class GlamourerIpc {
                             15 or 16 => 8,
                             _ => 1,
                         }
-                    }
+                    },
                 });
-                customize.Add("Clan", new JObject() { { "Apply", true }, { "Value", appearance.Clan.Value } });
+                customize.Add("Clan", new JObject { { "Apply", true }, { "Value", appearance.Clan.Value } });
             }
 
             foreach (var v in Enum.GetValues<CustomizeIndex>()) {
@@ -74,7 +74,7 @@ public static class GlamourerIpc {
             }
         }
 
-        
+
         // Required Customize Values
         if (!customize.ContainsKey("Race") || !customize.ContainsKey("Clan")) {
             customize["Race"] = new JObject {
@@ -90,19 +90,19 @@ public static class GlamourerIpc {
                         15 or 16 => 8,
                         _ => 1,
                     }
-                }
+                },
             };
-            
-            customize["Clan"] =  new JObject { { "Apply", true }, { "Value", state.Customize.Clan.Value } };
-            
+
+            customize["Clan"] = new JObject { { "Apply", true }, { "Value", state.Customize.Clan.Value } };
+
         }
 
         var revertMaterial = new JObject {
             { "Revert", true },
-            { "Enabled", true }
+            { "Enabled", true },
         };
-        
-         void AddMaterial(ApplicableMaterial material) {
+
+        void AddMaterial(ApplicableMaterial material) {
             if (material.Mode == "Legacy") {
                 materials[material.Index] = new JObject {
                     ["Mode"] = "Legacy",
@@ -118,7 +118,7 @@ public static class GlamourerIpc {
                     ["EmissiveB"] = material.EmissiveB,
                     ["Gloss"] = material.Gloss,
                     ["Enabled"] = material.Apply,
-                    ["Revert"] = false
+                    ["Revert"] = false,
                 };
             } else if (material.Mode == "Dawntrail") {
                 materials[material.Index] = new JObject {
@@ -138,7 +138,7 @@ public static class GlamourerIpc {
                     ["SheenTint"] = material.SheenTint,
                     ["SheenAperture"] = material.SheenAperture,
                     ["Enabled"] = material.Apply,
-                    ["Revert"] = false
+                    ["Revert"] = false,
                 };
             } else {
                 PluginLog.Error($"Invalid Material Mode: {material.Mode}");
@@ -153,15 +153,15 @@ public static class GlamourerIpc {
             if (outfitEquipment.VisorToggle.Apply) {
                 equipment["Visor"] = new JObject { { "Apply", true }, { "IsToggled", outfitEquipment.VisorToggle.Toggle } };
             }
-            
+
             if (outfitEquipment.WeaponVisible.Apply) {
                 equipment["Weapon"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.WeaponVisible.Toggle } };
             }
-            
+
             if (outfitEquipment.VieraEarsVisible.Apply) {
                 equipment["VieraEars"] = new JObject { { "Apply", true }, { "Show", outfitEquipment.VieraEarsVisible.Toggle } };
             }
-            
+
             foreach (var slot in Common.GetGearSlots()) {
                 if (outfitEquipment[slot].Apply) {
                     foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToHumanSlot() == slot)) {
@@ -182,24 +182,24 @@ public static class GlamourerIpc {
                     foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToEquipSlot() == EquipSlot.MainHand)) {
                         materials[mIndex.Key.ToString("X16")] = revertMaterial;
                     }
-                    
+
                     foreach (var material in cjWeapons.MainHand.Materials) {
                         AddMaterial(material);
                     }
                 }
-                
+
                 if (cjWeapons.OffHand.Apply) {
                     foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToEquipSlot() == EquipSlot.OffHand)) {
                         materials[mIndex.Key.ToString("X16")] = revertMaterial;
                     }
-                    
+
                     foreach (var material in cjWeapons.OffHand.Materials) {
                         AddMaterial(material);
                     }
                 }
             }
         }
-        
+
         obj.Add("Customize", customize);
         obj.Add("Equipment", equipment);
         obj.Add("Parameters", parameters);
@@ -218,7 +218,7 @@ public static class GlamourerIpc {
                 RevertStateName.Invoke(GameHelper.PlayerNameString, flags: flags);
             });
         }
-        
+
         var obj = GetCustomizationJObject(appearance, equipment, weapons);
         if (obj == null) return;
 
@@ -226,7 +226,7 @@ public static class GlamourerIpc {
     }
 
     public static async Task ApplyItem(HumanSlot slot, ApplicableItem<HumanSlot> item) {
-        var equipment = new OutfitEquipment() { Apply = true };
+        var equipment = new OutfitEquipment { Apply = true };
 
         if (slot == HumanSlot.Face && item is ApplicableBonus bo) {
             equipment.Face = bo;
@@ -245,7 +245,7 @@ public static class GlamourerIpc {
                 default: throw new ArgumentOutOfRangeException(nameof(slot), slot, null);
             }
         }
-        var obj = GetCustomizationJObject(new OutfitAppearance { Apply = false}, equipment, new OutfitWeapons { Apply = false });
+        var obj = GetCustomizationJObject(new OutfitAppearance { Apply = false }, equipment, new OutfitWeapons { Apply = false });
         if (obj == null) return;
         ApplyState.Invoke(obj, 0, 0, ApplyFlag.Customization);
     }

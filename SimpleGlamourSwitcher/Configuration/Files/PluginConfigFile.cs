@@ -30,22 +30,22 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public bool SharedFoldersOnOwnLine = false;
     public AnimatedImageConfiguration AnimatedImageConfiguration = new();
     public EquippedWindowConfig EquippedWindowConfig = new();
-    
+
     [JsonIgnore]
     public Style? CustomStyle {
         get {
             if (CustomCharacterPolaroidStyle == null) return null;
             return Style.Default with {
-                CharacterPolaroid = CustomCharacterPolaroidStyle ?? Style.Default.CharacterPolaroid
+                CharacterPolaroid = CustomCharacterPolaroidStyle ?? Style.Default.CharacterPolaroid,
             };
         }
 
         set => CustomCharacterPolaroidStyle = value?.CharacterPolaroid;
     }
-    
+
     public Dictionary<string, int> ModSlotIdentifier = [];
     public PolaroidStyle? CustomCharacterPolaroidStyle = null;
-    
+
     public bool ShowHiddenCharacters;
     public bool LogActionsToChat;
     public bool ShowButtonIcons = true;
@@ -58,7 +58,7 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
     public HashSet<CustomizeIndex> DisableAutoModsCustomize = [];
     public HashSet<HumanSlot> DisableAutoModsEquip = [];
     public HashSet<EquipSlot> DisableAutoModsWeapons = [];
-    
+
     public static FileInfo GetFile(Guid? guid = null) {
         if (guid != null) throw new Exception($"{nameof(PluginConfigFile)} does not support GUID");
         return new FileInfo(Path.Join(PluginInterface.GetPluginConfigDirectory(), "config.json"));
@@ -69,10 +69,8 @@ public class PluginConfigFile : ConfigFile<PluginConfigFile, RootConfig>, IParen
             Version = 1;
         }
     }
-    
-    public static DirectoryInfo GetChildDirectory(PluginConfigFile? config) {
-        return new DirectoryInfo(Path.Join(PluginInterface.GetPluginConfigDirectory()));
-    }
+
+    public static DirectoryInfo GetChildDirectory(PluginConfigFile? config) => new(Path.Join(PluginInterface.GetPluginConfigDirectory()));
 
     public static string GetFileName(Guid? guid) => "config.json";
 }

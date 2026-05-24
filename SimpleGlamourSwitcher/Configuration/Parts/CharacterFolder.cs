@@ -13,47 +13,42 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts;
 
-
-public class PreviousCharacterFolder : CharacterFolder, IDefaultOutfitOptionsProvider{
-    public static IDalamudTextureWrap? GetImage() {
-        return Common.GetEmbeddedTexture("resources/previousFolder.png").GetWrapOrDefault();
-    }
+public class PreviousCharacterFolder : CharacterFolder, IDefaultOutfitOptionsProvider {
+    public static IDalamudTextureWrap? GetImage() => Common.GetEmbeddedTexture("resources/previousFolder.png").GetWrapOrDefault();
 }
 
 public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
     [JsonIgnore] public string TypeName => "Folder";
     [JsonIgnore] private bool usingDefaultTexture = true;
-    
+
     [JsonIgnore]
     public CharacterConfigFile? ConfigFile { get; set; }
-    
+
     [JsonIgnore]
     public Guid Guid { get; set; }
-    
+
     [JsonIgnore]
     public bool Dirty { get; set; }
-    
+
     // public string Name = string.Empty;
     public string Description { get; set; } = string.Empty;
-    
+
     public string Name { get; set; } = string.Empty;
 
     public PolaroidStyle? OutfitPolaroidStyle;
     public PolaroidStyle? FolderPolaroidStyle;
-    
+
     public Guid Parent = Guid.Empty;
 
     Guid ICommonDetails.Folder {
         get => Parent;
         set => Parent = value;
     }
-    
+
     public bool Hidden;
 
-    public static IDalamudTextureWrap? GetDefaultFolderImage() {
-        return Common.GetEmbeddedTexture("resources/folder.png").GetWrapOrDefault();
-    }
-    
+    public static IDalamudTextureWrap? GetDefaultFolderImage() => Common.GetEmbeddedTexture("resources/folder.png").GetWrapOrDefault();
+
     public HashSet<CustomizeIndex>? CustomDefaultEnabledCustomizeIndexes;
     public HashSet<HumanSlot>? CustomDefaultDisabledEquipmentSlots;
     public HashSet<EquipSlot>? CustomDefaultDisabledWeaponSlots;
@@ -66,51 +61,51 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
 
     public bool? CustomDefaultRevertEquip;
     public bool? CustomDefaultRevertCustomize;
-    
+
     public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Inherit;
 
     public DefaultLinks? CustomDefaultLinks;
-    
+
     public class DefaultLinks {
         public List<Guid> Before = [];
         public List<Guid> After = [];
     }
-    
+
     [JsonIgnore]
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes => CustomDefaultEnabledCustomizeIndexes ?? ConfigFile?.DefaultEnabledCustomizeIndexes ?? [];
-    
+
     [JsonIgnore]
-    public HashSet<HumanSlot> DefaultDisabledEquipmentSlots => CustomDefaultDisabledEquipmentSlots ?? ConfigFile?.DefaultDisabledEquipmentSlots ?? [];    
-    
+    public HashSet<HumanSlot> DefaultDisabledEquipmentSlots => CustomDefaultDisabledEquipmentSlots ?? ConfigFile?.DefaultDisabledEquipmentSlots ?? [];
+
     [JsonIgnore]
     public HashSet<EquipSlot> DefaultDisabledWeaponSlots => CustomDefaultDisabledWeaponSlots ?? ConfigFile?.DefaultDisabledWeaponSlots ?? [];
 
     [JsonIgnore]
     public HashSet<AppearanceParameterKind> DefaultEnabledParameterKinds => CustomDefaultEnabledParameterKinds ?? ConfigFile?.DefaultEnabledParameterKinds ?? [];
-    
+
     [JsonIgnore]
     public HashSet<ToggleType> DefaultEnabledToggles => CustomDefaultEnabledToggles ?? ConfigFile?.DefaultEnabledToggles ?? [];
 
-    [JsonIgnore] public bool DefaultRevertEquip => CustomDefaultRevertEquip ?? ConfigFile?.DefaultRevertEquip  ?? false;
-    [JsonIgnore] public bool DefaultRevertCustomize => CustomDefaultRevertCustomize ?? ConfigFile?.DefaultRevertCustomize  ?? false;
-    
+    [JsonIgnore] public bool DefaultRevertEquip => CustomDefaultRevertEquip ?? ConfigFile?.DefaultRevertEquip ?? false;
+    [JsonIgnore] public bool DefaultRevertCustomize => CustomDefaultRevertCustomize ?? ConfigFile?.DefaultRevertCustomize ?? false;
+
     [JsonIgnore]
     public List<Guid> DefaultLinkBefore => CustomDefaultLinks?.Before ?? ConfigFile?.DefaultLinkBefore ?? [];
-    
+
     [JsonIgnore]
     public List<Guid> DefaultLinkAfter => CustomDefaultLinks?.After ?? ConfigFile?.DefaultLinkAfter ?? [];
-    
-    
+
+
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid) => GetImage(characterConfig, folderGuid, out _);
 
     private static readonly Dictionary<Guid, (DateTime TimeChecked, string? Path)> FolderCheckCache = new();
-    
+
     public static IDalamudTextureWrap? GetImage(CharacterConfigFile? characterConfig, Guid folderGuid, out bool isDefault) {
         if (TempImagePath.TryGetValue(folderGuid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
             isDefault = false;
             return CustomTextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
         }
-        
+
         isDefault = true;
         if (characterConfig == null || folderGuid == Guid.Empty) return GetDefaultFolderImage();
 
@@ -123,7 +118,7 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
             isDefault = true;
             return GetDefaultFolderImage();
         }
-        
+
         var dir = characterConfig.ImagesDirectory;
         var fileName = Path.Join(dir.FullName, $"{folderGuid}");
 
@@ -140,7 +135,7 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
     }
 
     public string GetPath(CharacterConfigFile characterConfigFile) {
-        if (Parent == Guid.Empty || !characterConfigFile.Folders.TryGetValue(Parent, out var parentFolder)) 
+        if (Parent == Guid.Empty || !characterConfigFile.Folders.TryGetValue(Parent, out var parentFolder))
             return $"{characterConfigFile.Name}/{Name}";
         return $"{parentFolder.GetPath(characterConfigFile)}/{Name}";
     }
@@ -168,15 +163,15 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
     }
 
     private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
-    
+
     public void SetImage(FileInfo fileInfo) {
         if (ConfigFile == null) return;
         FolderCheckCache.Remove(Guid);
-        
+
         var dir = ConfigFile.ImagesDirectory;
         if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
         var fileName = Path.Join(dir.FullName, $"{Guid}");
-        
+
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
                 File.Delete($"{fileName}.{type}");
@@ -188,21 +183,19 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
     }
 
     public void SetImageDetail(ImageDetail imageDetail) {
-        this.ImageDetail = imageDetail.Clone();
-        this.ConfigFile!.Dirty = true;
-        this.ConfigFile?.Save();
+        ImageDetail = imageDetail.Clone();
+        ConfigFile!.Dirty = true;
+        ConfigFile?.Save();
     }
 
-    public bool IsUsingDefaultImage() {
-        return usingDefaultTexture;
-    }
+    public bool IsUsingDefaultImage() => usingDefaultTexture;
 
     public FolderSortStrategy GetFolderSortStrategy() {
         if (FolderSortStrategy != FolderSortStrategy.Inherit) return FolderSortStrategy;
         if (ConfigFile == null) return PluginConfig.FolderSortStrategy;
 
         if (Parent == Guid.Empty) return ConfigFile.GetFolderSortStrategy();
-        
+
         if (ConfigFile.Folders.TryGetValue(Parent, out var parentFolder)) {
             return parentFolder.GetFolderSortStrategy();
         }
@@ -214,58 +207,55 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
 
         try {
             if (ConfigFile == null) return;
-        
+
             var guid = Guid.NewGuid();
             var clone = this.Clone();
             clone.ConfigFile = character;
             clone.Parent = parentFolder ?? Guid.Empty;
             character.Folders.Add(guid, clone);
-            foreach(var (_, childFolder) in ConfigFile.Folders.Where(f => f.Value.Parent.Equals(this.Guid))) {
+            foreach (var (_, childFolder) in ConfigFile.Folders.Where(f => f.Value.Parent.Equals(Guid))) {
                 childFolder.CloneTo(character, guid, false);
             }
 
             foreach (var (entryGuid, entry) in await ConfigFile.GetEntries(Guid)) {
                 var entryClone = entry.CloneTo(character);
                 if (entryClone == null) continue;
-                
+
                 if (entry is IImageProvider ip && entryClone is IImageProvider ip2) {
                     if (ip.TryGetImageFileInfo(out var imageFile)) {
                         ip2.SetImageDetail(ip.ImageDetail);
                         ip2.SetImage(imageFile);
                     }
                 }
-          
+
                 entryClone.Folder = guid;
                 entryClone.Save(true);
             }
-            
+
             if (doSave) character.Save(true);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             PluginLog.Error(e, "Failed to clone folder.");
         }
     }
-    
+
     public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
         if (ConfigFile == null) {
             fileInfo = null;
             return false;
         }
-        
+
         var dir = ConfigFile.ImagesDirectory;
         if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
         var fileName = Path.Join(dir.FullName, $"{Guid}");
-        
+
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
-                fileInfo =  new FileInfo($"{fileName}.{type}");
+                fileInfo = new FileInfo($"{fileName}.{type}");
                 return fileInfo.Exists;
             }
         }
-        
+
         fileInfo = null;
         return false;
     }
 }
-
-

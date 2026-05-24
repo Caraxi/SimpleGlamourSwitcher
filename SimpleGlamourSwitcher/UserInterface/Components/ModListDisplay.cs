@@ -19,7 +19,7 @@ public static class ModListDisplay {
     private static readonly Cached<Dictionary<string, string>> CachedModList = new(TimeSpan.FromSeconds(5), () => PenumbraIpc.GetModList.Invoke());
     private static string _locatingMod = string.Empty;
     private static string modSearch = string.Empty;
-    
+
     private static bool TryParseModName(string modDirectory, out string modName) {
         if (!CachedModList.Value.TryGetValueInsensitive(modDirectory, out modName!)) {
             modName = modDirectory;
@@ -29,7 +29,7 @@ public static class ModListDisplay {
     }
 
     public static void ShowModLinkButton(IHasModConfigs modable) {
-        
+
         if (modable.ModConfigs.Count == 1) {
             ImGui.SameLine();
             using (ImRaii.PushFont(UiBuilder.IconFont)) {
@@ -56,10 +56,10 @@ public static class ModListDisplay {
 
             ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), FontAwesomeIcon.Link.ToIconString());
         }
-        
-        
+
+
     }
-    
+
     public static bool Show(IHasModConfigs modable, string slotName, float width = -1, bool displayOnly = false, bool includeCustomizePlus = true) {
         var edited = false;
         var p = ImGui.GetItemRectMax();
@@ -72,7 +72,7 @@ public static class ModListDisplay {
         if (includeCustomizePlus && modable is IHasCustomizePlusTemplateConfigs) {
             extraButtons++;
         }
-        
+
         var modName = "No Associated Mods";
         Vector2 popupPosition;
         if (configs.Count > 0) {
@@ -92,7 +92,7 @@ public static class ModListDisplay {
             }
             popupPosition = ImGui.GetItemRectMin();
             _buttonSize = new Vector2(ImGui.GetItemRectSize().Y);
-            
+
             if (ImGui.IsItemHovered())
                 using (ImRaii.Tooltip()) {
                     foreach (var modConfig in configs) {
@@ -101,10 +101,10 @@ public static class ModListDisplay {
                             using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, !modExists)) {
                                 ImGui.Text(name);
                             }
-                            
+
                             if (ImGui.GetIO().KeyShift) ImGui.Separator();
                         }
-                        
+
                         if (!exists) {
                             using (ImRaii.PushIndent(1, configs.Count > 1)) {
                                 ImGui.TextColored(ImGuiColors.DalamudRed, "This mod does not exist.");
@@ -123,14 +123,14 @@ public static class ModListDisplay {
 
 
             ShowModLinkButton(modable);
-            
-            
+
+
         } else {
             ImGui.SetNextItemWidth(width - ImGui.GetStyle().ItemSpacing.X * extraButtons - _buttonSize.X * extraButtons);
             using (ImRaii.PushColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled))) {
                 ImGui.InputText("##modInfo", ref modName, 64, ImGuiInputTextFlags.ReadOnly);
             }
-            
+
             popupPosition = ImGui.GetItemRectMin();
         }
 
@@ -139,12 +139,12 @@ public static class ModListDisplay {
             ImGui.SameLine();
 
             var id = $"##editMods_{ImGui.GetID("editModsPopup")}_{slotName}";
-            
-            
+
+
             if (ImGui.Button($"##{id}_open", _buttonSize)) {
                 ImGui.OpenPopup(id);
             }
-            
+
             ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), FontAwesomeIcon.Edit.ToIconString());
 
             ImGui.SetNextWindowPos(popupPosition);
@@ -163,7 +163,7 @@ public static class ModListDisplay {
                         var m = modable.ModConfigs[i];
                         using var editModId = ImRaii.PushId($"editMod_{m.ModDirectory}");
                         var exists = TryParseModName(m.ModDirectory, out var editModName);
-                        
+
                         if (ImGuiExt.IconButton("##trash", FontAwesomeIcon.Trash, _buttonSize) && ImGui.GetIO().KeyShift) {
                             modable.ModConfigs.Remove(m);
                             edited = true;
@@ -177,7 +177,7 @@ public static class ModListDisplay {
                                 }
                             }
                         }
-                        
+
                         if (exists) {
                             ImGui.SameLine();
                             if (ImGuiExt.IconButton("##update", FontAwesomeIcon.ArrowsSpin, _buttonSize) && ImGui.GetIO().KeyShift) {
@@ -187,7 +187,7 @@ public static class ModListDisplay {
                                 OutfitModConfig modConfig;
                                 if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                     var modSettings = getModSettings.Item2.Value;
-                                    modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(m.ModDirectory)){
+                                    modConfig = new OutfitModConfig(m.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(m.ModDirectory)) {
                                         ProteusModConfig = OutfitModConfig.GetProteusModConfig(m.ModDirectory),
                                     };
                                 } else {
@@ -213,7 +213,7 @@ public static class ModListDisplay {
                                         };
                                         ShowModSettingsTable(modConfig);
                                     } else {
-                                        var modConfig = new OutfitModConfig(m.ModDirectory, false, 0, [], Heliosphere.GetId(m.ModDirectory)){
+                                        var modConfig = new OutfitModConfig(m.ModDirectory, false, 0, [], Heliosphere.GetId(m.ModDirectory)) {
                                             ProteusModConfig = OutfitModConfig.GetProteusModConfig(m.ModDirectory),
                                         };
                                         ShowModSettingsTable(modConfig, ImGuiTableFlags.BordersOuter);
@@ -272,25 +272,25 @@ public static class ModListDisplay {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
                     ImGui.InputTextWithHint("##search", "Search...", ref modSearch, 256);
                     ImGui.Separator();
-                    
+
                     if (ImGui.BeginChild("modList", new Vector2(ImGui.GetContentRegionAvail().X, 400 * ImGuiHelpers.GlobalScale))) {
                         foreach (var mod in modList.OrderBy(k => k.Value)) {
                             if (!string.IsNullOrWhiteSpace(modSearch) && !(mod.Key.Contains(modSearch, StringComparison.InvariantCultureIgnoreCase) || mod.Value.Contains(modSearch, StringComparison.InvariantCultureIgnoreCase))) continue;
 
                             var isProteus = ProteusIpc.IsProteusMod(mod.Key);
-                            
+
                             if (ImGui.Selectable($"{mod.Value}##{mod.Key}")) {
                                 if (string.IsNullOrWhiteSpace(_locatingMod)) {
                                     var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
                                     var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, mod.Key);
                                     if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                         var modSettings = getModSettings.Item2.Value;
-                                        var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.Key)){
+                                        var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.Key)) {
                                             ProteusModConfig = OutfitModConfig.GetProteusModConfig(mod.Key),
                                         };
                                         modable.ModConfigs.Add(modConfig);
                                     } else {
-                                        var modConfig = new OutfitModConfig(mod.Key, false, 0, [],  Heliosphere.GetId(mod.Key)){
+                                        var modConfig = new OutfitModConfig(mod.Key, false, 0, [], Heliosphere.GetId(mod.Key)) {
                                             ProteusModConfig = OutfitModConfig.GetProteusModConfig(mod.Key),
                                         };
                                         modable.ModConfigs.Add(modConfig);
@@ -315,19 +315,19 @@ public static class ModListDisplay {
                                 ImGui.TextDisabled(" [Proteus]");
                                 hovered |= ImGui.IsItemHovered();
                             }
-                            
+
                             if (hovered) {
                                 using (ImRaii.Tooltip()) {
                                     var getCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
                                     var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(getCollection.EffectiveCollection.Id, mod.Key);
                                     if (getModSettings is { Item1: PenumbraApiEc.Success, Item2: not null }) {
                                         var modSettings = getModSettings.Item2.Value;
-                                        var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.Key)){
+                                        var modConfig = new OutfitModConfig(mod.Key, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.Key)) {
                                             ProteusModConfig = OutfitModConfig.GetProteusModConfig(mod.Key),
                                         };
                                         ShowModSettingsTable(modConfig);
                                     } else {
-                                        var modConfig = new OutfitModConfig(mod.Key, false, 0, [], Heliosphere.GetId(mod.Key)){
+                                        var modConfig = new OutfitModConfig(mod.Key, false, 0, [], Heliosphere.GetId(mod.Key)) {
                                             ProteusModConfig = OutfitModConfig.GetProteusModConfig(mod.Key),
                                         };
                                         ShowModSettingsTable(modConfig);
@@ -340,21 +340,21 @@ public static class ModListDisplay {
                     ImGui.EndChild();
                     ImGui.EndCombo();
                 }
-                
+
                 if (ImGui.Button("Done", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 1.5f))) {
                     ImGui.CloseCurrentPopup();
                 }
-                
+
                 ImGui.EndPopup();
             }
-            
-        
+
+
         }
         if (includeCustomizePlus && modable is IHasCustomizePlusTemplateConfigs cPlusTemplateConfig && ActiveCharacter?.CustomizePlusProfile != null && ActiveCharacter.CustomizePlusProfile != Guid.Empty) {
             ImGui.SameLine();
             edited |= CustomizePlusTemplateEditor.ShowButton(cPlusTemplateConfig, slotName, _buttonSize, popupPosition, s.X);
         }
-        
+
         return edited;
     }
 
@@ -366,14 +366,14 @@ public static class ModListDisplay {
                 ImGui.TableNextColumn();
                 ImGui.Text($"{modConfig.ModDirectory}");
             }
-            
+
             if (modConfig.HeliosphereId != null) {
                 ImGui.TableNextColumn();
                 ImGui.TextDisabled("Heliosphere ID");
                 ImGui.TableNextColumn();
                 ImGui.Text($"{modConfig.HeliosphereId}");
             }
-            
+
             ImGui.TableNextColumn();
             ImGui.TextDisabled("Enabled");
             ImGui.TableNextColumn();
@@ -394,25 +394,25 @@ public static class ModListDisplay {
                     ImGui.TableNextColumn();
                     ImGui.Separator();
                     ImGui.TextDisabled("Proteus Colour Tables");
-                    
+
                     ImGui.TableNextColumn();
                     ImGui.Separator();
-                    
+
                     var proteusConfig = modConfig.ProteusModConfig;
-                    
+
                     /*
                     ImGui.TableNextColumn();
                     ImGui.TextDisabled($" - Enabled");
                     ImGui.TableNextColumn();
                     ImGui.Text($"{proteusConfig.Enabled}");
-                    
+
                     ImGui.TableNextColumn();
                     ImGui.TextDisabled($" - Priority");
                     ImGui.TableNextColumn();
                     ImGui.Text($"{proteusConfig.Priority}");
 
                     */
-                    
+
                     void ShowColourSubRow(int row, char suffix, ProteusColorSubRow? subRow) {
                         if (subRow == null) return;
                         ImGui.TextDisabled($"{row:00}{suffix}");
@@ -427,7 +427,7 @@ public static class ModListDisplay {
                         var opacity = $"{subRow.Opacity:+#;-#;0}";
                         ImGui.InputText("##", ref opacity);
                     }
-                    
+
                     void ShowColourTable(ProteusColorTable? colourTable) {
                         if (colourTable == null) return;
 
@@ -435,9 +435,9 @@ public static class ModListDisplay {
                             ShowColourSubRow(r.Row, 'A', r.SubRowA);
                             ShowColourSubRow(r.Row, 'B', r.SubRowB);
                         }
-                        
+
                     }
-                    
+
                     foreach (var o in proteusConfig.OptionConfigs) {
                         if (o.OptionDescriptor.GroupName == null && proteusConfig.OptionConfigs.Count == 1) {
                             ShowColourTable(o.ColorTable);
@@ -447,15 +447,15 @@ public static class ModListDisplay {
                             ImGui.TableNextColumn();
                             ShowColourTable(o.ColorTable);
                         }
-                       
+
                     }
-                    
-                    
+
+
                 }
-                
-                
+
+
             }
-                               
+
             ImGui.EndTable();
         }
     }

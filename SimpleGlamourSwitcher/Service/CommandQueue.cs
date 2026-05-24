@@ -24,7 +24,7 @@ public class ActionQueueService : ConcurrentQueue<Action>, IDisposable {
 
             var oldLength = utf8->Length;
 
-            utf8->SanitizeString(AllowedEntities.UppercaseLetters | AllowedEntities.LowercaseLetters | AllowedEntities.Numbers | AllowedEntities.SpecialCharacters | AllowedEntities.CharacterList | AllowedEntities.OtherCharacters | AllowedEntities.Payloads |AllowedEntities.Unknown9);
+            utf8->SanitizeString(AllowedEntities.UppercaseLetters | AllowedEntities.LowercaseLetters | AllowedEntities.Numbers | AllowedEntities.SpecialCharacters | AllowedEntities.CharacterList | AllowedEntities.OtherCharacters | AllowedEntities.Payloads | AllowedEntities.Unknown9);
 
             if (utf8->Length != oldLength) {
                 throw new ArgumentException($"message contained invalid characters", nameof(message));
@@ -56,7 +56,7 @@ public class ActionQueueService : ConcurrentQueue<Action>, IDisposable {
             });
         });
     }
-    
+
     private void TickQueue(IFramework framework) {
         if (!TryDequeue(out var action)) return;
         action.Invoke();

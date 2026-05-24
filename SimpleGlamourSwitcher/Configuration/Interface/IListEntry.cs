@@ -28,14 +28,13 @@ public interface IAutoCommandProvider {
 public interface IListEntry : ICommonDetails, ISortNameProvider, IAutoCommandProvider {
     public void Save(bool force = false);
     public Task Apply();
-    
+
     public bool IsValid { get; }
     public IReadOnlyList<string> ValidationErrors { get; }
     FontAwesomeIcon TypeIcon { get; }
     public FileInfo? GetImageFile();
-    
+
     void Delete();
 
     IListEntry? CloneTo(CharacterConfigFile characterConfigFile);
 }
-

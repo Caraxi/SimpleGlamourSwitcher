@@ -13,31 +13,31 @@ namespace SimpleGlamourSwitcher.UserInterface.Components;
 public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? outfit, List<Guid> linkBefore, List<Guid> linkAfter) {
 
     public OutfitLinksEditor(CharacterConfigFile character, List<Guid> linkBefore, List<Guid> linkAfter) : this(character, null, linkBefore, linkAfter) {
-        
+
     }
-    
-    
+
+
     private readonly LazyAsync<OrderedDictionary<Guid, IListEntry>> otherOutfits = new(character.GetEntries);
     private readonly LazyAsync<OrderedDictionary<Guid, IListEntry>> sharedOutfits = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, IListEntry>()) : SharedCharacter.GetEntries());
 
     [Flags]
-    private enum Button : uint  {
+    private enum Button : uint {
         None = 0,
         Delete = 1,
         Up = 2,
-        Down = 4
+        Down = 4,
     }
 
     private Button DrawButtons(Button disabled = Button.None) {
         var clicked = Button.None;
-        using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(8, 8))) 
+        using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(8, 8)))
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0))) {
             using (ImRaii.Disabled(disabled.HasFlag(Button.Delete))) {
                 if (ImGuiExt.IconButton("delete", FontAwesomeIcon.Trash)) {
                     clicked = Button.Delete;
                 }
             }
-            
+
             ImGui.SameLine();
             using (ImRaii.Disabled(disabled.HasFlag(Button.Up))) {
                 if (ImGuiExt.IconButton("up", FontAwesomeIcon.ArrowUp)) {
@@ -65,27 +65,27 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
         if (sharedOutfits.IsValueCreated && sharedOutfits.Value.TryGetValue(outfitGuid, out o)) {
             return $"[Shared] {o.Name}";
         }
-        
+
         return $"{outfitGuid}";
     }
-    
+
     private FontAwesomeIcon OutfitTypeIcon(Guid guid) {
         if (character.Guid != CharacterConfigFile.SharedDataGuid && otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(guid, out var o)) {
             return o.TypeIcon;
         }
-        
+
         if (sharedOutfits.IsValueCreated && sharedOutfits.Value.TryGetValue(guid, out o)) {
             return o.TypeIcon;
         }
-        
+
         return FontAwesomeIcon.Question;
     }
-    
-    
+
+
     public bool Draw(string outfitName) {
         otherOutfits.CreateValueIfNotCreated();
         var modified = false;
-         using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get())) {
+        using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get())) {
             ImGui.TextWrapped("Outfit links allow other outfits, emotes or minions to be applied before or after an outfit. Emotes and Minions will not be executed or summoned when applied using an outfit link.");
         }
 
@@ -99,8 +99,8 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                 modified = true;
             }
         }
-   
-        
+
+
         for (var b = 0; b < linkBefore.Count; b++) {
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, ImGui.GetStyle().ItemSpacing with { X = 0 }))
             using (ImRaii.PushId($"linkBefore_{b}")) {
@@ -125,17 +125,17 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                         modified = true;
                         break;
                 }
-                
-                
-                
+
+
+
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-                
+
                 if (DrawOutfitPicker(string.Empty, OutfitName(link), OutfitTypeIcon(link), ref link) && link != Guid.Empty) {
                     linkBefore[b] = link;
                     modified = true;
                 }
-                
+
                 // CustomInput.ReadOnlyInputText(string.Empty, otherOutfits.Value[link].Name, style: new TextInputStyle() { BorderSize = 2, PadTop = false, FramePadding = new Vector2(16, 8)});
             }
         }
@@ -144,24 +144,24 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, ImGui.GetStyle().ItemSpacing with { X = 0 })) {
             switch (DrawButtons(Button.Delete | (linkBefore.Count == 0 ? Button.Up : Button.None) | (linkAfter.Count == 0 ? Button.Down : Button.None))) {
                 case Button.Up:
-                    
+
                     linkAfter.Insert(0, linkBefore[^1]);
                     linkBefore.RemoveAt(linkBefore.Count - 1);
-                    
+
                     modified = true;
                     break;
                 case Button.Down:
                     linkBefore.Add(linkAfter[0]);
                     linkAfter.RemoveAt(0);
                     modified = true;
-                break;
+                    break;
             }
-            
+
             ImGui.SameLine();
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-            CustomInput.ReadOnlyInputText("##currentOutfit", outfitName, style: new TextInputStyle() { BorderSize = 2, PadTop = false, FramePadding = new Vector2(16, 8), BorderColour = ImGuiColors.DalamudOrange}, icon: FontAwesomeIcon.PersonHalfDress);
+            CustomInput.ReadOnlyInputText("##currentOutfit", outfitName, style: new TextInputStyle { BorderSize = 2, PadTop = false, FramePadding = new Vector2(16, 8), BorderColour = ImGuiColors.DalamudOrange }, icon: FontAwesomeIcon.PersonHalfDress);
         }
-        
+
         for (var a = 0; a < linkAfter.Count; a++) {
             using (ImRaii.PushId($"linkAfter_{a}")) {
                 var link = linkAfter[a];
@@ -174,7 +174,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                             } else {
                                 linkBefore.Add(link);
                                 linkAfter.RemoveAt(a);
-                                
+
                             }
                             modified = true;
                             break;
@@ -190,11 +190,11 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                             modified = true;
                             break;
                     }
-                
+
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-                    
-                    
+
+
                     if (DrawOutfitPicker(string.Empty, OutfitName(link), OutfitTypeIcon(link), ref link, outfit?.Guid ?? Guid.Empty) && link != Guid.Empty) {
                         linkAfter[a] = link;
                         modified = true;
@@ -234,7 +234,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                         if (o.Folder == Guid.Empty) continue;
                         if (!chr.Folders.TryGetValue(o.Folder, out var f)) continue;
                     }
-                    
+
                     if (outfitGuid != guid && (linkAfter.Contains(outfitGuid) || linkBefore.Contains(outfitGuid) || (exclude?.Contains(outfitGuid) ?? false))) continue;
                     if (ImGui.IsWindowAppearing() && guid == outfitGuid) {
                         ImGui.SetScrollHereY(0.5f);
@@ -242,7 +242,7 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                     var fullName = chr.ParseFolderPath(o.Folder, isShared) + " / " + o.Name;
                     var fullNameCollapse = string.Join('/', chr.ParseFolderPath(o.Folder, isShared).Split('/', StringSplitOptions.TrimEntries)) + "/" + o.Name;
                     if (!(fullName.Contains(search, StringComparison.InvariantCultureIgnoreCase) || fullNameCollapse.Contains(search, StringComparison.InvariantCultureIgnoreCase))) continue;
-                
+
                     using (ImRaii.Group())
                     using (ImRaii.PushId(o.Guid.ToString())) {
                         using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get(), o.Folder != Guid.Empty)) {
@@ -265,11 +265,11 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
                     }
                 }
             }
-            
+
             if (character.Guid != CharacterConfigFile.SharedDataGuid) {
                 ShowEntries(otherOutfits.Value, character);
             }
-            
+
             if (SharedCharacter != null) {
                 ShowEntries(sharedOutfits.Value, SharedCharacter);
             }
@@ -279,19 +279,19 @@ public class OutfitLinksEditor(CharacterConfigFile character, OutfitConfigFile? 
 
 
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-        if (CustomInput.Combo(label, previewText, DrawComboContents, style: new ComboStyle() { FramePadding = new Vector2(16, 8), PadTop = false}, icon: previewIcon)) {
+        if (CustomInput.Combo(label, previewText, DrawComboContents, style: new ComboStyle { FramePadding = new Vector2(16, 8), PadTop = false }, icon: previewIcon)) {
             picked = guid;
             return true;
         }
-        
+
         if (ImGui.IsItemHovered() && otherOutfits.IsValueCreated && otherOutfits.Value.TryGetValue(picked, out var o)) {
             using (ImRaii.Tooltip()) {
                 Polaroid.Draw(o.GetImageOrNull, o.ImageDetail, o.Name, character.Folders.GetValueOrDefault(o.Folder)?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle);
             }
         }
-        
+
 
         return false;
     }
-    
+
 }

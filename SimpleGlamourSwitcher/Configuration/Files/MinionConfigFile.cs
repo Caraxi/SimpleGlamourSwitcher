@@ -30,7 +30,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
 
 
     public uint MinionId { get; set; } = 0;
-    public bool Resummon { get; set; } 
+    public bool Resummon { get; set; }
     public List<OutfitModConfig> ModConfigs { get; set; } = new();
 
     public static MinionConfigFile Create(CharacterConfigFile parent, Guid folderGuid) {
@@ -38,29 +38,29 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         instance.Folder = folderGuid;
         return instance;
     }
-    
+
     protected override void Setup() {
         base.Setup();
         (this as IHasModConfigs).UpdateHeliosphereMods();
     }
 
-    
+
     public async Task Apply() {
         var isActive = await CompanionHelper.GetActiveCompanionId() == MinionId;
 
         var resummonIfActive = Resummon || KeyState[VirtualKey.SHIFT];
-        
-        
+
+
         if (isActive && resummonIfActive) {
             ActionQueue.QueueCommand("/minion");
             await Task.Delay(TimeSpan.FromMilliseconds(1250 + Random.Shared.Next(250)));
         }
-        
+
         if (DataManager.GetExcelSheet<Companion>().TryGetRow(MinionId, out var row)) {
             Notice.Show($"Apply Minion: {Name} for {row.Singular.ExtractText()}");
             ModManager.ApplyMods(row, ModConfigs);
             EnqueueAutoCommands();
-            
+
             if (isActive && !resummonIfActive) {
                 ActionQueue.QueueCommand($"/penumbra redraw {SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, MinionId)}");
             } else {
@@ -68,7 +68,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
             }
         }
     }
-    
+
     public async Task<bool> ApplyMods() {
         var isActive = await CompanionHelper.GetActiveCompanionId() == MinionId;
         if (DataManager.GetExcelSheet<Companion>().TryGetRow(MinionId, out var row)) {
@@ -86,9 +86,9 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
     public void EnqueueAutoCommands() {
         if (!PluginConfig.EnableOutfitCommands) return;
         var parent = GetParent() ?? throw new Exception("Invalid MinionConfigFile");
-        
+
         List<string> commands = [];
-        
+
         if (parent.Folders.TryGetValue(Folder, out var folder)) {
             if (folder.AutoCommandsSkipCharacter) {
                 commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
@@ -115,7 +115,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
             }
         }
     }
-    
+
     /*
     public static FileInfo GetFile(CharacterConfigFile characterConfig, Guid guid) {
         var dir = characterConfig.OutfitDirectory;
@@ -123,9 +123,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
     }
     */
 
-    public static string GetFileName(Guid? guid) {
-        return $"{CharacterDirectory.Minions}/{guid}.json";
-    }
+    public static string GetFileName(Guid? guid) => $"{CharacterDirectory.Minions}/{guid}.json";
 
 
     public FileInfo? GetImageFile() {
@@ -136,13 +134,13 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         }
         return file;
     }
-    
+
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) {
         if (TempImagePath.TryGetValue(Guid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
             wrap = CustomTextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
             return wrap != null;
         }
-        
+
         var filePath = Path.Join(GetParent()?.ImagesDirectory.FullName ?? throw new Exception("Outfit Config requires a parent."), $"{Guid}");
         var file = Common.GetImageFile(filePath);
         if (file is not { Exists: true }) {
@@ -152,19 +150,19 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         wrap = CustomTextureProvider.GetFromFile(file).GetWrapOrDefault();
         return wrap is not null;
     }
-    
-    
+
+
     [JsonIgnore] public CharacterConfigFile? ConfigFile => GetParent();
 
-    
+
     private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
-    
+
     public void SetImage(FileInfo fileInfo) {
         if (ConfigFile == null || Guid == Guid.Empty) return;
-        
+
         var dir = ConfigFile.ImagesDirectory;
         var fileName = Path.Join(dir.FullName, $"{Guid}");
-        
+
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
                 File.Delete($"{fileName}.{type}");
@@ -173,7 +171,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
 
         TempImagePath[Guid] = (fileInfo.FullName, Stopwatch.StartNew());
         fileInfo.CopyTo(fileName + Path.GetExtension(fileInfo.FullName));
-        
+
         return;
     }
 
@@ -184,13 +182,13 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
     }
 
     protected override void Validate(List<string> errors) {
-        
+
     }
 
     public async Task<MinionConfigFile> CreateClone() {
         return await Task.Run(() => {
             var guid = Guid.NewGuid();
-            var parent = this.GetParent();
+            var parent = GetParent();
             SaveAs(guid, true);
             return Load(guid, parent);
         }) ?? throw new Exception("Failed to clone outfit.");
@@ -202,7 +200,7 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         if (CompanionHelper.GetActiveCompanionId().TryWaitResult(out var minionId)) {
             cfg.MinionId = minionId;
         }
-        
+
         if (cfg.MinionId != 0) {
             var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(1);
             if (penumbraCollection.ObjectValid) {
@@ -219,13 +217,11 @@ public class MinionConfigFile : ConfigFile<MinionConfigFile, CharacterConfigFile
         PluginLog.Warning($"Deleting: {path}");
         GetConfigPath(GetParent(), Guid).Delete();
     }
-    
+
     public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
-    
+
     public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
         fileInfo = GetImageFile();
         return fileInfo is { Exists: true };
     }
 }
-
-

@@ -30,47 +30,47 @@ public class GlamourListPage : Page {
     private bool showHiddenFolders;
 
     private bool hideBackButton;
-    private Stopwatch holdingControlStopwatch = new Stopwatch();
+    private Stopwatch holdingControlStopwatch = new();
 
     private FolderSortStrategy folderSortStrategy;
 
     private Dictionary<Guid, CharacterConfigFile>? characterCloneTargets;
-    
+
     private CharacterConfigFile? SharedOrActiveCharacter => IsSharedFolder ? SharedCharacter : ActiveCharacter;
-    
+
     public GlamourListPage(Guid folderGuid = default, bool hideBackButton = false, bool isShared = false) {
         this.hideBackButton = hideBackButton;
         IsSharedFolder = isShared;
         ActiveFolder = isShared ? SharedCharacter == null || !SharedCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid
-                                : ActiveCharacter == null || !ActiveCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid;
+            : ActiveCharacter == null || !ActiveCharacter.Folders.ContainsKey(folderGuid) ? Guid.Empty : folderGuid;
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.PersonCirclePlus, "Create Outfit", () => {
-            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Outfit"} );        
-        
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditOutfitPage(SharedOrActiveCharacter, ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Outfit" });
+
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Tshirt, "Create Item", () => {
-            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditItemPage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Item"} );
-        
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditItemPage(SharedOrActiveCharacter, ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Item" });
+
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.Cat, "Create Minion", () => {
-            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Minion"} );
-        
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditMinionPage(SharedOrActiveCharacter, ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Minion" });
+
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.KissWinkHeart, "Create Emote", () => {
-            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditEmotePage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Emote"} );
-        
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditEmotePage(SharedOrActiveCharacter, ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Emote" });
+
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.KissWinkHeart, "Create Other", () => {
-            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditGenericPage(SharedOrActiveCharacter,  ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Generic Mod Entry", Context = GetGenericContextMenu } );
-        
+            if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditGenericPage(SharedOrActiveCharacter, ActiveFolder, null));
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Generic Mod Entry", Context = GetGenericContextMenu });
+
         BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Folder", () => {
             if (SharedOrActiveCharacter != null) MainWindow?.OpenPage(new EditFolderPage(SharedOrActiveCharacter, ActiveFolder, null));
-        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Folder" } );
+        }) { IsDisabled = () => SharedOrActiveCharacter == null, Tooltip = "Create New Folder" });
 
         if (folderGuid == Guid.Empty) {
             BottomRightButtons.Add(new ButtonInfo(FontAwesomeIcon.FolderPlus, "Create Shared Folder", () => {
                 if (SharedCharacter != null) MainWindow.OpenPage(new EditFolderPage(SharedCharacter, Guid.Empty, null));
-            }) { IsDisabled = () => SharedCharacter == null, Tooltip = "Create Shared Folder, accessible from all characters" } );
+            }) { IsDisabled = () => SharedCharacter == null, Tooltip = "Create Shared Folder, accessible from all characters" });
         }
         LoadOutfits();
     }
@@ -78,7 +78,7 @@ public class GlamourListPage : Page {
         if (!ProteusIpc.IsReady()) return null;
         var character = SharedOrActiveCharacter;
         if (character == null) return null;
-        
+
         return () => {
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(10, 20))) {
                 if (ImGui.MenuItem("Create from active Proteus Overlays")) {
@@ -89,7 +89,7 @@ public class GlamourListPage : Page {
                         ProteusIpc.FlushCache();
                         entry.ModConfigs = OutfitModConfig.FromList(ProteusIpc.ActiveOverlays.Value.Keys, penumbraCollection.EffectiveCollection.Id);
                     }
-                    
+
                     MainWindow.OpenPage(new EditGenericPage(character, ActiveFolder, entry));
                 }
             }
@@ -111,7 +111,7 @@ public class GlamourListPage : Page {
     }
 
     private bool allowContextMenu;
-    
+
     public override void Refresh() {
         allowContextMenu = false;
         LoadOutfits();
@@ -120,7 +120,7 @@ public class GlamourListPage : Page {
     }
 
     private (ItemType Type, Guid Guid)? dragItem;
-    
+
     private OrderedDictionary<Guid, IListEntry>? outfits;
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
@@ -148,11 +148,11 @@ public class GlamourListPage : Page {
                 }
                 ImGui.EndPopup();
             }
-            
+
             if (ImGuiExt.ButtonWithIcon("Configure Automations", FontAwesomeIcon.Robot, buttonSize)) {
                 MainWindow?.OpenPage(new AutomationPage(ActiveCharacter));
             }
-            
+
             if (ImGuiExt.ButtonWithIcon("Open in Explorer", FontAwesomeIcon.FolderTree, buttonSize)) {
                 CharacterConfigFile.GetFile(ActiveCharacter.Guid).Directory?.OpenInExplorer();
             }
@@ -177,14 +177,14 @@ public class GlamourListPage : Page {
             }
         }
     }
-    
-    
+
+
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         var errors = ConfigFile.GetBadFiles<ConfigFile<OutfitConfigFile, CharacterConfigFile>>(ActiveCharacter?.Guid ?? Guid.Empty);
         if (errors.Count > 0) {
             var errListOpen = false;
-            using (ImRaii.PushColor(ImGuiCol.Header, 0xAA3333AA)) 
-            using (ImRaii.PushColor(ImGuiCol.HeaderActive, 0xBB3333BB)) 
+            using (ImRaii.PushColor(ImGuiCol.Header, 0xAA3333AA))
+            using (ImRaii.PushColor(ImGuiCol.HeaderActive, 0xBB3333BB))
             using (ImRaii.PushColor(ImGuiCol.HeaderHovered, 0xCC3333CC)) {
                 errListOpen = ImGui.CollapsingHeader($"{errors.Count} Outfits failed to load###outfitLoadErrorHeader");
             }
@@ -195,7 +195,7 @@ public class GlamourListPage : Page {
 
                         var file = OutfitConfigFile.GetConfigPath(ActiveCharacter, errGuid);
                         if (!File.Exists(file.FullName)) continue;
-                        
+
                         if (ImGuiComponents.IconButton($"{errGuid}_trashButton", FontAwesomeIcon.Trash) && ImGui.GetIO().KeyShift) {
                             File.Delete(file.FullName);
                             errors.Remove(errGuid);
@@ -211,7 +211,7 @@ public class GlamourListPage : Page {
                         }
                         ImGui.SameLine();
                         if (ImGui.CollapsingHeader($"{errGuid}###outfitLoadErrorHeader_{errGuid}")) {
-                            
+
                             using (ImRaii.PushIndent()) {
                                 var fullText = ex.ToStringFull();
 
@@ -221,26 +221,26 @@ public class GlamourListPage : Page {
                                     ImGui.InputTextMultiline($"##stackTrace_{errGuid}", ref fullText, fullText.Length, size + ImGui.GetStyle().FramePadding * 2, ImGuiInputTextFlags.ReadOnly);
                                 }
                                 ImGui.EndChild();
-                                
+
                             }
                         }
                     }
                 }
             }
         }
-        
+
         using var child = ImRaii.Child("glamourListScroll", ImGui.GetContentRegionAvail());
         if (scrollTop) {
             scrollTop = false;
             ImGui.SetScrollHereY();
         }
-        
+
         var character = SharedOrActiveCharacter;
         var drag = dragItem;
         if (drag != null) {
             controlFlags |= WindowControlFlags.PreventMove;
         }
-        
+
         if (character == null) {
             ImGuiExt.CenterText("No Character Selected", centerHorizontally: true, centerVertically: true, shadowed: true);
             return;
@@ -249,16 +249,16 @@ public class GlamourListPage : Page {
         if (ActiveFolder == Guid.Empty || !character.Folders.TryGetValue(ActiveFolder, out var folder)) {
             folder = null;
         }
-        
+
         var folderStyle = folder?.FolderPolaroidStyle ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
         var sharedFolderStyle = (ActiveFolder == Guid.Empty ? SharedCharacter?.FolderPolaroidStyle : null) ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
         var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-        var localFolders = character.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || (ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent)))).ToList();
+        var localFolders = character.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent))).ToList();
 
         if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
             localFolders = localFolders.OrderBy(kvp => kvp.Value.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
         }
-        
+
         if (ActiveFolder != Guid.Empty && folder != null && hideBackButton == false) {
             var parentGuid = Guid.Empty;
             var parentName = ActiveCharacter?.Name ?? character.Name;
@@ -266,20 +266,20 @@ public class GlamourListPage : Page {
                 parentName = parentFolder.Name;
                 parentGuid = folder.Parent;
             }
-            
-            localFolders.Insert(0, new KeyValuePair<Guid, CharacterFolder>(parentGuid, new PreviousCharacterFolder() { Name = folderStyle.ImageSize.X < 100 ? "[Back]" : $"[Back] {parentName}", Parent = ActiveFolder}));
+
+            localFolders.Insert(0, new KeyValuePair<Guid, CharacterFolder>(parentGuid, new PreviousCharacterFolder { Name = folderStyle.ImageSize.X < 100 ? "[Back]" : $"[Back] {parentName}", Parent = ActiveFolder }));
         }
-        
+
         var sharedFolders = new List<KeyValuePair<Guid, CharacterFolder>>();
-        
+
         if (ActiveFolder == Guid.Empty && SharedCharacter != null) {
-            sharedFolders = SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || (ActiveFolder == Guid.Empty && !SharedCharacter.Folders.ContainsKey(f.Value.Parent)))).ToList();
+            sharedFolders = SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || ActiveFolder == Guid.Empty && !SharedCharacter.Folders.ContainsKey(f.Value.Parent))).ToList();
 
             if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
                 sharedFolders = sharedFolders.OrderBy(kvp => kvp.Value.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
-            } 
+            }
         }
-        
+
         void DrawFolders(List<KeyValuePair<Guid, CharacterFolder>> folders, ref WindowControlFlags controlFlags, bool isShared) {
             var style = isShared && ActiveFolder == Guid.Empty ? sharedFolderStyle : folderStyle;
             foreach (var (folderGuid, characterFolder) in folders) {
@@ -295,26 +295,26 @@ public class GlamourListPage : Page {
                                     MainWindow?.PopPage();
                                 } else {
                                     MainWindow?.PopPage();
-                                    MainWindow?.OpenPage(new GlamourListPage(folderGuid, isShared: characterFolder.ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid) );
+                                    MainWindow?.OpenPage(new GlamourListPage(folderGuid, isShared: characterFolder.ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid));
                                 }
                             } else {
                                 MainWindow?.OpenPage(new GlamourListPage(folderGuid, isShared: characterFolder.ConfigFile?.Guid == CharacterConfigFile.SharedDataGuid));
                             }
                         }
                         if (characterFolder.IsSharedFolder) {
-                            using (PluginService.PluginUi.IconFontHandle.Push()) {
-                                ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExternalLinkAlt.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = 0xFFFFFFFF });
+                            using (PluginUi.IconFontHandle.Push()) {
+                                ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExternalLinkAlt.ToIconString(), new ShadowTextStyle { ShadowColour = 0x80000000, TextColour = 0xFFFFFFFF });
                             }
                         }
 
                         if (ImGui.IsItemHovered()) {
                             controlFlags |= WindowControlFlags.PreventMove;
                         }
-                            
+
                         if (ImGui.IsItemHovered() && (!characterFolder.IsSharedFolder || IsSharedFolder) && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 10) && characterFolder is not PreviousCharacterFolder) {
                             dragItem = (ItemType.Folder, folderGuid);
                         }
-                            
+
                         if (allowContextMenu && characterFolder is not PreviousCharacterFolder && ImGui.BeginPopupContextItem($"folder_{folderGuid}_context")) {
                             controlFlags |= WindowControlFlags.PreventClose;
 
@@ -331,17 +331,17 @@ public class GlamourListPage : Page {
 
                             var folderCharacter = isShared ? SharedCharacter : ActiveCharacter;
                             if (folderSortStrategy == FolderSortStrategy.Manual && folderCharacter != null) {
-                                var displayIndex = folders.FindIndex(f => f.Key ==  folderGuid);
+                                var displayIndex = folders.FindIndex(f => f.Key == folderGuid);
                                 var offset = folders[0].Value is PreviousCharacterFolder ? 1 : 0;
                                 var folderCount = folders.Count(f => f.Value is not PreviousCharacterFolder);
                                 displayIndex -= offset;
-                                
+
                                 if (ImGui.MenuItem($"Move Up", false, displayIndex > 0)) {
                                     var prevRealIndex = folderCharacter.Folders.IndexOf(folders[displayIndex + offset - 1].Key);
                                     folderCharacter.Folders.Remove(folderGuid);
-                                    folderCharacter.Folders.Insert(prevRealIndex,  folderGuid, characterFolder);
+                                    folderCharacter.Folders.Insert(prevRealIndex, folderGuid, characterFolder);
                                 }
-                                    
+
                                 if (ImGui.MenuItem($"Move Down", false, displayIndex < folderCount - 1)) {
                                     var nextRealIndex = folderCharacter.Folders.IndexOf(folders[displayIndex + offset + 1].Key);
                                     folderCharacter.Folders.Remove(folderGuid);
@@ -365,13 +365,13 @@ public class GlamourListPage : Page {
                                         characterCloneTargets = c.Result;
                                     });
                                 }
-                                
+
                                 if (characterFolder is not PreviousCharacterFolder && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
                                     foreach (var c in characterCloneTargets) {
                                         if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
                                         characterFolder.CloneTo(c.Value);
                                     }
-                                    
+
                                     if (!characterFolder.IsSharedFolder && characterFolder.Parent == Guid.Empty && SharedCharacter != null) {
                                         // Only Root Non-Shared folders
                                         ImGui.Separator();
@@ -388,7 +388,7 @@ public class GlamourListPage : Page {
                                             }
                                         }
                                     }
-                                        
+
                                     ImGui.EndMenu();
                                 }
                             }
@@ -401,24 +401,24 @@ public class GlamourListPage : Page {
                                     ImGui.Text("All contents of the folder will be moved out\nof the folder before it is deleted.\nHold SHIFT and ALT to confirm.");
 
                                 }
-                                    
+
                                 if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
                                     Task.Run(async () => {
                                         if (characterFolder.IsSharedFolder && !IsSharedFolder) {
                                             void DeleteSharedFolder(Guid guid) {
                                                 if (SharedCharacter == null) return;
                                                 SharedCharacter?.Folders.Remove(guid);
-                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) { 
+                                                foreach (var f in SharedCharacter!.Folders.Values.Where(f => f.Parent == guid)) {
                                                     DeleteSharedFolder(f.Guid);
                                                 }
                                             }
-                                                
+
                                             DeleteSharedFolder(folderGuid);
                                             if (SharedCharacter != null) {
                                                 SharedCharacter.Dirty = true;
                                                 SharedCharacter.Save();
                                             }
-                                                
+
                                             Refresh();
                                         } else {
                                             var moveOutfits = await character.GetEntries(folderGuid);
@@ -433,53 +433,53 @@ public class GlamourListPage : Page {
                                             }
 
                                             character.Folders.Remove(folderGuid);
-                                            
+
                                             character.Dirty = true;
                                             character.Save();
-                                            
+
                                             Refresh();
                                         }
                                     });
                                 }
-                                    
+
                                 if (!ImGui.GetIO().KeyCtrl || ImGui.IsWindowAppearing()) {
                                     holdingControlStopwatch.Restart();
                                 } else if (holdingControlStopwatch.ElapsedMilliseconds > 5000 && ImGui.MenuItem("> DELETE CONTENTS <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
                                     DeleteFolderWithContents(folderGuid, characterFolder);
                                 }
-                                    
+
                                 ImGui.EndMenu();
                             }
 
                             ImGui.EndPopup();
                         }
-                            
+
                         if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) {
                             controlFlags |= WindowControlFlags.PreventClose;
                         }
-                            
+
                     } else {
                         var dragging = drag.Value;
                         if (IsSharedFolder) {
                             Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, style with {
-                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & style.FrameColour),
+                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? 0x8040FFFF : 0x40FFFFFF & style.FrameColour,
                                 BlankImageColour = 0x40FFFFFF & style.BlankImageColour,
-                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour,
-                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour
+                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? 0x8040FFFF : style.FrameColour,
+                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? 0x8040FFFF : style.FrameColour,
                             });
                         } else {
                             Polaroid.Button(() => characterFolder is PreviousCharacterFolder ? PreviousCharacterFolder.GetImage() : characterFolder.TryGetImage(out var img) ? img : null, characterFolder.ImageDetail, characterFolder.Name, folderGuid, style with {
-                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : (0x40FFFFFF & style.FrameColour),
+                                FrameColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? 0x8040FFFF : 0x40FFFFFF & style.FrameColour,
                                 BlankImageColour = 0x40FFFFFF & style.BlankImageColour,
-                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour,
-                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? (0x8040FFFF) : style.FrameColour
+                                FrameHoveredColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? 0x8040FFFF : style.FrameColour,
+                                FrameActiveColour = folderGuid == dragging.Guid && dragging.Type == ItemType.Folder ? 0x8040FFFF : style.FrameColour,
                             });
                         }
-                            
-                            
+
+
 
                         if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left) && dragging.Guid != folderGuid) {
-                                
+
                             switch (dragging.Type) {
                                 case ItemType.Folder:
                                     if (character.Folders.TryGetValue(dragging.Guid, out var dragFolder)) {
@@ -489,7 +489,7 @@ public class GlamourListPage : Page {
                                     break;
                                 case ItemType.Outfit:
                                     if (IsSharedFolder && folderGuid == Guid.Empty) {
-                                            
+
                                     } else {
                                         if (outfits?.TryGetValue(dragging.Guid, out var dragFile) ?? false) {
                                             dragFile.Folder = folderGuid;
@@ -503,12 +503,12 @@ public class GlamourListPage : Page {
                                     PluginLog.Warning($"Cannot move {dragging.Type} into folder.");
                                     break;
                             }
-                                
+
                             dragItem = null;
                         }
-                            
+
                     }
-                        
+
                     ImGui.SameLine();
                 }
             }
@@ -518,18 +518,18 @@ public class GlamourListPage : Page {
             DrawFolders(sharedFolders, ref controlFlags, true);
             if (PluginConfig.SharedFoldersOnOwnLine && localFolders.Count > 0 && sharedFolders.Count > 0) ImGui.NewLine();
             DrawFolders(localFolders, ref controlFlags, false);
-            
+
             ImGui.NewLine();
         }
-        
+
         if (outfits == null) {
             ImGuiExt.CenterText("Loading Outfits...");
         } else {
 
-           
+
             foreach (var (outfitGuid, entry) in outfits) {
                 if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(outfitStyle).X) ImGui.NewLine();
-                
+
                 if (drag == null) {
                     if (Polaroid.Button(entry.GetImageOrNull, entry.ImageDetail, entry.Name, outfitGuid, outfitStyle with { FrameColour = GetOutfitFrameColour(outfitStyle, character, entry) })) {
                         entry.Apply().ConfigureAwait(false);
@@ -543,8 +543,8 @@ public class GlamourListPage : Page {
                     }
 
                     if (!entry.IsValid) {
-                        using (PluginService.PluginUi.IconFontHandle.Push()) {
-                            ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExclamationTriangle.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = ImGuiColors.DalamudRed });
+                        using (PluginUi.IconFontHandle.Push()) {
+                            ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, FontAwesomeIcon.ExclamationTriangle.ToIconString(), new ShadowTextStyle { ShadowColour = 0x80000000, TextColour = ImGuiColors.DalamudRed });
                         }
 
                         if (ImGui.IsItemHovered()) {
@@ -556,23 +556,22 @@ public class GlamourListPage : Page {
                                 }
                             }
                         }
-                    }
-                    else {
-                        using (PluginService.PluginUi.IconFontHandle.Push()) {
-                            ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, entry.TypeIcon.ToIconString(), new ShadowTextStyle() { ShadowColour = 0x80000000, TextColour = 0xFFFFFFFF });
+                    } else {
+                        using (PluginUi.IconFontHandle.Push()) {
+                            ImGui.GetWindowDrawList().AddShadowedText(ImGui.GetItemRectMin() + outfitStyle.FramePadding * 2, entry.TypeIcon.ToIconString(), new ShadowTextStyle { ShadowColour = 0x80000000, TextColour = 0xFFFFFFFF });
                         }
                     }
-                    
+
                     if (ImGui.IsItemHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 10)) {
                         dragItem = (ItemType.Outfit, outfitGuid);
                     }
-                    
-                    
+
+
                     if (allowContextMenu && ImGui.BeginPopupContextItem($"outfit_{outfitGuid}_context")) {
                         controlFlags |= WindowControlFlags.PreventClose;
 
                         using (ImRaii.PushFont(UiBuilder.IconFont)) {
-                            
+
                             ImGui.Text(entry.TypeIcon.ToIconString());
                             ImGui.SameLine();
                         }
@@ -597,7 +596,7 @@ public class GlamourListPage : Page {
 
                                 return false;
                             }
-                            
+
                             character.Dirty |= AutomationOption("Login", ref character.Automation.Login);
                             character.Dirty |= AutomationOption("Character Switch", ref character.Automation.CharacterSwitch);
 
@@ -613,19 +612,18 @@ public class GlamourListPage : Page {
                                     character.Dirty = true;
                                 }
                             }
-                            
+
                             character.Dirty |= AutomationOption("default Gearset", ref character.Automation.DefaultGearset);
-                            
+
                             ImGui.EndMenu();
                         }
-                        
-                        if (entry is OutfitConfigFile outfit)
-                        {
+
+                        if (entry is OutfitConfigFile outfit) {
                             if (ImGui.MenuItem("Edit Outfit")) {
-                            
+
                                 MainWindow?.OpenPage(new EditOutfitPage(character, ActiveFolder, outfit));
                             }
-                        
+
                             if (ImGui.MenuItem("Clone Outfit")) {
                                 outfit.CreateClone().ContinueWith(task => {
                                     if (task.IsCompletedSuccessfully) {
@@ -636,7 +634,7 @@ public class GlamourListPage : Page {
 
                             if (outfit.ConfigFile != null && !outfit.Appearance.Apply && !outfit.Weapons.Apply && outfit.Equipment.Count(p => p.SlotData.Apply) == 1) {
                                 if (ImGui.MenuItem("Convert to Single Item")) {
-    
+
                                     foreach (var slot in Common.GetGearSlots()) {
                                         var applicable = outfit.Equipment[slot];
                                         if (applicable.Apply) {
@@ -649,7 +647,7 @@ public class GlamourListPage : Page {
                                             newItem.ModConfigs = applicable.ModConfigs;
                                             newItem.ImageDetail = outfit.ImageDetail;
                                             newItem.SortName = outfit.SortName;
-                                            
+
                                             newItem.Save(true);
                                             outfit.Delete();
                                             Refresh();
@@ -659,14 +657,13 @@ public class GlamourListPage : Page {
                                 }
                             }
                         }
-                        
-                        if (entry is ItemConfigFile item)
-                        {
+
+                        if (entry is ItemConfigFile item) {
                             if (ImGui.MenuItem("Edit Item")) {
-                            
+
                                 MainWindow?.OpenPage(new EditItemPage(character, ActiveFolder, item));
                             }
-                        
+
                             if (ImGui.MenuItem("Clone Item")) {
                                 item.CreateClone().ContinueWith(task => {
                                     if (task.IsCompletedSuccessfully) {
@@ -675,14 +672,13 @@ public class GlamourListPage : Page {
                                 });
                             }
                         }
-                        
-                        if (entry is MinionConfigFile minion)
-                        {
+
+                        if (entry is MinionConfigFile minion) {
                             if (ImGui.MenuItem("Edit Minion")) {
-                            
+
                                 MainWindow?.OpenPage(new EditMinionPage(character, ActiveFolder, minion));
                             }
-                        
+
                             if (ImGui.MenuItem("Clone Minion")) {
                                 minion.CreateClone().ContinueWith(task => {
                                     if (task.IsCompletedSuccessfully) {
@@ -691,13 +687,12 @@ public class GlamourListPage : Page {
                                 });
                             }
                         }
-                        
-                        if (entry is EmoteConfigFile emote)
-                        {
+
+                        if (entry is EmoteConfigFile emote) {
                             if (ImGui.MenuItem("Edit Emote")) {
                                 MainWindow?.OpenPage(new EditEmotePage(character, ActiveFolder, emote));
                             }
-                        
+
                             if (ImGui.MenuItem("Clone Emote")) {
                                 emote.CreateClone().ContinueWith(task => {
                                     if (task.IsCompletedSuccessfully) {
@@ -707,12 +702,11 @@ public class GlamourListPage : Page {
                             }
                         }
 
-                        if (entry is GenericEntryConfigFile generic)
-                        {
+                        if (entry is GenericEntryConfigFile generic) {
                             if (ImGui.MenuItem("Edit")) {
                                 MainWindow?.OpenPage(new EditGenericPage(character, ActiveFolder, generic));
                             }
-                        
+
                             if (ImGui.MenuItem("Clone")) {
                                 generic.CreateClone().ContinueWith(task => {
                                     if (task.IsCompletedSuccessfully) {
@@ -721,11 +715,11 @@ public class GlamourListPage : Page {
                                 });
                             }
                         }
-                        
+
                         if (ImGui.MenuItem("Copy Command")) {
                             ImGui.SetClipboardText($"/sgs apply {outfitGuid}");
                         }
-                        
+
                         if (characterCloneTargets == null) {
                             characterCloneTargets = [];
                             CharacterConfigFile.GetCharacterConfigurations(fc => {
@@ -737,11 +731,11 @@ public class GlamourListPage : Page {
                                 characterCloneTargets = c.Result;
                             });
                         }
-                        
+
                         if (!IsSharedFolder && entry is ConfigFile && characterCloneTargets is { Count: > 0 } && ImGui.BeginMenu("Clone to Character")) {
                             foreach (var c in characterCloneTargets) {
                                 if (!ImGui.MenuItem($"{c.Value.Name}##{c.Key}")) continue;
-                                
+
                                 var clone = entry.CloneTo(c.Value);
                                 if (clone == null) continue;
                                 var image = entry.GetImageFile();
@@ -750,12 +744,12 @@ public class GlamourListPage : Page {
 
                             ImGui.EndMenu();
                         }
-                        
+
                         if (ImGui.MenuItem("Open File")) {
                             var file = OutfitConfigFile.GetConfigPath(character, outfitGuid);
                             file.OpenWithDefaultApplication();
                         }
-                        
+
                         if (ImGui.BeginMenu($"Delete")) {
                             ImGui.Text("Hold SHIFT and ALT to confirm.");
                             if (ImGui.MenuItem("> Confirm Delete <", false, ImGui.GetIO().KeyShift && ImGui.GetIO().KeyAlt)) {
@@ -767,49 +761,49 @@ public class GlamourListPage : Page {
                                     } catch (Exception ex) {
                                         PluginLog.Error(ex, "Error deleting file.");
                                     }
-                                   
+
                                     Refresh();
                                 });
                             }
-                                
+
                             ImGui.EndMenu();
                         }
-                        
+
                         ImGui.EndPopup();
                     }
-                        
+
                     if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) {
                         controlFlags |= WindowControlFlags.PreventClose;
                     }
-                    
-                    
+
+
                 } else {
                     var dragging = drag.Value;
                     Polaroid.Draw(entry.GetImageOrNull, entry.ImageDetail, entry.Name, outfitStyle with {
-                        FrameColour = outfitGuid == dragging.Guid && dragging.Type == ItemType.Outfit ? (0x8040FFFF) : (0x40FFFFFF & outfitStyle.FrameColour),
-                        BlankImageColour = 0x40FFFFFF & outfitStyle.BlankImageColour
+                        FrameColour = outfitGuid == dragging.Guid && dragging.Type == ItemType.Outfit ? 0x8040FFFF : 0x40FFFFFF & outfitStyle.FrameColour,
+                        BlankImageColour = 0x40FFFFFF & outfitStyle.BlankImageColour,
                     });
                 }
-                
-                
-                
-                
+
+
+
+
                 ImGui.SameLine();
-                
-                
-                
+
+
+
             }
         }
-        
+
         if (dragItem != null) {
             using (ImRaii.PushColor(ImGuiCol.PopupBg, 0)) {
-          
+
                 ImGui.BeginTooltip();
 
                 switch (dragItem.Value.Type) {
                     case ItemType.Folder:
                         if (character.Folders.TryGetValue(dragItem.Value.Guid, out var dragFolder)) {
-                            Polaroid.Draw(() => CharacterFolder.GetImage(character, dragItem.Value.Guid), dragFolder.ImageDetail, dragFolder.Name, folderStyle with {ImageSize = folderStyle.ImageSize.FitTo(72)});
+                            Polaroid.Draw(() => CharacterFolder.GetImage(character, dragItem.Value.Guid), dragFolder.ImageDetail, dragFolder.Name, folderStyle with { ImageSize = folderStyle.ImageSize.FitTo(72) });
                         }
                         break;
                     case ItemType.Outfit:
@@ -824,11 +818,11 @@ public class GlamourListPage : Page {
                         ImGui.GetForegroundDrawList().AddRect(ImGui.GetMousePos() - new Vector2(50, 100), ImGui.GetMousePos() + new Vector2(50, 0), 0x80FFFFFF, 8f, ImDrawFlags.RoundCornersAll, 2);
                         break;
                 }
-                
-                
-            ImGui.EndTooltip();
+
+
+                ImGui.EndTooltip();
             }
-            
+
             if (!ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
                 dragItem = null;
             }
@@ -838,7 +832,7 @@ public class GlamourListPage : Page {
         if (!allowContextMenu && !ImGui.IsMouseDown(ImGuiMouseButton.Right)) {
             allowContextMenu = true;
         }
-        
+
         base.DrawCenter(ref controlFlags);
     }
 
@@ -850,16 +844,16 @@ public class GlamourListPage : Page {
             var activeGearset = GameHelper.GetActiveGearset();
             anyAutomation |= activeGearset != null && character.Automation.Gearsets.TryGetValue(activeGearset.Value.Id, out var gearsetAutomation) && gearsetAutomation == outfit.Guid;
         }
-        
-        
+
+
         return anyAutomation ? style.OutfitList.DefaultOutfitColour : polaroidStyle?.FrameColour ?? PolaroidStyle.Default.FrameColour;
     }
 
     public override void DrawRight(ref WindowControlFlags controlFlags) {
 
         ImGui.Checkbox("Show Hidden Folders", ref showHiddenFolders);
-        
-        
+
+
         base.DrawRight(ref controlFlags);
     }
 
@@ -870,7 +864,7 @@ public class GlamourListPage : Page {
         } else {
             ImGuiExt.CenterText("Glamour List", shadowed: true);
         }
-        
+
         if (ActiveFolder != Guid.Empty && SharedOrActiveCharacter != null) {
             var path = SharedOrActiveCharacter.ParseFolderPath(ActiveFolder, false);
             ImGuiExt.CenterText(path, shadowed: true);
@@ -882,7 +876,7 @@ public class GlamourListPage : Page {
         Task.Run(async () => {
             var character = characterFolder.ConfigFile;
             if (character == null) return;
-            
+
             if (characterFolder.IsSharedFolder && !IsSharedFolder) {
                 void DeleteSharedFolder(Guid guid) {
                     if (SharedCharacter == null) return;
@@ -891,7 +885,7 @@ public class GlamourListPage : Page {
                         DeleteSharedFolder(f.Guid);
                     }
                 }
-                    
+
                 DeleteSharedFolder(folderGuid);
                 if (SharedCharacter != null) {
                     SharedCharacter.Dirty = true;
@@ -908,11 +902,11 @@ public class GlamourListPage : Page {
                 }
 
                 character.Folders.Remove(folderGuid);
-                
+
                 character.Dirty = true;
                 character.Save();
             }
-            
+
             Refresh();
         });
     }

@@ -6,29 +6,27 @@ using Newtonsoft.Json;
 namespace SimpleGlamourSwitcher.Service;
 
 public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
-    
+
     public virtual bool Equals(EmoteIdentifier? other) => other != null && EmoteModeId == other.EmoteModeId && CPoseState == other.CPoseState && other.EmoteId == EmoteId;
     public override int GetHashCode() => HashCode.Combine(EmoteModeId, EmoteId, CPoseState);
 
-    public override string ToString() {
-        return EmoteModeId == 0 ? EmoteId == 0 ? $"IdleEmote#{CPoseState}" : $"Emote#{EmoteId}" : $"EmoteModeId#{EmoteModeId}-{CPoseState}";
-    }
+    public override string ToString() => EmoteModeId == 0 ? EmoteId == 0 ? $"IdleEmote#{CPoseState}" : $"Emote#{EmoteId}" : $"EmoteModeId#{EmoteModeId}-{CPoseState}";
 
     public static Lazy<HashSet<EmoteIdentifier>> EmoteList = new(() => {
         var l = new HashSet<EmoteIdentifier>();
         for (byte i = 0; i < 7; i++) {
             l.Add(new EmoteIdentifier(0, 0, i));
         }
-        
+
         foreach (var emoteMode in DataManager.GetExcelSheet<EmoteMode>()!) {
             if (emoteMode.RowId == 0) continue;
             if (emoteMode.StartEmote.RowId == 0) continue;
             // Looping Emotes
-            for (byte i = 0; i < emoteMode.RowId switch { 1 => 4, 2 => 5, 3 => 3, _ => 1 }; i++) 
+            for (byte i = 0; i < emoteMode.RowId switch { 1 => 4, 2 => 5, 3 => 3, _ => 1 }; i++)
                 l.Add(new EmoteIdentifier(emoteMode.RowId, 0, i));
-        
+
         }
-        
+
         foreach (var e in DataManager.GetExcelSheet<Emote>()) {
             if (e.EmoteMode.RowId != 0) continue;
             if (e.EmoteCategory.RowId == 3) continue;
@@ -69,7 +67,7 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
         if (!emote.IsValid || emote.RowId == 0) return $"EmoteMode#{emoteModeId}";
         return emote.Value.Name.ExtractText();
     }
-    
+
     private static string FetchEmoteName(uint emoteId) {
         var emoteMode = DataManager.GetExcelSheet<Emote>()?.GetRow(emoteId);
         if (emoteMode == null) return $"Emote#{emoteId}";
@@ -84,7 +82,7 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
 
         return emote.Value.Icon;
     }
-    
+
     private static uint FetchEmoteIcon(uint emoteId) {
         var emote = DataManager.GetExcelSheet<Emote>()?.GetRow(emoteId);
         if (emote == null) return 0;
@@ -95,7 +93,7 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
     public string EmoteName {
         get {
             if (Names.TryGetValue(this, out var name)) return name;
-            
+
             if (EmoteId == 0 && EmoteModeId == 0) {
                 name = "Idle";
             } else if (EmoteModeId == 0) {
@@ -103,13 +101,13 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
             } else {
                 name = FetchModeName(EmoteModeId);
             }
-            
+
             Names.TryAdd(this, name);
             return name;
         }
     }
 
-    [JsonIgnore] public string Name => EmoteModeId is 1 or 2 or 3 || (EmoteModeId == 0 && EmoteId == 0) ? $"{EmoteName} Pose {CPoseState + 1}" : EmoteName;
+    [JsonIgnore] public string Name => EmoteModeId is 1 or 2 or 3 || EmoteModeId == 0 && EmoteId == 0 ? $"{EmoteName} Pose {CPoseState + 1}" : EmoteName;
 
     [JsonIgnore]
     public uint Icon {
@@ -123,14 +121,14 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
             } else {
                 icon = FetchModeIcon(EmoteModeId);
             }
-            
+
             Icons.TryAdd(this, icon);
             return icon;
         }
     }
 
-    public static unsafe EmoteIdentifier? Get(IPlayerCharacter? playerCharacter) => Get((Character*) (playerCharacter?.Address ?? 0));
-    
+    public static unsafe EmoteIdentifier? Get(IPlayerCharacter? playerCharacter) => Get((Character*)(playerCharacter?.Address ?? 0));
+
     private static unsafe EmoteIdentifier? Get(Character* character) {
         if (character == null) return null;
         if (character->Mode is CharacterModes.InPositionLoop or CharacterModes.EmoteLoop) {
@@ -142,10 +140,10 @@ public record EmoteIdentifier(uint EmoteModeId, uint EmoteId, byte CPoseState) {
             if (EmoteAlias.TryGetValue(id.EmoteId, out var aliasId)) {
                 id = aliasId;
             }
-            
+
             if (List.Contains(id)) return id;
         }
-        
+
         return null;
     }
 

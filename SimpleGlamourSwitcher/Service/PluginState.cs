@@ -3,18 +3,16 @@
 namespace SimpleGlamourSwitcher.Service;
 
 public static class PluginState {
-    public static bool TryGetActiveCharacterGuid(out Guid guid) {
-        return PluginConfig.SelectedCharacter.TryGetValue(PlayerStateService.ContentId, out guid);
-    }
-    
-    
+    public static bool TryGetActiveCharacterGuid(out Guid guid) => PluginConfig.SelectedCharacter.TryGetValue(PlayerStateService.ContentId, out guid);
+
+
     public static void OnLogout(int type, int code) {
         PluginLog.Verbose($"OnLogout(type: {type} , code: {code})");
         ActionQueue.Clear();
         Config.SwitchCharacter(null, false);
         Plugin.MainWindow.IsOpen = false;
     }
-    
+
     public static void LoadActiveCharacter(bool isLogin, bool isPluginStartup = false) {
         PluginLog.Verbose($"LoadActiveCharacter(isLogin: {isLogin}, isPluginStartup: {isPluginStartup})");
         if (TryGetActiveCharacterGuid(out var guid)) {
@@ -26,7 +24,7 @@ public static class PluginState {
                 PluginLog.Debug("Failed to load character.");
                 return;
             }
-            
+
             PluginLog.Verbose($"Loaded character: {ActiveCharacter.Name}");
 
             if (isLogin && ActiveCharacter.ApplyOnLogin) {
@@ -46,7 +44,7 @@ public static class PluginState {
         PluginLog.Verbose("Initialize()");
         ClientState.Login += OnLogin;
         ClientState.Logout += OnLogout;
-        
+
         if (ClientState.IsLoggedIn) {
             LoadActiveCharacter(false);
         }
@@ -58,7 +56,7 @@ public static class PluginState {
         ClientState.Logout -= OnLogout;
     }
 
-    
+
     public static void ShowGlamourSwitcher() {
         PluginLog.Verbose("ShowGlamourSwitcher()");
         Plugin.MainWindow.Toggle();
@@ -79,5 +77,5 @@ public static class PluginState {
             //
         }
     }
-    
+
 }

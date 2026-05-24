@@ -18,9 +18,9 @@ public class ProteusHexConverter : JsonConverter<Vector3> {
         if (string.IsNullOrEmpty(hex)) return Vector3.One;
         if (hex.Length == 3) hex = string.Concat(hex[0], hex[0], hex[1], hex[1], hex[2], hex[2]);
         if (hex.Length != 6) return Vector3.One;
-        if (!int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int rgb)) return Vector3.One;
-        var r = ((rgb >> 16) & 0xFF) / 255f;
-        var g = ((rgb >> 8) & 0xFF) / 255f;
+        if (!int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var rgb)) return Vector3.One;
+        var r = (rgb >> 16 & 0xFF) / 255f;
+        var g = (rgb >> 8 & 0xFF) / 255f;
         var b = (rgb & 0xFF) / 255f;
         return new Vector3(r, g, b);
     }

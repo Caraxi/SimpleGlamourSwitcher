@@ -51,35 +51,35 @@ public static class ItemPicker {
         _items[slot] = items;
     }
 
-    
+
     private static List<EquipItem> PopulateWeaponList(EquipSlot equipSlot, ClassJob classJob) {
         var items = new List<EquipItem>();
-        
+
         var preSort = new List<EquipItem>();
         foreach (var i in DataManager.GetExcelSheet<Item>().Where(i => i.IsEquipableWeaponOrToolForClassSlot(classJob, equipSlot))) {
 
-            EquipItem item = new EquipItem();
-            
+            var item = new EquipItem();
+
             switch ((EquipSlotCategoryEnum)i.EquipSlotCategory.RowId) {
                 case EquipSlotCategoryEnum.WeaponMainHand:
                     item = equipSlot switch {
                         EquipSlot.MainHand => EquipItem.FromMainhand(i),
                         EquipSlot.OffHand => item,
-                        _ => throw new Exception("Invalid weapon slot")
+                        _ => throw new Exception("Invalid weapon slot"),
                     };
                     break;
                 case EquipSlotCategoryEnum.OffHand:
                     item = equipSlot switch {
                         EquipSlot.MainHand => item,
                         EquipSlot.OffHand => EquipItem.FromMainhand(i),
-                        _ => throw new Exception("Invalid weapon slot")
+                        _ => throw new Exception("Invalid weapon slot"),
                     };
                     break;
                 case EquipSlotCategoryEnum.WeaponTwoHand:
                     item = equipSlot switch {
                         EquipSlot.MainHand => EquipItem.FromMainhand(i),
                         EquipSlot.OffHand => EquipItem.FromOffhand(i),
-                        _ => throw new Exception("Invalid weapon slot")
+                        _ => throw new Exception("Invalid weapon slot"),
                     };
                     break;
             }
@@ -90,7 +90,7 @@ public static class ItemPicker {
         if (equipSlot != EquipSlot.MainHand) items.Add(ItemManager.NothingItem(equipSlot));
 
         items.AddRange(preSort.OrderBy(i => i.Name.ToLowerInvariant()));
-        
+
         _weapons[(equipSlot, classJob.RowId)] = items;
 
         return items;
@@ -100,7 +100,7 @@ public static class ItemPicker {
     private static bool _doScroll;
 
     private static int resultCount;
-    
+
     public static bool Show(string label, HumanSlot slot, ref EquipItem item) {
         var edit = false;
         if (!Common.GetGearSlots().Contains(slot)) throw new ArgumentOutOfRangeException(nameof(slot), $"{slot}", $"{slot} is not a valid item slot.");
@@ -115,7 +115,7 @@ public static class ItemPicker {
                     ImGui.SetKeyboardFocusHere();
                     _itemSearch = string.Empty;
                 }
-                
+
                 #if DEBUG
                 if (ImGui.GetIO().KeyAlt) {
                     ImGui.TextDisabled($"Current: {item.Id}");
@@ -133,7 +133,7 @@ public static class ItemPicker {
                             if (!string.IsNullOrWhiteSpace(_itemSearch) && !i.Name.Contains(_itemSearch, StringComparison.InvariantCultureIgnoreCase)) continue;
 
                             resultCount++;
-                            
+
                             if (_doScroll && i.Id == item.Id) {
                                 ImGui.SetScrollHereY(0.5f);
                                 _doScroll = false;
@@ -144,14 +144,14 @@ public static class ItemPicker {
                                 edit = true;
                                 ImGui.CloseCurrentPopup();
                             }
-                            
+
                             #if DEBUG
                             if (ImGui.GetIO().KeyAlt) {
                                 ImGui.SameLine();
                                 ImGui.TextDisabled($"{i.Id}");
                             }
                             #endif
-                            
+
                         }
 
                         if (list.Count > 0) {
@@ -161,7 +161,7 @@ public static class ItemPicker {
                         list = [];
                         _items[slot] = list;
                         Task.Run(() => { PopulateItemList(slot); }).ConfigureAwait(false);
-                        
+
                     }
                 }
 
@@ -186,7 +186,7 @@ public static class ItemPicker {
                     ImGui.SetKeyboardFocusHere();
                     _itemSearch = string.Empty;
                 }
-                
+
                 #if DEBUG
                 if (ImGui.GetIO().KeyAlt) {
                     ImGui.TextDisabled($"Current: {item.Id}");
@@ -213,14 +213,14 @@ public static class ItemPicker {
                                 edit = true;
                                 ImGui.CloseCurrentPopup();
                             }
-                            
+
                             #if DEBUG
                             if (ImGui.GetIO().KeyAlt) {
                                 ImGui.SameLine();
                                 ImGui.TextDisabled($"{i.Id}");
                             }
                             #endif
-                            
+
                         }
 
                         if (list.Count > 0) {
@@ -230,7 +230,7 @@ public static class ItemPicker {
                         list = [];
                         _weapons[(slot, classJob.RowId)] = list;
                         Task.Run(() => { PopulateWeaponList(slot, classJob); }).ConfigureAwait(false);
-                       
+
                     }
                 }
 
@@ -253,14 +253,14 @@ public static class ItemPicker {
         }
 
         mh = mhList.FirstOrDefault(e => e.Id != mh.Id, mh);
-        
-        
-        
-        
-        
+
+
+
+
+
 
 
         return (mh, oh);
     }
-    
+
 }

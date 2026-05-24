@@ -6,10 +6,8 @@ using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 namespace SimpleGlamourSwitcher.Utility;
 
 public static class Common {
-    public static ISharedImmediateTexture GetEmbeddedTexture(string embeddedPath) {
-        return TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), $"{nameof(SimpleGlamourSwitcher)}.{embeddedPath.Replace('/', '.')}");
-    }
-    
+    public static ISharedImmediateTexture GetEmbeddedTexture(string embeddedPath) => TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), $"{nameof(SimpleGlamourSwitcher)}.{embeddedPath.Replace('/', '.')}");
+
     public static FileInfo? GetImageFile(string pathWithoutExtension) {
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             var fileInfo = new FileInfo($"{pathWithoutExtension}.{type}");
@@ -17,7 +15,7 @@ public static class Common {
         }
         return null;
     }
-    
+
     public static IEnumerable<HumanSlot> GetGearSlots() {
         yield return HumanSlot.Head;
         yield return HumanSlot.Body;
@@ -36,18 +34,16 @@ public static class Common {
 
     public static IEnumerable<T> Concat<T>(params IEnumerable<T>[] sources) {
         foreach (var source in sources) {
-            foreach(var item in source) yield return item;
+            foreach (var item in source) yield return item;
         }
     }
-    public static IReadOnlyList<T> ConcatList<T>(params IEnumerable<T>[] sources) {
-        return Concat(sources).ToList();
-    }
+    public static IReadOnlyList<T> ConcatList<T>(params IEnumerable<T>[] sources) => Concat(sources).ToList();
 
     public static IEnumerable<IGrouping<TEnum, string>> GetEnumValueNames<TEnum>() where TEnum : struct, Enum {
         var names = Enum.GetNames<TEnum>();
         return names.GroupBy(Enum.Parse<TEnum>);
     }
-    
+
     public static IEnumerable<string> GetEnumValueNames<TEnum>(TEnum value) where TEnum : struct, Enum {
         var names = Enum.GetNames<TEnum>();
         return names.Where(e => value.Equals(Enum.Parse<TEnum>(e)));

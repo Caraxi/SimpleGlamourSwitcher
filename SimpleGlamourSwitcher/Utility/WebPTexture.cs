@@ -14,13 +14,13 @@ public class WebPTexture : ISharedImmediateTexture, IDisposable {
     private int frameIndex;
     private uint currentFrameDuration = uint.MaxValue;
     private readonly IDalamudTextureWrap empty;
-    
+
     public WebPTexture(string filePath) {
         image = Image.Load(filePath);
         if (image.Frames.Count > 1) {
-            currentFrameDuration =  image.Frames[0].Metadata.GetWebpMetadata().FrameDelay;
+            currentFrameDuration = image.Frames[0].Metadata.GetWebpMetadata().FrameDelay;
         }
-        
+
         empty = TextureProvider.CreateEmpty(RawImageSpecification.A8(1, 1), false, false);
     }
 
@@ -29,7 +29,7 @@ public class WebPTexture : ISharedImmediateTexture, IDisposable {
         if (frames.TryGetValue(index, out var frame)) {
             return frame;
         }
-        
+
         frames[index] = null;
         using var frameImage = new Image<Rgba32>(image.Width, image.Height);
         frameImage.Frames.AddFrame(image.Frames[index]);
@@ -42,7 +42,7 @@ public class WebPTexture : ISharedImmediateTexture, IDisposable {
             return null;
         }
     }
-    
+
     public void Dispose() {
         image.Dispose();
         foreach (var (_, frame) in frames) frame?.Dispose();
@@ -52,7 +52,7 @@ public class WebPTexture : ISharedImmediateTexture, IDisposable {
     public IDalamudTextureWrap GetWrapOrEmpty() => GetWrapOrDefault(empty) ?? empty;
 
     public IDalamudTextureWrap? GetWrapOrDefault(IDalamudTextureWrap? defaultWrap = null) {
-        if (image.Frames.Count <= 1) { 
+        if (image.Frames.Count <= 1) {
             var wrap = GetFrame(0);
             return wrap ?? defaultWrap;
         }

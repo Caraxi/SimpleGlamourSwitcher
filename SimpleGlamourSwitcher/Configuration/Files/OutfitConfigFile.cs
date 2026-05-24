@@ -23,17 +23,17 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
     public List<Guid> ApplyBefore = new();
     public List<Guid> ApplyAfter = new();
-    
+
     public string? SortName { get; set; } = string.Empty;
 
     public List<AutoCommandEntry> AutoCommands { get; set; } = new();
-    
+
     public ImageDetail ImageDetail { get; set; } = new();
 
     public OutfitEquipment Equipment = new();
     public OutfitAppearance Appearance = new();
     public OutfitWeapons Weapons = new();
-    
+
     // public OutfitMods Mods = new();
 
     public static OutfitConfigFile Create(CharacterConfigFile parent, Guid folderGuid) {
@@ -47,7 +47,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
             instance.ApplyBefore = parent.DefaultLinkBefore.Clone();
             instance.ApplyAfter = parent.DefaultLinkAfter.Clone();
         }
-        
+
         return instance;
     }
 
@@ -59,13 +59,13 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
                 Dirty |= modable.UpdateHeliosphereMods();
             }
         }
-        
+
         foreach (var (_, applicable) in Equipment) {
             if (applicable is IHasModConfigs modable) {
                 Dirty |= modable.UpdateHeliosphereMods();
             }
         }
-        
+
         foreach (var (_, weaponSet) in Weapons.ClassWeapons) {
             Dirty |= (weaponSet.MainHand as IHasModConfigs).UpdateHeliosphereMods();
             Dirty |= (weaponSet.OffHand as IHasModConfigs).UpdateHeliosphereMods();
@@ -76,13 +76,13 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         Notice.Show($"Apply Outfit: {Name}");
 
         var stack = await GlamourSystem.HandleLinks(this, false);
-        
+
         var redraw = false;
 
         await Framework.RunOnTick(async () => {
 
             await GlamourerIpc.ApplyOutfit(stack.Appearance, stack.Equipment, stack.Weapons);
-            
+
             stack.Appearance.ApplyToCharacter(ref redraw);
             await Framework.RunOnTick(async () => {
                 stack.Equipment.ApplyToCharacter(ref redraw);
@@ -100,16 +100,16 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
             }, delayTicks: 2);
         });
-        
+
         EnqueueAutoCommands();
     }
 
     public void EnqueueAutoCommands() {
         if (!PluginConfig.EnableOutfitCommands) return;
         var parent = GetParent() ?? throw new Exception("Invalid OutfitConfigFile");
-        
+
         List<string> commands = [];
-        
+
         if (parent.Folders.TryGetValue(Folder, out var folder)) {
             if (folder.AutoCommandsSkipCharacter) {
                 commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
@@ -136,7 +136,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
             }
         }
     }
-    
+
     /*
     public static FileInfo GetFile(CharacterConfigFile characterConfig, Guid guid) {
         var dir = characterConfig.OutfitDirectory;
@@ -144,9 +144,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     }
     */
 
-    public static string GetFileName(Guid? guid) {
-        return $"{CharacterDirectory.Outfits}/{guid}.json";
-    }
+    public static string GetFileName(Guid? guid) => $"{CharacterDirectory.Outfits}/{guid}.json";
 
 
     public FileInfo? GetImageFile() {
@@ -157,13 +155,13 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         }
         return file;
     }
-    
+
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) {
         if (TempImagePath.TryGetValue(Guid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
             wrap = CustomTextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
             return wrap != null;
         }
-        
+
         var filePath = Path.Join(GetParent()?.ImagesDirectory.FullName ?? throw new Exception("Outfit Config requires a parent."), $"{Guid}");
         var file = Common.GetImageFile(filePath);
         if (file is not { Exists: true }) {
@@ -173,19 +171,19 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         wrap = CustomTextureProvider.GetFromFile(file).GetWrapOrDefault();
         return wrap is not null;
     }
-    
-    
+
+
     [JsonIgnore] public CharacterConfigFile? ConfigFile => GetParent();
 
-    
+
     private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
-    
+
     public void SetImage(FileInfo fileInfo) {
         if (ConfigFile == null || Guid == Guid.Empty) return;
-        
+
         var dir = ConfigFile.ImagesDirectory;
         var fileName = Path.Join(dir.FullName, $"{Guid}");
-        
+
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
                 File.Delete($"{fileName}.{type}");
@@ -194,7 +192,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
 
         TempImagePath[Guid] = (fileInfo.FullName, Stopwatch.StartNew());
         fileInfo.CopyTo(fileName + Path.GetExtension(fileInfo.FullName));
-        
+
         return;
     }
 
@@ -210,7 +208,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
         PluginLog.Debug("Creating Outfit from Local Player");
         var glamourerState = GlamourerIpc.GetState(0);
         var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
-        
+
         if (glamourerState != null && penumbraCollection.ObjectValid) {
             instance.Equipment = OutfitEquipment.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
             instance.Appearance = OutfitAppearance.FromExistingState(defaultOptionsProvider, glamourerState, penumbraCollection.EffectiveCollection.Id);
@@ -223,7 +221,7 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     }
 
     protected override void Validate(List<string> errors) {
-        foreach(var (slotName, applicable) in Enumerable.Concat(Equipment, Appearance)) {
+        foreach (var (slotName, applicable) in Enumerable.Concat(Equipment, Appearance)) {
             if (applicable is IHasModConfigs modable) {
                 if (!modable.IsValid()) {
                     errors.Add($"Invalid mod setup in '{slotName}' slot.");
@@ -235,24 +233,22 @@ public class OutfitConfigFile : ConfigFile<OutfitConfigFile, CharacterConfigFile
     public async Task<OutfitConfigFile> CreateClone() {
         return await Task.Run(() => {
             var guid = Guid.NewGuid();
-            var parent = this.GetParent();
+            var parent = GetParent();
             SaveAs(guid, true);
             return Load(guid, parent);
         }) ?? throw new Exception("Failed to clone outfit.");
     }
-    
+
     public void Delete() {
-        
+
         PluginLog.Warning($"Deleting Outfit: {Name}");
         GetConfigPath(GetParent(), Guid).Delete();
     }
-    
+
     public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
-    
+
     public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
         fileInfo = GetImageFile();
         return fileInfo is { Exists: true };
     }
 }
-
-

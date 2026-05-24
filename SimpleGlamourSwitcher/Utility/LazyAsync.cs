@@ -3,7 +3,7 @@
 namespace SimpleGlamourSwitcher.Utility;
 
 public class LazyAsync<T>(Func<Task<T>> func) where T : new() {
-    
+
     private Task<T>? task;
 
     public bool IsValueCreated => task is { IsCompletedSuccessfully: true };
@@ -11,9 +11,9 @@ public class LazyAsync<T>(Func<Task<T>> func) where T : new() {
     public void CreateValueIfNotCreated() {
         task ??= func();
     }
-    
 
-    [field: AllowNull, MaybeNull]
+
+    [field: AllowNull] [field: MaybeNull]
     public T Value {
         get {
             if (field != null) return field;
@@ -21,7 +21,7 @@ public class LazyAsync<T>(Func<Task<T>> func) where T : new() {
             task ??= func();
 
             if (!task.IsCompletedSuccessfully) return new T();
-            
+
             field = task.Result;
             return field;
         }

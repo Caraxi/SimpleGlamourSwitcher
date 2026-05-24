@@ -11,7 +11,7 @@ public class EditGenericPage(CharacterConfigFile character, Guid folderGuid, Gen
     public override string TypeName => "Generic Entry";
 
     private string? identifier;
-    
+
     protected override void DrawEditor(ref WindowControlFlags controlFlags) {
         identifier ??= Entry.Identifier;
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);

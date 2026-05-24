@@ -10,12 +10,12 @@ public class ChangeLogPage : Page {
     public override bool AllowStack => false;
     private static int _configIndex;
     private static bool _isOldExpanded;
-    
+
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
         ImGuiExt.CenterText("Changelogs", shadowed: true);
     }
-    
+
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         _configIndex = 0;
         using (ImRaii.Child("changelogs", ImGui.GetContentRegionAvail())) {
@@ -32,7 +32,7 @@ public class ChangeLogPage : Page {
         draw();
         ImGui.Unindent();
     }
-    
+
     public static void Change(string text, int indent = 0, Vector4? color = null) {
         for (var i = 0; i < indent; i++) ImGui.Indent();
         if (color != null)

@@ -12,7 +12,7 @@ public record OutfitMods {
     public List<OutfitModConfig> Wrists = [];
     public List<OutfitModConfig> RFinger = [];
     public List<OutfitModConfig> LFinger = [];
-    
+
     public ref List<OutfitModConfig> this[EquipSlot slot] {
         get {
             switch (slot) {
@@ -35,7 +35,7 @@ public record OutfitMods {
 
     public static OutfitMods FromEquipment(OutfitEquipment instanceEquipment, Guid penumbraCollection) {
         var instance = new OutfitMods();
-        
+
         foreach (var slot in Common.GetGearSlots()) {
             instance[slot] = OutfitModConfig.GetModListFromEquipment(slot, instanceEquipment[slot], penumbraCollection);
         }

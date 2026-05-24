@@ -16,11 +16,10 @@ public abstract record Applicable<T, T2> : Applicable {
     }
 }
 
-
 [Flags]
 public enum UpdateApplicableFlags {
     None = 0,
-    SkipApply = 1
+    SkipApply = 1,
 }
 
 public abstract record Applicable {

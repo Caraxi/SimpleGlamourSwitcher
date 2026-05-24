@@ -5,7 +5,7 @@ namespace SimpleGlamourSwitcher.Service;
 public class CleanupManager : IDisposable {
 
     private List<Action> cleanupActions = [];
-    
+
     public event Action Cleanup {
         add {
             cleanupActions.Remove(value);
@@ -39,10 +39,10 @@ public class CleanupManager : IDisposable {
             } catch (Exception ex) {
                 PluginLog.Error(ex, "Error in cleanup");
             }
-            
+
         }, cancellationToken: cancellationTokenSource.Token, delay: TimeSpan.FromSeconds(60));
     }
-    
+
     public void Dispose() {
         cancellationTokenSource.Cancel();
         cleanupActions = [];

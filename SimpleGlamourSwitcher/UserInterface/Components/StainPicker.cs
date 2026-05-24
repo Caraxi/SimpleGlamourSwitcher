@@ -16,7 +16,7 @@ public static class StainPicker {
         { 7, new Vector4(0.5f, 1f, 0.25f, 1f) },
         { 8, new Vector4(0.3f, 0.5f, 1f, 1f) },
         { 9, new Vector4(0.7f, 0.45f, 0.9f, 1) },
-        { 10, new Vector4(1f, 1f, 1f, 1f) }
+        { 10, new Vector4(1f, 1f, 1f, 1f) },
     };
 
     public static bool Show(string label, ref byte stainId, Vector2 size, bool tooltip = true) {
@@ -32,20 +32,20 @@ public static class StainPicker {
             if (texture == null) return false;
 
             ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * Vector2.UnitY);
-            using (ImRaii.PushColor(ImGuiCol.Border, 0xFFFFFFFF)) 
-            using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 2)) 
+            using (ImRaii.PushColor(ImGuiCol.Border, 0xFFFFFFFF))
+            using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 2))
             using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(3, 3))) {
                 if (ImGui.BeginPopup($"stainPicker_{label}", ImGuiWindowFlags.AlwaysAutoResize)) {
 
                     if (ImGui.IsWindowAppearing()) {
                         _selectedShade = stain.Shade;
                     }
-                    
+
                     ImGui.Text(label.Split("##")[0]);
                     ImGui.Separator();
 
                     var stains = DataManager.GetExcelSheet<Stain>().Where(s => !string.IsNullOrWhiteSpace(s.Name.ExtractText())).OrderBy(s => s.Shade).ThenBy(s => s.SubOrder).ToList();
-                    
+
                     foreach (var shade in StainShadeHeaders) {
                         using (ImRaii.Group()) {
                             var p = ImGui.GetCursorPos();
@@ -80,7 +80,7 @@ public static class StainPicker {
                     foreach (var s in stains.Where(s => s.Shade == _selectedShade)) {
                         if (ImGui.GetContentRegionAvail().X < size.X * 1.5f) ImGui.NewLine();
                         if (StainButton(s, size * 1.5f, true, s.RowId == stainId)) {
-                            stainId = (byte) s.RowId;
+                            stainId = (byte)s.RowId;
                             ImGui.CloseCurrentPopup();
                             edit = true;
                         }
@@ -122,8 +122,8 @@ public static class StainPicker {
         }
 
         var b = stain.Value.Color & 255;
-        var g = (stain.Value.Color >> 8) & 255;
-        var r = (stain.Value.Color >> 16) & 255;
+        var g = stain.Value.Color >> 8 & 255;
+        var r = stain.Value.Color >> 16 & 255;
         var stainVec4 = new Vector4(r / 255f, g / 255f, b / 255f, 1f);
         var stainColor = ImGui.GetColorU32(stainVec4);
 
@@ -143,8 +143,8 @@ public static class StainPicker {
             var opacity = 0U;
             for (var x = 3; x < size.X; x++) {
                 if (opacity < 0xF0_00_00_00U) opacity += 0x08_00_00_00U;
-                dl.AddLine(tr + new Vector2(0, x), bl + new Vector2(x, 0), opacity | (0x00A0A0A0 & dColor), 2);
-                dl.AddLine(tr - new Vector2(0, x), bl - new Vector2(x, 0), opacity | (0x00FFFFFF & bColor), 2);
+                dl.AddLine(tr + new Vector2(0, x), bl + new Vector2(x, 0), opacity | 0x00A0A0A0 & dColor, 2);
+                dl.AddLine(tr - new Vector2(0, x), bl - new Vector2(x, 0), opacity | 0x00FFFFFF & bColor, 2);
             }
 
             dl.PopClipRect();

@@ -14,7 +14,7 @@ public static class AdvancedMaterialsDisplay {
         ImGui.SameLine();
         using (ImRaii.PushFont(UiBuilder.IconFont)) {
             if (ImGui.Button(FontAwesomeIcon.Palette.ToIconString(), new Vector2(ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2))) {
-                
+
             }
         }
 
@@ -63,10 +63,10 @@ public static class AdvancedMaterialsDisplay {
                 }
             }
         }
-        
 
-                
+
+
         return false;
     }
-    
+
 }

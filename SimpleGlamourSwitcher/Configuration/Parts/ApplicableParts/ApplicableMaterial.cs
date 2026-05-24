@@ -23,11 +23,11 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
     public float EmissiveR;
     public float EmissiveG;
     public float EmissiveB;
-    
+
     // Legacy
     public float SpecularA;
     public float Gloss;
-    
+
     // Dawntrail
     public float Metalness;
     public float Roughness;
@@ -55,14 +55,14 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
                 EmissiveR = material.EmissiveR,
                 EmissiveG = material.EmissiveG,
                 EmissiveB = material.EmissiveB,
-                
+
                 // Dawntrail
                 Metalness = material.Metalness,
                 Roughness = material.Roughness,
                 Sheen = material.Sheen,
                 SheenTint = material.SheenTint,
                 SheenAperture = material.SheenAperture,
-                
+
                 // Legacy
                 Gloss = material.Gloss,
                 SpecularA = material.SpecularA,
@@ -71,7 +71,7 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
 
         return list;
     }
-    
+
     public static List<ApplicableMaterial> FilterForSlot(Dictionary<MaterialValueIndex, GlamourerMaterial> materials, EquipSlot slot) {
         var list = new List<ApplicableMaterial>();
 
@@ -92,14 +92,14 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
                 EmissiveR = material.EmissiveR,
                 EmissiveG = material.EmissiveG,
                 EmissiveB = material.EmissiveB,
-                
+
                 // Dawntrail
                 Metalness = material.Metalness,
                 Roughness = material.Roughness,
                 Sheen = material.Sheen,
                 SheenTint = material.SheenTint,
                 SheenAperture = material.SheenAperture,
-                
+
                 // Legacy
                 Gloss = material.Gloss,
                 SpecularA = material.SpecularA,

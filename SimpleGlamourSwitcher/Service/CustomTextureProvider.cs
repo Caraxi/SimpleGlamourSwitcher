@@ -7,21 +7,21 @@ namespace SimpleGlamourSwitcher.Service;
 public static class CustomTextureProvider {
 
     static CustomTextureProvider() {
-        Framework.RunOnTick(DisposeStaleLoop, delay: TimeSpan.FromSeconds(5));
+        Framework.RunOnTick(DisposeStaleLoop, TimeSpan.FromSeconds(5));
     }
 
     private static void DisposeStaleLoop() {
         DisposeStale();
-        Framework.RunOnTick(DisposeStaleLoop, delay: TimeSpan.FromSeconds(5));
+        Framework.RunOnTick(DisposeStaleLoop, TimeSpan.FromSeconds(5));
     }
 
-    
+
     private interface ITexture : IDisposable {
         public bool IsDisposed { get; }
         public ISharedImmediateTexture Texture { get; }
         public DateTime LastAccessed { get; }
     }
-    
+
     private class CachedCustomTexture(ISharedImmediateTexture texture) : ITexture {
         public bool IsDisposed { get; private set; }
         public ISharedImmediateTexture Texture {
@@ -46,17 +46,17 @@ public static class CustomTextureProvider {
         public ISharedImmediateTexture Texture => TextureProvider.GetFromGameIcon(new GameIconLookup(0));
         public DateTime LastAccessed => DateTime.Now;
     }
-    
-    
-    private readonly static Dictionary<string, ITexture> CustomTextures = new();
+
+
+    private static readonly Dictionary<string, ITexture> CustomTextures = new();
     public static ISharedImmediateTexture GetFromFile(FileInfo file) => GetFromFileAbsolute(file.FullName);
-    
+
     public static ISharedImmediateTexture GetFromFileAbsolute(string path) {
         if (CustomTextures.TryGetValue(path, out var cache) && !cache.IsDisposed) {
             return cache.Texture;
         }
 
-        if (path.Length >=5 && string.Equals(path[^5..], ".webp", StringComparison.InvariantCultureIgnoreCase)) {
+        if (path.Length >= 5 && string.Equals(path[^5..], ".webp", StringComparison.InvariantCultureIgnoreCase)) {
             CustomTextures[path] = new BlankTexture();
             Task.Run(() => {
                 PluginLog.Debug($"Creating Texture for WEBP: {path}");
@@ -82,8 +82,8 @@ public static class CustomTextureProvider {
             }
         }
     }
-    
+
     public static void DisposeAll() {
-        foreach(var c in CustomTextures) c.Value.Dispose();
+        foreach (var c in CustomTextures) c.Value.Dispose();
     }
 }

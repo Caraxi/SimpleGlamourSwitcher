@@ -5,7 +5,7 @@ namespace SimpleGlamourSwitcher.Utility;
 public class Cached<T>(TimeSpan maxAge, Func<T> getValue) {
     private readonly Stopwatch age = Stopwatch.StartNew();
     private bool clear;
-    
+
     public T Value {
         get {
             if (!clear && field != null && age.Elapsed <= maxAge) return field;
@@ -19,7 +19,7 @@ public class Cached<T>(TimeSpan maxAge, Func<T> getValue) {
     public void Clear() {
         clear = true;
     }
-    
+
 }
 
 public class NullableCached<T>(TimeSpan maxAge, Func<T?> getValue) where T : class {
@@ -30,7 +30,7 @@ public class NullableCached<T>(TimeSpan maxAge, Func<T?> getValue) where T : cla
 
     public bool HasValue => isFetched && age.Elapsed <= maxAge;
     public TimeSpan Age => age.Elapsed;
-    
+
     public T? Value {
         get {
             if (!clear && isFetched && age.Elapsed <= maxAge) return field;
@@ -41,7 +41,7 @@ public class NullableCached<T>(TimeSpan maxAge, Func<T?> getValue) where T : cla
             return field;
         }
     } = getValue();
-    
+
     public void Clear() {
         clear = true;
     }

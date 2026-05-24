@@ -1,9 +1,9 @@
 ﻿global using ProteusIpcOverlayDetail = (
-    string ModDirectory, 
-    string Name, 
-    int Priority, 
+    string ModDirectory,
+    string Name,
+    int Priority,
     System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>? Options
-);
+    );
 using System.Diagnostics.CodeAnalysis;
 using ECommons;
 using ECommons.EzIpcManager;
@@ -20,20 +20,20 @@ public static class ProteusIpc {
     static ProteusIpc() {
         CleanupManager.Cleanup += CleanupCache;
     }
-    
+
     [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass")]
     private static class Api {
         static Api() {
             EzIPC.Init(typeof(Api), "Proteus");
         }
-        
+
         [EzIPC] public static readonly Func<(int Major, int Minor)> ApiVersion = null!;
         [EzIPC] public static readonly Func<List<ProteusIpcOverlayDetail>> GetActiveOverlays = null!;
         [EzIPC] public static readonly Func<List<ProteusIpcOverlayDetail>> GetOverlays = null!;
         [EzIPC] public static readonly Func<string, string?, string?, string> GetColorTable = null!;
         [EzIPC] public static readonly Func<string, string?, string?, string, bool> SetColorTable = null!;
     }
-    
+
     public static bool IsReady() {
         try {
             var v = Api.ApiVersion();
@@ -47,9 +47,9 @@ public static class ProteusIpc {
 
     public static Cached<Dictionary<string, ProteusOverlayMod>> ActiveOverlays { get; } = new(TimeSpan.FromSeconds(CacheTimeSeconds), GetActiveOverlays);
     public static Cached<Dictionary<string, ProteusOverlayMod>> AllOverlays { get; } = new(TimeSpan.FromSeconds(CacheTimeSeconds), GetOverlays);
-    
+
     private static Dictionary<ProteusModOptionDescriptor, NullableCached<ProteusColorTable>> colourTableCache = new();
-    
+
     private static Dictionary<string, ProteusOverlayMod> GetActiveOverlays() {
         try {
             PluginLog.Debug("Getting Active Proteus Overlays");
@@ -58,7 +58,7 @@ public static class ProteusIpc {
             return [];
         }
     }
-    
+
     private static Dictionary<string, ProteusOverlayMod> GetOverlays() {
         try {
             PluginLog.Debug("Getting All Proteus Overlays");
@@ -72,13 +72,13 @@ public static class ProteusIpc {
         PluginLog.Verbose("Cleanup Proteus Cache");
         colourTableCache.RemoveAll(kvp => !kvp.Value.HasValue && kvp.Value.Age > TimeSpan.FromMinutes(1));
     }
-    
+
 
     public static ProteusColorTable? GetColourTable(ProteusModOptionDescriptor modOption) {
         if (colourTableCache.TryGetValue(modOption, out var cache)) {
             return cache.Value;
         }
-        
+
         cache = new NullableCached<ProteusColorTable>(TimeSpan.FromSeconds(CacheTimeSeconds).Add(TimeSpan.FromSeconds(Random.Shared.NextDouble())), () => {
             try {
                 PluginLog.Debug($"Getting Proteus Colour Table: [{modOption}]");
@@ -88,9 +88,9 @@ public static class ProteusIpc {
             } catch {
                 return null;
             }
-            
+
         });
-        
+
         colourTableCache[modOption] = cache;
 
         return cache.Value;
@@ -102,10 +102,8 @@ public static class ProteusIpc {
         PluginLog.Debug($"Sending Proteus.SetColorTable({modOption.ModDirectory},  {modOption.GroupName}, {modOption.OptionName}, {json})");
         return Api.SetColorTable(modOption.ModDirectory, modOption.GroupName, modOption.OptionName, json);
     }
-    
-    public static ProteusColorTable? GetColourTable(string modDirectory, string? optionGroup = null, string? option = null) {
-        return GetColourTable(new ProteusModOptionDescriptor(modDirectory, optionGroup, option));
-    }
+
+    public static ProteusColorTable? GetColourTable(string modDirectory, string? optionGroup = null, string? option = null) => GetColourTable(new ProteusModOptionDescriptor(modDirectory, optionGroup, option));
 
     private static Dictionary<string, (DateTime Recheck, bool Result)> isProteusModCache = new();
     public static bool IsProteusMod(string modDirectory) {
@@ -120,7 +118,7 @@ public static class ProteusIpc {
             return false;
         }
     }
-    
+
     public static void FlushCache() {
         isProteusModCache.Clear();
         colourTableCache.Clear();

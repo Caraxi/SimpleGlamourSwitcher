@@ -27,13 +27,13 @@ public enum EquipmentDisplayFlags : uint {
     ContextShowSaveSlot = 32,
     EnableCustomItemPicker = 64,
     Compact = 128,
-    
+
 
     Simple = NoApplyToggles | NoCustomizePlus | NoModEditing | ContextNoSetToCurrent,
 }
 
 public static class EquipmentDisplay {
-    
+
     private static LazyAsync<OrderedDictionary<Guid, ItemConfigFile>> items = new(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : ActiveCharacter.GetEntries<ItemConfigFile>());
     private static LazyAsync<OrderedDictionary<Guid, ItemConfigFile>> sharedItems = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : SharedCharacter.GetEntries<ItemConfigFile>());
 
@@ -42,8 +42,8 @@ public static class EquipmentDisplay {
     }
 
     private static void ClearCustomItemCache() {
-        items = new(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : ActiveCharacter.GetEntries<ItemConfigFile>());
-        sharedItems = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : SharedCharacter.GetEntries<ItemConfigFile>());
+        items = new LazyAsync<OrderedDictionary<Guid, ItemConfigFile>>(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : ActiveCharacter.GetEntries<ItemConfigFile>());
+        sharedItems = new LazyAsync<OrderedDictionary<Guid, ItemConfigFile>>(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, ItemConfigFile>()) : SharedCharacter.GetEntries<ItemConfigFile>());
     }
 
     public static bool DrawEquipment(OutfitEquipment equipment, EquipmentDisplayFlags flags = EquipmentDisplayFlags.None, CharacterConfigFile? character = null, Guid? folderGuid = null) {
@@ -65,7 +65,7 @@ public static class EquipmentDisplay {
                     using (ImRaii.PushColor(ImGuiCol.CheckMark, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.5f), disable)) {
                         dirty |= ImGui.Checkbox($"##enable_{slot}", ref equip.Apply);
                     }
-            
+
                     if (ImGui.IsItemHovered()) {
                         using (ImRaii.Tooltip()) {
                             ImGui.Text($"Enable {slot.PrettyName()}");
@@ -82,19 +82,19 @@ public static class EquipmentDisplay {
                 dirty |= ShowSlot(slot, equip, flags, character, folderGuid);
             }
         }
-        
-        
+
+
         return dirty;
     }
-    
+
     private static bool ShowSlot(OutfitEquipment equipment, HumanSlot slot, EquipmentDisplayFlags flags, CharacterConfigFile? character, Guid? folderGuid) {
         var dirty = false;
         var equip = equipment[slot];
-        
+
         dirty |= ShowSlot(equip, slot, !equipment.Apply, flags, character, folderGuid);
 
         if (flags.HasFlag(EquipmentDisplayFlags.Compact)) return dirty;
-        
+
         if (slot == HumanSlot.Head) {
             ImGui.SameLine();
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero))
@@ -119,12 +119,12 @@ public static class EquipmentDisplay {
     }
 
     private static int _quickSwitchFrameCounter;
-    
+
     private static bool ShowSlot(HumanSlot slot, ApplicableItem<HumanSlot> equipment, EquipmentDisplayFlags flags, CharacterConfigFile? character, Guid? folderGuid) {
         var dirty = false;
         var equipItem = equipment.GetEquipItem(slot);
 
-        
+
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One))
         using (ImRaii.PushId($"State_{slot}")) {
             var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
@@ -139,7 +139,7 @@ public static class EquipmentDisplay {
                     }
                 }
             }
-            
+
             void DrawInputs() {
                 using (ImRaii.Group()) {
                     ImGui.SetNextItemWidth(s.X - s.Y + ImGui.GetStyle().ItemSpacing.X - (equipment is ApplicableEquipment ? s.Y * 2 + ImGui.GetStyle().ItemSpacing.X * 2 : 0));
@@ -166,11 +166,11 @@ public static class EquipmentDisplay {
                     DrawDyePicker(false);
 
                     ImGui.EndGroup();
-                
+
                     dirty |= ModListDisplay.Show(equipment, $"{slot.PrettyName()}", displayOnly: flags.HasFlag(EquipmentDisplayFlags.NoModEditing), includeCustomizePlus: !flags.HasFlag(EquipmentDisplayFlags.NoCustomizePlus));
                 }
             }
-            
+
             ItemIcon.Draw(slot, equipItem);
             if (flags.HasFlag(EquipmentDisplayFlags.EnableCustomItemPicker)) {
                 if (flags.HasFlag(EquipmentDisplayFlags.EnableCustomItemPicker) && ImGui.IsPopupOpen($"CustomItemPicker_{slot}")) {
@@ -179,22 +179,22 @@ public static class EquipmentDisplay {
                         ImGui.GetItemRectMin() - Vector2.One,
                         ImGui.GetItemRectMax() + new Vector2(8 * ImGuiHelpers.GlobalScale, 1),
                         ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudViolet));
-                    
+
                     dl.DrawEmptySlotIcon(slot, ImGui.GetItemRectMin(), ImGui.GetItemRectMax());
 
                 }
-                
+
                 if (ImGui.IsItemHovered()) {
                     var dl = ImGui.GetWindowDrawList();
                     dl.AddRect(ImGui.GetItemRectMin() - Vector2.One, ImGui.GetItemRectMax() + Vector2.One, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 }
-                
+
                 if (ImGui.IsItemClicked()) {
                     ImGui.OpenPopup($"CustomItemPicker_{slot}");
                     ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() with { Y = -1 } + new Vector2(5 * ImGuiHelpers.GlobalScale, 0));
                 }
-                
+
                 using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 2))
                 using (ImRaii.PushColor(ImGuiCol.Border, ImGuiColors.DalamudViolet))
                 using (var popup = ImRaii.Popup($"CustomItemPicker_{slot}")) {
@@ -202,15 +202,15 @@ public static class EquipmentDisplay {
                         if (flags.HasFlag(EquipmentDisplayFlags.Compact)) {
                             DrawInputs();
                         }
-                        
+
                         using (ImRaii.Child($"CustomItemPickerScroll_{slot}", (s * 1.35f) with { Y = s.Y * 10 }, false, ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysHorizontalScrollbar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
                             if (ImGui.IsWindowAppearing()) _quickSwitchFrameCounter = 0;
 
                             _quickSwitchFrameCounter++;
                             if (ImGui.IsWindowHovered()) {
-                                ImGui.SetScrollX(ImGui.GetScrollX() - (ImGui.GetIO().MouseWheel * 50 * ImGuiHelpers.GlobalScale));
+                                ImGui.SetScrollX(ImGui.GetScrollX() - ImGui.GetIO().MouseWheel * 50 * ImGuiHelpers.GlobalScale);
                             }
-                            
+
                             items.CreateValueIfNotCreated();
                             sharedItems.CreateValueIfNotCreated();
 
@@ -223,13 +223,13 @@ public static class EquipmentDisplay {
 
                                 var contentRegionSize = ImGui.GetWindowContentRegionMax() - ImGui.GetWindowContentRegionMin();
                                 var rowHeight = contentRegionSize.Y / rowCount;
-                                
+
                                 var group = ImRaii.Group();
                                 try {
 
                                     using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
                                         foreach (var entry in items.Value.Values.Concat(sharedItems.Value.Values).Where(i => i.Slot == slot).OrderBy(i => i.SortName).ThenBy(i => i.Name, StringComparer.InvariantCultureIgnoreCase)) {
-                                            
+
                                             if (any) {
                                                 if (row >= rowCount) {
                                                     group.Dispose();
@@ -244,7 +244,7 @@ public static class EquipmentDisplay {
                                             var folder = entry.ConfigFile?.Folders.GetValueOrDefault(entry.Folder);
                                             var style = folder?.OutfitPolaroidStyle ??
                                                         entry.ConfigFile?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-                                            
+
                                             if (Polaroid.Button(
                                                     (entry as IImageProvider).GetImageOrNull,
                                                     entry.ImageDetail,
@@ -255,12 +255,11 @@ public static class EquipmentDisplay {
                                             }
                                         }
                                     }
-                                   
-                                }
-                                finally {
+
+                                } finally {
                                     group.Dispose();
                                 }
-                                
+
                                 if (!any) {
                                     ImGui.TextDisabled($"No custom {slot.ToName()} saved.");
                                 }
@@ -269,7 +268,7 @@ public static class EquipmentDisplay {
                     }
                 }
             }
-            
+
             var contextCharacter = character ?? ActiveCharacter;
             if (contextCharacter != null && !flags.CheckAll(EquipmentDisplayFlags.ContextNoSetToCurrent | EquipmentDisplayFlags.ContextNoClearSlot)) {
                 dirty |= HandleSlotContextMenu($"{slot.ToName()}##ItemContext", slot, equipment, contextCharacter, folderGuid, flags, (a) => a.Equipment[slot]);
@@ -284,17 +283,17 @@ public static class EquipmentDisplay {
                     DrawDyePicker(false);
                     ImGui.NewLine();
                     AdvancedMaterialsDisplay.ShowAdvancedMaterialsDisplay(equipment, $"{slot.PrettyName()}");
-                    
+
                     ModListDisplay.ShowModLinkButton(equipment);
                 }
             }
-            
-            
+
+
         }
         return dirty;
     }
 
-    private static bool HandleSlotContextMenu(string label, HumanSlot slot, Applicable applicable, CharacterConfigFile character, Guid? folderGuid = null, EquipmentDisplayFlags flags = EquipmentDisplayFlags.None, Func<OutfitConfigFile, Applicable>? getApplicable = null ) {
+    private static bool HandleSlotContextMenu(string label, HumanSlot slot, Applicable applicable, CharacterConfigFile character, Guid? folderGuid = null, EquipmentDisplayFlags flags = EquipmentDisplayFlags.None, Func<OutfitConfigFile, Applicable>? getApplicable = null) {
         var dirty = false;
         if (ImGui.BeginPopupContextItem($"Context_{label}")) {
             ImGui.Text(label.Split("##")[0]);
@@ -322,7 +321,7 @@ public static class EquipmentDisplay {
                             }
 
                         }
-                    
+
                     } catch (Exception ex) {
                         PluginLog.Error(ex, "Error replacing equipment");
                         //
@@ -339,7 +338,7 @@ public static class EquipmentDisplay {
                         } else if (applicable is ApplicableBonus bonus) {
                             bonus.BonusItemId = 0;
                         }
-                    
+
                     } catch (Exception ex) {
                         PluginLog.Error(ex, "Error replacing equipment");
                         //
@@ -353,7 +352,7 @@ public static class EquipmentDisplay {
                     Plugin.MainWindow.OpenPage(new EditItemPage(character, Guid.Empty, ItemConfigFile.CreateFromLocalPlayer(character, Guid.Empty, slot)));
                 }
             }
-            
+
 
             ImGui.EndPopup();
         }

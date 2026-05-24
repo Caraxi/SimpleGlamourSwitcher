@@ -1,5 +1,6 @@
 ﻿namespace SimpleGlamourSwitcher;
-using static SimpleGlamourSwitcher.UserInterface.Page.ChangeLogPage;
+
+using static UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {

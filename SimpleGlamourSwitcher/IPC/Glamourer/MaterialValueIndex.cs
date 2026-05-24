@@ -46,7 +46,7 @@ public readonly record struct MaterialValueIndex(MaterialValueIndex.DrawObjectTy
             DrawObjectType.Human when SlotIndex < 10 => ((uint)SlotIndex).ToEquipSlot(),
             DrawObjectType.Mainhand when SlotIndex == 0 => EquipSlot.MainHand,
             DrawObjectType.Offhand when SlotIndex == 0 => EquipSlot.OffHand,
-            _ => EquipSlot.Unknown
+            _ => EquipSlot.Unknown,
         };
     }
 
@@ -65,50 +65,38 @@ public readonly record struct MaterialValueIndex(MaterialValueIndex.DrawObjectTy
             DrawObjectType.Human => actor.Model,
             DrawObjectType.Mainhand => actor.IsCharacter ? actor.AsCharacter->DrawData.WeaponData[0].DrawObject : Model.Null,
             DrawObjectType.Offhand => actor.IsCharacter ? actor.AsCharacter->DrawData.WeaponData[1].DrawObject : Model.Null,
-            _ => Model.Null
+            _ => Model.Null,
         };
         return model.IsCharacterBase;
     }
 
-    public static MaterialValueIndex FromKey(uint key) {
-        return new MaterialValueIndex(key);
-    }
+    public static MaterialValueIndex FromKey(uint key) => new(key);
 
-    public static MaterialValueIndex Min(DrawObjectType drawObject = 0, byte slotIndex = 0, byte materialIndex = 0, byte rowIndex = 0) {
-        return new MaterialValueIndex(drawObject, slotIndex, materialIndex, rowIndex);
-    }
+    public static MaterialValueIndex Min(DrawObjectType drawObject = 0, byte slotIndex = 0, byte materialIndex = 0, byte rowIndex = 0) => new(drawObject, slotIndex, materialIndex, rowIndex);
 
-    public static MaterialValueIndex Max(DrawObjectType drawObject = (DrawObjectType)byte.MaxValue, byte slotIndex = byte.MaxValue, byte materialIndex = byte.MaxValue, byte rowIndex = byte.MaxValue) {
-        return new MaterialValueIndex(drawObject, slotIndex, materialIndex, rowIndex);
-    }
+    public static MaterialValueIndex Max(DrawObjectType drawObject = (DrawObjectType)byte.MaxValue, byte slotIndex = byte.MaxValue, byte materialIndex = byte.MaxValue, byte rowIndex = byte.MaxValue) => new(drawObject, slotIndex, materialIndex, rowIndex);
 
     public enum DrawObjectType : byte {
         Invalid,
         Human,
         Mainhand,
-        Offhand
+        Offhand,
     };
 
-    public static bool Validate(DrawObjectType type) {
-        return type is not DrawObjectType.Invalid && Enum.IsDefined(type);
-    }
+    public static bool Validate(DrawObjectType type) => type is not DrawObjectType.Invalid && Enum.IsDefined(type);
 
     public static bool ValidateSlot(DrawObjectType type, byte slotIndex) {
         return type switch {
             DrawObjectType.Human => slotIndex < 18,
             DrawObjectType.Mainhand => slotIndex == 0,
             DrawObjectType.Offhand => slotIndex == 0,
-            _ => false
+            _ => false,
         };
     }
 
-    public static bool ValidateMaterial(byte materialIndex) {
-        return materialIndex < MaterialsPerModel;
-    }
+    public static bool ValidateMaterial(byte materialIndex) => materialIndex < MaterialsPerModel;
 
-    public static bool ValidateRow(byte rowIndex) {
-        return rowIndex < ColorTable.NumRows;
-    }
+    public static bool ValidateRow(byte rowIndex) => rowIndex < ColorTable.NumRows;
 
     private static uint ToKey(DrawObjectType type, byte slotIndex, byte materialIndex, byte rowIndex) {
         var result = (uint)rowIndex;
@@ -132,21 +120,15 @@ public readonly record struct MaterialValueIndex(MaterialValueIndex.DrawObjectTy
             DrawObjectType.Human when SlotIndex == 17 => $"{BonusItemFlag.UnkSlot.ToName()} {MaterialString()} {RowString()}",
             DrawObjectType.Mainhand when SlotIndex == 0 => $"{EquipSlot.MainHand.ToName()} {MaterialString()} {RowString()}",
             DrawObjectType.Offhand when SlotIndex == 0 => $"{EquipSlot.OffHand.ToName()} {MaterialString()} {RowString()}",
-            _ => $"{DrawObject} Slot {SlotIndex} {MaterialString()} {RowString()}"
+            _ => $"{DrawObject} Slot {SlotIndex} {MaterialString()} {RowString()}",
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string MaterialString() {
-        return $"Material {(char)(MaterialIndex + 'A')}";
-    }
+    public string MaterialString() => $"Material {(char)(MaterialIndex + 'A')}";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string RowString() {
-        return $"Row {RowIndex / 2 + 1}{(char)(RowIndex % 2 + 'A')}";
-    }
+    public string RowString() => $"Row {RowIndex / 2 + 1}{(char)(RowIndex % 2 + 'A')}";
 
-    public static implicit operator MaterialValueIndex(string keyString) {
-        return FromKey(uint.Parse(keyString, NumberStyles.HexNumber));
-    }
+    public static implicit operator MaterialValueIndex(string keyString) => FromKey(uint.Parse(keyString, NumberStyles.HexNumber));
 }

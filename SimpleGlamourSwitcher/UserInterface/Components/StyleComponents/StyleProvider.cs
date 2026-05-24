@@ -2,9 +2,8 @@
 
 public abstract record StyleProvider<T> where T : StyleProvider<T>, new() {
     public static T Default { get; } = new();
-    
-    public static bool DrawEditor(ref T style) {
+
+    public static bool DrawEditor(ref T style) =>
         // TODO:
-        return false;
-    }
+        false;
 }

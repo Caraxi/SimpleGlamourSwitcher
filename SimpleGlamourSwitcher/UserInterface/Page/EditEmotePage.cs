@@ -22,8 +22,8 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
         get {
             modConfigs ??= Entry.ModConfigs.Clone();
             return modConfigs;
-        } 
-        set =>  modConfigs = value;
+        }
+        set => modConfigs = value;
     }
 
     protected override void DrawEditor(ref WindowControlFlags controlFlags) {
@@ -58,19 +58,19 @@ public class EditEmotePage(CharacterConfigFile character, Guid folderGuid, Emote
             if (!(string.IsNullOrWhiteSpace(arg) || name.Contains(arg, StringComparison.CurrentCultureIgnoreCase))) continue;
             if (ImGui.Selectable($"{name}##{m}", m == emoteId)) {
                 emoteId = m;
-                
+
                 var activeCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
                 if (activeCollection.ObjectValid) {
                     modConfigs = OutfitModConfig.GetModListFromEmote(m, activeCollection.EffectiveCollection.Id);
                 }
-                
+
                 return true;
             }
-            
+
             ImGui.SameLine();
             ImGui.TextDisabled($"{m}");
         }
-        
+
         return false;
     }
 }

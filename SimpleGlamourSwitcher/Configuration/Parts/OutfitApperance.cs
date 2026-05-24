@@ -12,7 +12,7 @@ namespace SimpleGlamourSwitcher.Configuration.Parts;
 [JsonObject]
 public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
     public bool RevertToGame;
-    
+
     public ApplicableCustomize Race = new();
     public ApplicableCustomize Gender = new();
     public ApplicableCustomize BodyType = new();
@@ -124,17 +124,17 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
                 AppearanceParameterKind.FeatureColor => FeatureColor,
                 AppearanceParameterKind.LipDiffuse => LipDiffuse,
                 AppearanceParameterKind.DecalColor => DecalColor,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid parameter")
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid parameter"),
             };
         }
     }
-    
-    
+
+
     public override void ApplyToCharacter(ref bool requestRedraw) {
-        
+
         if (!Apply) return;
         Notice.Show("Applying Customization Values");
-        
+
         foreach (var v in System.Enum.GetValues<CustomizeIndex>()) {
             var customization = this[v];
             if (customization is ApplicableCustomizeModable acm) {
@@ -186,7 +186,7 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
             FacePaint = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaint, customize, penumbraCollectionId),
             FacePaintReversed = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaintReversed, customize),
             FacePaintColor = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaintColor, customize),
-            
+
             FacePaintUvMultiplier = ApplicableParameterFloat.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.FacePaintUvMultiplier, parameter.FacePaintUvMultiplier),
             FacePaintUvOffset = ApplicableParameterFloat.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.FacePaintUvOffset, parameter.FacePaintUvOffset),
             MuscleTone = ApplicableParameterPercent.FromExistingState(defaultOptionsProvider, AppearanceParameterKind.MuscleTone, parameter.MuscleTone),
@@ -255,7 +255,5 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
         yield return ("DecalColor", DecalColor);
     }
 
-    IEnumerator IEnumerable.GetEnumerator() {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

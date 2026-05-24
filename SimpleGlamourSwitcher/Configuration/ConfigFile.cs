@@ -7,14 +7,14 @@ namespace SimpleGlamourSwitcher.Configuration;
 
 public abstract class ConfigFile {
     public uint Version { get; set; }
-    
+
     [JsonIgnore]
     public Guid Guid { get; protected set; }
-    
+
     protected virtual void Setup() {
         Version = 1;
     }
-    
+
     private static Dictionary<(Type, Guid), Dictionary<Guid, Exception>> BadFiles { get; } = new();
 
     [JsonIgnore] public IReadOnlyList<string> ValidationErrors { get; private set; } = new List<string>();
@@ -27,7 +27,7 @@ public abstract class ConfigFile {
         Validate(errorList);
         ValidationErrors = errorList;
     }
-    
+
     protected static void AddBadFile<T>(Guid parent, Guid guid, Exception ex) where T : ConfigFile {
         if (!BadFiles.TryGetValue((typeof(T), parent), out var list)) {
             list = new Dictionary<Guid, Exception>();
@@ -36,13 +36,8 @@ public abstract class ConfigFile {
         list[guid] = ex;
     }
 
-    public static Dictionary<Guid, Exception> GetBadFiles<T>(Guid parent) where T : ConfigFile {
-        return BadFiles.TryGetValue((typeof(T), parent), out var list) ? list : new Dictionary<Guid, Exception>();
-    }
+    public static Dictionary<Guid, Exception> GetBadFiles<T>(Guid parent) where T : ConfigFile => BadFiles.TryGetValue((typeof(T), parent), out var list) ? list : new Dictionary<Guid, Exception>();
 }
-
-
-
 
 public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T, TParent>, new() where TParent : ConfigFile, IParentConfig<TParent> {
     [JsonIgnore]
@@ -54,34 +49,34 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
         set => dirty = dirty || value;
     }
 
-    
-    private readonly static T Default = new();
+
+    private static readonly T Default = new();
 
     [JsonIgnore] private TParent? parent;
-    
+
     public static void VerifyParent(ref TParent? parent) {
         if (typeof(TParent) == typeof(RootConfig)) parent = RootConfig.Instance as TParent;
     }
     protected TParent? GetParent() {
         VerifyParent(ref parent);
-        
+
         return parent;
     }
-    
+
     public static T Create(TParent? parent = null) {
         VerifyParent(ref parent);
         var instance = new T();
         instance.Initialize(parent, Guid.NewGuid());
         return instance;
     }
-    
+
     public static T Create(Guid guid, TParent? parent = null) {
         VerifyParent(ref parent);
         var instance = new T();
         instance.Initialize(parent, guid);
         return instance;
     }
-    
+
     public static T? Load(Guid guid, TParent? parent = null) {
         try {
             VerifyParent(ref parent);
@@ -99,8 +94,8 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
             if (instance == null) return null;
             instance.Initialize(parent, guid);
             PluginLog.Debug($"Loaded {typeof(T).Name} - {guid}");
-            
-            
+
+
             return instance;
         } catch (Exception ex) {
             PluginLog.Error(ex, $"Failed to load {typeof(T).Name} - {guid}");
@@ -110,8 +105,8 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
     }
 
 
-    
-  
+
+
     public void Initialize(TParent? parent, Guid guid) {
         VerifyParent(ref parent);
         Setup();
@@ -122,41 +117,41 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
     }
 
     protected void SaveAs(Guid guid, bool revertGuid = false) {
-        var originalGuid = this.Guid;
+        var originalGuid = Guid;
 
         try {
-            this.Guid = guid;
+            Guid = guid;
             Save(true);
         } finally {
             if (revertGuid) {
-                this.Guid = originalGuid;
+                Guid = originalGuid;
             }
         }
     }
 
     public T? SaveTo(TParent newParent) {
-        var originalGuid = this.Guid;
-        var originalParent = this.parent;
+        var originalGuid = Guid;
+        var originalParent = parent;
         var newGuid = Guid.NewGuid();
         try {
-            this.parent = newParent;
-            this.Guid = newGuid;
+            parent = newParent;
+            Guid = newGuid;
             Save(true);
         } finally {
-            this.Guid = originalGuid;
-            this.parent = originalParent;
+            Guid = originalGuid;
+            parent = originalParent;
         }
 
         return Load(newGuid, newParent);
     }
-    
+
     public void Save(bool force = false) {
         if (force) Dirty = true;
         PluginLog.Verbose($"Save Request {typeof(T).Name} - {GetConfigPath(parent, Guid)}");
         if (!Dirty) return;
 
         dirty = false;
-        
+
         PluginLog.Debug($"Save {typeof(T).Name} - {GetConfigPath(parent, Guid)}");
 
         var file = GetConfigPath(parent, Guid);
@@ -171,7 +166,7 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
             PluginLog.Error(ex, $"Error saving {typeof(T).Name} - {Guid}");
         }
     }
-    
+
     public static FileInfo GetConfigPath(TParent? parent, Guid guid) {
         VerifyParent(ref parent);
 
@@ -179,15 +174,15 @@ public abstract class ConfigFile<T, TParent> : ConfigFile where T : ConfigFile<T
         if (typeof(T).IsAssignableTo(typeof(INamedConfigFile))) {
             fileName = typeof(T).GetMethod("GetFileName", BindingFlags.Static | BindingFlags.Public)?.Invoke(null, [guid]) as string;
         }
-        
+
         if (fileName == null) throw new Exception("Filename cannot be null.");
-        
-        
+
+
         var filePath = Path.Join(TParent.GetChildDirectory(parent).FullName, fileName);
-        
+
         PluginLog.Debug($"File Path for [{typeof(T).Name}]{guid} - {filePath}");
-        
-        
+
+
         return new FileInfo(filePath);
     }
 }

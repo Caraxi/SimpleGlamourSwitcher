@@ -22,16 +22,16 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
             return field ??= new CommonDetailsEditor(character, Entry);
         }
     }
-    
+
 
     protected virtual float SubWindowWidth => 600;
 
     public bool IsNew { get; protected set; } = entry == null;
-    
+
     public abstract string TypeName { get; }
 
     protected T Entry { get; } = entry ?? T.CreateFromLocalPlayer(character, folderGuid, character.GetOptionsProvider(folderGuid));
-    
+
     private readonly FileDialogManager fileDialogManager = new();
 
     protected bool Dirty;
@@ -42,15 +42,15 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
         ImGuiExt.CenterText(IsNew ? $"New {TypeName} in {CommonDetailsEditor?.FolderPath}" : $"{CommonDetailsEditor?.FolderPath} / {Entry.Name}", shadowed: true);
     }
 
-    
-    
+
+
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
         using (ImRaii.Disabled(Dirty && !ImGui.GetIO().KeyShift)) {
-            if (ImGuiExt.ButtonWithIcon(Dirty ? "Discard Changes": "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
+            if (ImGuiExt.ButtonWithIcon(Dirty ? "Discard Changes" : "Back", FontAwesomeIcon.CaretLeft, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                 MainWindow.PopPage();
             }
         }
-        
+
 #if DEBUG
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) && ImGui.IsMouseClicked(ImGuiMouseButton.Right)) {
             Dirty = false;
@@ -63,26 +63,26 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
     }
 
     protected abstract void DrawEditor(ref WindowControlFlags controlFlags);
-    
+
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         fileDialogManager.Draw();
         controlFlags |= WindowControlFlags.PreventClose;
-        
+
         var pad = (ImGui.GetContentRegionAvail().X - SubWindowWidth * ImGuiHelpers.GlobalScale) / 2f;
-        
+
         Dirty |= CommonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth);
-        
+
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();
-        
-        using (ImRaii.Child("entryEditor", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {        
+
+        using (ImRaii.Child("entryEditor", new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing() * 3), false)) {
             DrawEditor(ref controlFlags);
             Dirty |= CommonDetailsEditor.ShowCommonDetails(ref controlFlags);
         }
-        
+
         ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin() - ImGui.GetStyle().FramePadding, ImGui.GetItemRectMax() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Separator));
 
-        
+
         ImGui.Spacing();
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();

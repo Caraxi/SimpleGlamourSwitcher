@@ -32,23 +32,23 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
             TitleBarButtons.Add(lockButton);
             return;
         }
-        
+
         TitleBarButtons.Add(compactButton);
         if (compact) {
             TitleBarButtons.Add(lockButton);
         }
     }
-    
+
     private readonly TitleBarButton compactButton = new() {
         Icon = FontAwesomeIcon.ArrowRight,
         ShowTooltip = () => { },
     };
-    
+
     private readonly TitleBarButton lockButton = new() {
         Icon = FontAwesomeIcon.Lock,
-        ShowTooltip = () => { }
+        ShowTooltip = () => { },
     };
-    
+
     public override void OnClose() {
         if (Plugin.IsDisposing) return;
         PluginConfig.EquippedWindowConfig.WindowOpen = false;
@@ -56,11 +56,11 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         GlamourerIpc.StateChanged.Event -= OnGlamourerStateChanged;
         PenumbraIpc.ModSettingChanged.Event -= OnPenumbraSettingChanged;
     }
-    
+
     private void OnPenumbraSettingChanged(ModSettingChange change, Guid collectionGuid, string modDirectory, bool inherited) {
         if (PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id == collectionGuid) UpdateOutfit();
     }
-    
+
     private void OnGlamourerStateChanged(IntPtr obj) {
         if (obj == Objects.LocalPlayer?.Address) UpdateOutfit();
     }
@@ -69,7 +69,7 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
 
     public override void OnOpen() {
         PluginConfig.EquippedWindowConfig.WindowOpen = true;
-        
+
         compact = PluginConfig.EquippedWindowConfig.UseCompactWindow;
         if (compact) {
             locked = PluginConfig.EquippedWindowConfig.LockWindow;
@@ -77,14 +77,14 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
             PluginConfig.EquippedWindowConfig.LockWindow = false;
         }
         PluginConfig.Save(true);
-        
+
         compactButton.Click = ToggleCompactMode;
         lockButton.Click = ToggleLock;
         UpdateButtons();
-        
+
         dirty = false;
         updatingOutfit = false;
-        
+
         AllowClickthrough = false;
         AllowPinning = false;
         RespectCloseHotkey = false;
@@ -173,9 +173,9 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
             updatingOutfit = false;
         });
     }
-    
 
-    
+
+
     public override void Draw() {
         var outfit = OutfitCache;
         if (!dirty && updatedCache != null && !applyingOutfit) {
@@ -190,9 +190,9 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
                 applyingOutfit = false;
             });
         }
-        
+
         outfit ??= OutfitConfigFile.Create(ActiveCharacter);
-        
+
         dirty |= EquipmentDisplay.DrawEquipment(outfit.Equipment, EquipmentDisplayFlags.Simple | EquipmentDisplayFlags.EnableCustomItemPicker | EquipmentDisplayFlags.ContextShowSaveSlot | (compact ? EquipmentDisplayFlags.Compact : EquipmentDisplayFlags.None));
 
         if (PluginConfig.EquippedWindowConfig.ShowSaveButton && ActiveCharacter != null) {

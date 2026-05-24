@@ -7,10 +7,10 @@ public static class HeelsIpc {
     static HeelsIpc() {
         EzIPC.Init(typeof(HeelsIpc), "SimpleHeels");
     }
-    
+
     [EzIPC] public static readonly Action<string, uint>? SetLocalPlayerIdentity = null!;
     [EzIPC] private static readonly Func<(int Major, int Minor)>? ApiVersion = null!;
-    
+
     public static bool IsReady() {
         try {
             if (ApiVersion == null) return false;

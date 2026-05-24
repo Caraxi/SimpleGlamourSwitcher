@@ -37,10 +37,10 @@ public class PluginService {
     public static ItemManager ItemManager => _serviceManager.GetService<ItemManager>();
     public static DictBonusItems DictBonusItems => _serviceManager.GetService<DictBonusItems>();
     public static CustomizeManager CustomizeManager => _serviceManager.GetService<CustomizeManager>();
-    
+
     private static ServiceManager _serviceManager = null!;
 
-    public static CleanupManager CleanupManager { private set; get; } = null!;
+    public static CleanupManager CleanupManager { get; private set; } = null!;
 
     public void Initialize() {
         var logger = new MainLogger(nameof(SimpleGlamourSwitcher));
@@ -76,7 +76,7 @@ public class PluginService {
             .AddSingleton<RestrictedItemsRace>()
             .AddSingleton<NpcCustomizeSet>()
             .AddSingleton<CustomizeManager>();
-        
+
 
         _serviceManager.EnsureRequiredServices();
 

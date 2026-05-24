@@ -11,7 +11,7 @@ using Dalamud.Game.ClientState.Keys;
 namespace SimpleGlamourSwitcher.Utility;
 
 public partial class NativeKeyState : IDisposable {
-    
+
     private const int WH_KEYBOARD_LL = 13;
 
     private const uint WM_KEYUP = 0x101;
@@ -46,7 +46,9 @@ public partial class NativeKeyState : IDisposable {
     public static partial nint GetModuleHandleW([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
 
     [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial nint FindWindowExW(nint hWndParent, nint hWndChildAfter, string lpszClass,
+    private static partial nint FindWindowExW(nint hWndParent,
+        nint hWndChildAfter,
+        string lpszClass,
         string? lpszWindow);
 
     [LibraryImport("user32.dll")]
@@ -69,7 +71,7 @@ public partial class NativeKeyState : IDisposable {
 
     [LibraryImport("user32.dll")]
     private static partial short GetAsyncKeyState(int vKey);
-    
+
 
     private nint _keyboardHookId;
     private Thread? _thread;
@@ -82,11 +84,11 @@ public partial class NativeKeyState : IDisposable {
 
     private bool enabled;
     private bool disposed;
-    
+
     internal NativeKeyState() {
-        
+
     }
-    
+
     internal void Enable() {
         if (disposed) throw new ObjectDisposedException(nameof(NativeKeyState));
         PluginLog.Debug("Enable NativeKeyState");
@@ -114,29 +116,29 @@ public partial class NativeKeyState : IDisposable {
                 TranslateMessage(msg);
                 DispatchMessageW(msg);
             }
-            
+
         });
         _thread.Start();
     }
 
 
     private HashSet<VirtualKey> heldKeys = new();
-    public IReadOnlySet<VirtualKey> HeldKeys => heldKeys; 
-    
+    public IReadOnlySet<VirtualKey> HeldKeys => heldKeys;
+
     public void Disable() {
         PluginLog.Debug("Disable NativeKeyState");
         if (_keyboardHookId != nint.Zero) {
             UnhookWindowsHookEx(_keyboardHookId);
             _keyboardHookId = nint.Zero;
         }
-       
+
         _cts?.Cancel();
         enabled = false;
     }
-    
+
     public void Dispose() {
         disposed = true;
-        Disable(); 
+        Disable();
         _cts?.Dispose();
     }
 
@@ -164,13 +166,13 @@ public partial class NativeKeyState : IDisposable {
         Block,
         BlockAndPassToGame,
     }
-    
+
     private nint OnKeystrokeDetour(int nCode, nint wParam, ref KeyInfoStruct lParam) {
         // DANGER: This method is *highly sensitive* to performance impacts! Keep it light!!
         // When this tweak runs, this method runs on *every keyboard event across the entire system*. As such, if this
         // takes too long, it *will* be noticeable to the user, including if/when they're not in the game. Yes, this
         // does in fact turn FFXIV into a de facto keylogger. We have to do this to capture certain keys.
-        
+
         var vk = (VirtualKey)lParam.vkCode switch {
             VirtualKey.LMENU or VirtualKey.RMENU => VirtualKey.MENU,
             VirtualKey.LSHIFT or VirtualKey.RSHIFT => VirtualKey.SHIFT,
@@ -178,13 +180,13 @@ public partial class NativeKeyState : IDisposable {
             VirtualKey.LWIN or VirtualKey.RWIN => VirtualKey.LWIN,
             _ => (VirtualKey)lParam.vkCode,
         };
-        
+
         if ((lParam.flags & KeyInfoFlags.Up) == KeyInfoFlags.Up) {
             heldKeys.Remove(vk);
         } else {
             heldKeys.Add(vk);
         }
-        
+
         if (onKeystroke == null) goto ORIGINAL;
         if (!TryFindGameWindow(out var handle)) goto ORIGINAL;
         if (GetForegroundWindow() != handle) goto ORIGINAL;
@@ -195,8 +197,8 @@ public partial class NativeKeyState : IDisposable {
         } catch (Exception ex) {
             PluginLog.Error(ex, "Error processing OnKeystroke");
         }
-        
-        
+
+
         if (handleType == KeyHandleType.Block) {
             return 1;
         }
@@ -205,14 +207,12 @@ public partial class NativeKeyState : IDisposable {
             SendMessageW(handle, lParam.flags == KeyInfoFlags.Up ? WM_KEYUP : WM_KEYDOWN, lParam.vkCode, 0);
             return 1;
         }
-        
+
         ORIGINAL:
         return CallNextHookEx(_keyboardHookId, nCode, wParam, ref lParam);
     }
 
-    public static bool IsKeyDown(VirtualKey vKey) {
-        return (GetAsyncKeyState((int) vKey) & 0x8000) > 0;
-    }
+    public static bool IsKeyDown(VirtualKey vKey) => (GetAsyncKeyState((int)vKey) & 0x8000) > 0;
 
     private static bool TryFindGameWindow(out nint handle) {
         handle = nint.Zero;

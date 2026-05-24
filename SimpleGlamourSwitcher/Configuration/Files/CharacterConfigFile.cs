@@ -12,11 +12,9 @@ using SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 
 namespace SimpleGlamourSwitcher.Configuration.Files;
 
-
-
 public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigFile>, INamedConfigFile, IParentConfig<CharacterConfigFile>, IImageProvider, IDefaultOutfitOptionsProvider {
-    public readonly static Guid SharedDataGuid = new("00000000-0000-0000-0000-000000000001");
-    
+    public static readonly Guid SharedDataGuid = new("00000000-0000-0000-0000-000000000001");
+
     public string Name = string.Empty;
     public bool Hidden = false;
     public bool ApplyOnLogin = true;
@@ -33,16 +31,16 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
     public List<AutoCommandEntry> AutoCommandOnCharacterLoad = new();
     public List<AutoCommandEntry> AutoCommandOnCharacterUnload = new();
-    
+
     public bool Deleted;
-    
+
     public PolaroidStyle? OutfitPolaroidStyle;
     public PolaroidStyle? FolderPolaroidStyle;
-    
+
     public ImageDetail ImageDetail { get; set; } = new();
-    
+
     public OrderedDictionary<Guid, CharacterFolder> Folders = new();
-    
+
     public AutomationConfig Automation = new();
 
     public FolderSortStrategy FolderSortStrategy = FolderSortStrategy.Inherit;
@@ -51,14 +49,15 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
     public List<Guid> DefaultLinkBefore { get; set; } = [];
     public List<Guid> DefaultLinkAfter { get; set; } = [];
-    
+
     public delegate bool IncludeCharacter(CharacterConfigFile character);
+
     public static class Filters {
         public static readonly IncludeCharacter Default = c => c is { Deleted: false, Hidden: false };
         public static readonly IncludeCharacter ShowHiddenCharacter = c => c is { Deleted: false };
         public static readonly IncludeCharacter DeletedCharacter = c => c is { Deleted: true };
     }
-    
+
     public static async Task<Dictionary<Guid, CharacterConfigFile>> GetCharacterConfigurations(IncludeCharacter? filter = null, CancellationToken cancellationToken = default) {
         var dict = new Dictionary<Guid, CharacterConfigFile>();
 
@@ -84,19 +83,17 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
 
             dict = loadedCharacters;
         }, cancellationToken).WaitAsync(cancellationToken);
-        
+
 
         return dict;
     }
-    
+
     public static FileInfo GetFile(Guid? guid) {
         if (guid == null) throw new Exception(nameof(CharacterConfigFile) + " requires a guid to be provided.");
         return new FileInfo(Path.Join(GetDirectory().FullName, guid.ToString(), "character.json"));
     }
-    
-    public static DirectoryInfo GetDirectory() {
-        return new DirectoryInfo(Path.Join(PluginInterface.GetPluginConfigDirectory(), "characters"));
-    }
+
+    public static DirectoryInfo GetDirectory() => new(Path.Join(PluginInterface.GetPluginConfigDirectory(), "characters"));
 
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap, out FileInfo filePath) {
         var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
@@ -106,18 +103,18 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 filePath = new FileInfo($"{fileName}.{type}");
             }
         }
-        
+
         if (!filePath.Exists) {
             wrap = null;
             return false;
         }
-        
+
         wrap = CustomTextureProvider.GetFromFile(filePath).GetWrapOrDefault();
         return wrap is not null;
     }
-    
+
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) => TryGetImage(out wrap, out _);
-    
+
     public bool Delete() {
         Notice.Show($"Deleting Character Config: {Name} / {Guid}");
         Deleted = true;
@@ -130,11 +127,11 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         foreach (var (fGuid, f) in Folders) {
             f.ConfigFile = this;
             f.Guid = fGuid;
-            
+
             if (f.Parent == Guid.Empty) continue;
             if (!Folders.ContainsKey(f.Parent)) f.Parent = Guid.Empty;
         }
-        
+
         base.Setup();
     }
 
@@ -147,32 +144,32 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 dict.TryAdd(e.Key, eT);
             }
         }
-        
+
         return dict;
     }
-    
+
     public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries() => await GetEntries(null, CancellationToken.None);
     public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries(CancellationToken cancellationToken) => await GetEntries(null, cancellationToken);
     public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries(Guid? folder) => await GetEntries(folder, CancellationToken.None);
     public async Task<OrderedDictionary<Guid, IListEntry>> GetEntries(Guid? folder, CancellationToken cancellationToken) {
         return await Task.Run(() => {
             var entries = new List<IListEntry>();
-            
+
             PluginLog.Verbose($"Getting Outfits from {OutfitDirectory.FullName}");
             foreach (var f in OutfitDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
-                
+
                 var outfitCfg = OutfitConfigFile.Load(guid, this);
                 if (outfitCfg == null) continue;
                 var outfitFolder = Folders.ContainsKey(outfitCfg.Folder) ? outfitCfg.Folder : Guid.Empty;
                 if (folder != null && outfitFolder != folder) continue;
                 entries.Add(outfitCfg);
             }
-            
+
             PluginLog.Verbose($"Getting Items from {OutfitDirectory.FullName}");
             foreach (var f in ItemDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
-                
+
                 var itemCfg = ItemConfigFile.Load(guid, this);
                 if (itemCfg == null) continue;
                 var outfitFolder = Folders.ContainsKey(itemCfg.Folder) ? itemCfg.Folder : Guid.Empty;
@@ -180,7 +177,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 entries.Add(itemCfg);
             }
 
-            
+
             PluginLog.Verbose($"Getting Minions from {MinionDirectory.FullName}");
             foreach (var f in MinionDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
@@ -190,7 +187,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 if (folder != null && outfitFolder != folder) continue;
                 entries.Add(minionCfg);
             }
-            
+
             PluginLog.Verbose($"Getting Emotes from {EmoteDirectory.FullName}");
             foreach (var f in EmoteDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
@@ -200,7 +197,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 if (folder != null && outfitFolder != folder) continue;
                 entries.Add(emoteCfg);
             }
-            
+
             PluginLog.Verbose($"Getting GenericEntries from {GenericDirectory.FullName}");
             foreach (var f in GenericDirectory.GetFiles("*.json")) {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(f.FullName), out var guid)) continue;
@@ -211,44 +208,42 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 entries.Add(genericCfg);
             }
             var dict = new OrderedDictionary<Guid, IListEntry>();
-            foreach (var outfit in entries.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name  : o.SortName)) {
+            foreach (var outfit in entries.OrderBy(o => string.IsNullOrWhiteSpace(o.SortName) ? o.Name : o.SortName)) {
                 dict.Add(outfit.Guid, outfit);
             }
 
             return dict;
         }, cancellationToken).WaitAsync(cancellationToken);
     }
-    
-    public static string GetFileName(Guid? guid) {
-        return Path.Join("characters", $"{guid}", "character.json");
-    }
+
+    public static string GetFileName(Guid? guid) => Path.Join("characters", $"{guid}", "character.json");
 
     [JsonIgnore]
     public DirectoryInfo OutfitDirectory {
         get {
             var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Outfits));
             if (!dir.Exists) dir.Create();
-            
+
             PluginLog.Debug($"Character Outfit Directory [{Guid}] is {dir.FullName}");
-            
-            
+
+
             return dir;
         }
     }
-    
+
     [JsonIgnore]
     public DirectoryInfo ItemDirectory {
         get {
             var dir = new DirectoryInfo(Path.Join(GetChildDirectory(this).FullName, CharacterDirectory.Items));
             if (!dir.Exists) dir.Create();
-            
+
             PluginLog.Debug($"Character Item Directory [{Guid}] is {dir.FullName}");
-            
-            
+
+
             return dir;
         }
     }
-    
+
     [JsonIgnore]
     public DirectoryInfo MinionDirectory {
         get {
@@ -258,7 +253,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             return dir;
         }
     }
-    
+
     [JsonIgnore]
     public DirectoryInfo EmoteDirectory {
         get {
@@ -267,8 +262,8 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             PluginLog.Debug($"Character Emote Directory [{Guid}] is {dir.FullName}");
             return dir;
         }
-    }    
-    
+    }
+
     [JsonIgnore]
     public DirectoryInfo GenericDirectory {
         get {
@@ -289,13 +284,13 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
     }
 
     private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
-    
+
     public void SetImage(FileInfo fileInfo) {
-        if ( Guid == Guid.Empty) return;
+        if (Guid == Guid.Empty) return;
 
         var dir = new DirectoryInfo(Path.Join(GetDirectory().FullName, Guid.ToString()));
         if (!dir.Exists) Directory.CreateDirectory(dir.FullName);
-        
+
         var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
@@ -312,7 +307,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         Dirty = true;
         Save();
     }
-    
+
     public static DirectoryInfo GetChildDirectory(CharacterConfigFile? parent) {
         var configFile = new FileInfo(Path.Join(PluginInterface.GetPluginConfigDirectory(), GetFileName(parent?.Guid ?? throw new InvalidOperationException())));
         return new DirectoryInfo(configFile.Directory?.FullName ?? throw new InvalidOperationException());
@@ -325,14 +320,14 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
         return folderStr;
     }
-    
+
     private string ParseFolderPath(Guid guid, HashSet<Guid> folders, bool characterName, bool compact) {
         if (!folders.Add(guid)) throw new Exception("Folder loop caught");
         if (guid == Guid.Empty || !Folders.TryGetValue(guid, out var folder)) return characterName ? Name : string.Empty;
         return characterName || folder.Parent != Guid.Empty ? $"{ParseFolderPath(folder.Parent, folders, characterName, compact)}{(compact ? "/" : " / ")}{folder.Name}" : folder.Name;
     }
 
-    
+
     public HashSet<CustomizeIndex> DefaultEnabledCustomizeIndexes { get; set; } = new();
     public HashSet<HumanSlot> DefaultDisabledEquipmentSlots { get; set; } = new();
     public HashSet<EquipSlot> DefaultDisabledWeaponSlots { get; set; } = new();
@@ -346,8 +341,8 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         return Folders.GetValueOrDefault(folderGuid) as IDefaultOutfitOptionsProvider ?? this;
     }
 
-    
-    
+
+
     public async Task ApplyAutomation(bool isLogin = false, bool isCharacterSwitch = false, bool isGearsetSwitch = false) {
         var outfits = await GetEntries();
 
@@ -363,10 +358,10 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                         Chat.PrintError($"Failed to find outfit configured for Gearset '{currentGearset.Value.Name}'.", "Simple Glamour Switcher", 500);
                     }
                 }
-                
+
                 return;
             }
-            
+
         }
 
         if (isGearsetSwitch && Automation.DefaultGearset != null) {
@@ -374,13 +369,13 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 if (entry is OutfitConfigFile outfit) {
                     await outfit.Apply();
                 }
-                
+
             } else {
                 Chat.PrintError($"Failed to find outfit configured for 'Any Gearset'.", "Simple Glamour Switcher", 500);
             }
             return;
         }
-        
+
         if (isCharacterSwitch && Automation.CharacterSwitch != null) {
             if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var entry)) {
                 if (entry is OutfitConfigFile outfit) {
@@ -391,7 +386,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
             }
             return;
         }
-        
+
         if (isLogin && Automation.Login != null) {
             if (outfits.TryGetValue(Automation.Login.Value, out var entry)) {
                 if (entry is OutfitConfigFile outfit) {
@@ -404,10 +399,8 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
     }
 
-    public FolderSortStrategy GetFolderSortStrategy() {
-        return FolderSortStrategy == FolderSortStrategy.Inherit ? PluginConfig.FolderSortStrategy : FolderSortStrategy;
-    }
-    
+    public FolderSortStrategy GetFolderSortStrategy() => FolderSortStrategy == FolderSortStrategy.Inherit ? PluginConfig.FolderSortStrategy : FolderSortStrategy;
+
     public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
         var fileName = Path.Join(GetDirectory().FullName, Guid.ToString(), "character");
         fileInfo = new FileInfo(fileName + ".png");
@@ -416,7 +409,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
                 fileInfo = new FileInfo($"{fileName}.{type}");
             }
         }
-        
+
         if (!fileInfo.Exists) {
             fileInfo = null;
             return false;

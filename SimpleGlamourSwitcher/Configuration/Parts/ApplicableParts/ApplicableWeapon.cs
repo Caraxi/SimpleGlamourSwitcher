@@ -10,9 +10,9 @@ using ItemManager = SimpleGlamourSwitcher.Service.ItemManager;
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
 public record ApplicableWeapon : ApplicableItem<EquipSlot> {
-    public Penumbra.GameData.Structs.ItemId ItemId;
+    public ItemId ItemId;
     public ApplicableStain Stain = new();
-    
+
     public override void ApplyToCharacter(EquipSlot slot, ref bool requestRedraw) {
         if (!Apply) return;
 
@@ -21,26 +21,22 @@ public record ApplicableWeapon : ApplicableItem<EquipSlot> {
         if (PluginConfig.LogActionsToChat) {
             Notice.Show($"Apply to {slot}: {equipItem.Name} [{equipItem.ItemId.Id} / {ItemId}");
         }
-        
+
         PluginLog.Debug($"Apply to {slot}: {equipItem.Name} / {equipItem.ItemId}");
 
-        var ec = GlamourerIpc.SetItem.Invoke(0, (ApiEquipSlot) slot, equipItem.ItemId.Id, Stain.AsList());
+        var ec = GlamourerIpc.SetItem.Invoke(0, (ApiEquipSlot)slot, equipItem.ItemId.Id, Stain.AsList());
 
         if (ec == GlamourerApiEc.Success) {
             ModManager.ApplyMods(slot, ModConfigs);
         } else {
             PluginLog.Error($"Failed to apply item: {ec}");
         }
-        
+
         if (ActiveCharacter?.CustomizePlusProfile != null) {
             CustomizePlus.ApplyTemplateConfig(ActiveCharacter.CustomizePlusProfile.Value, CustomizePlusTemplateConfigs, slot);
         }
     }
 
-    public override EquipItem GetEquipItem(HumanSlot slot) {
-        return PluginService.ItemManager.Resolve(slot.ToEquipSlot(), ItemId);
-    }
-    public override EquipItem GetEquipItem(EquipSlot slot) {
-        return PluginService.ItemManager.Resolve(slot, ItemId);
-    }
+    public override EquipItem GetEquipItem(HumanSlot slot) => PluginService.ItemManager.Resolve(slot.ToEquipSlot(), ItemId);
+    public override EquipItem GetEquipItem(EquipSlot slot) => PluginService.ItemManager.Resolve(slot, ItemId);
 }

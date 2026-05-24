@@ -21,7 +21,7 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher.UserInterface.Windows;
 
 public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoBackground) {
-    
+
     private IImageProvider? imageProvider;
     private PolaroidStyle? polaroidStyle;
     private PolaroidStyle? ScaledStyle => polaroidStyle == null ? null : polaroidStyle with { ImageSize = polaroidStyle.ImageSize * scale };
@@ -33,14 +33,14 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
     private float animationTargetSeconds = 2f;
 
     private unsafe float GetCurrentAnimationDuration() {
-        var chr = (Character*) (Objects.LocalPlayer?.Address ?? 0);
+        var chr = (Character*)(Objects.LocalPlayer?.Address ?? 0);
         if (chr == null) return -1f;
-        var obj = (Human*) chr->GetDrawObject();
+        var obj = (Human*)chr->GetDrawObject();
         if (obj == null || obj->GetObjectType() != ObjectType.CharacterBase || obj->GetModelType() != CharacterBase.ModelType.Human || obj->Skeleton == null || obj->Skeleton->PartialSkeletonCount <= 0) return -1f;
-        
+
         var animatedSkeleton = (&obj->Skeleton->PartialSkeletons[0])->GetHavokAnimatedSkeleton(0);
         if (animatedSkeleton == null || animatedSkeleton->AnimationControls.Length <= 0) return -1f;
-        
+
         var control = animatedSkeleton->AnimationControls[0].Value;
         if (control == null) return -1f;
 
@@ -52,33 +52,31 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
 
         return anim->Duration;
     }
-    
-    
+
+
     public void BeginScreenshot(PolaroidStyle? style, IImageProvider? imageProvider) {
         this.imageProvider = imageProvider;
-        this.polaroidStyle = style;
+        polaroidStyle = style;
 
         animationTargetSeconds = 2f;
         var d = GetCurrentAnimationDuration();
         if (d > 0) animationTargetSeconds = d;
-        
+
         IsOpen = true;
         animatedScreenshot.Dispose();
         animatedScreenshot = new AnimatedScreenshotRecording();
     }
 
-    public override bool DrawConditions() {
-        return imageProvider != null && polaroidStyle != null;;
-    }
+    public override bool DrawConditions() => imageProvider != null && polaroidStyle != null;
 
     public override void PreDraw() {
         ForceMainWindow = true;
-        this.AllowPinning = false;
-        this.AllowClickthrough = false;
+        AllowPinning = false;
+        AllowClickthrough = false;
 
-        this.ShowCloseButton = !animatedScreenshot.IsRecording;
-        this.RespectCloseHotkey = !animatedScreenshot.IsRecording;
-        
+        ShowCloseButton = !animatedScreenshot.IsRecording;
+        RespectCloseHotkey = !animatedScreenshot.IsRecording;
+
         base.PreDraw();
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
     }
@@ -91,27 +89,27 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
 
         if (windowTopLeft.X < mainViewportTopLeft.X || windowTopLeft.Y < mainViewportTopLeft.Y) {
             ImGui.SetWindowPos(new Vector2(
-                MathF.Max(mainViewportTopLeft.X,  windowTopLeft.X),
+                MathF.Max(mainViewportTopLeft.X, windowTopLeft.X),
                 MathF.Max(mainViewportTopLeft.Y, windowTopLeft.Y)
-                ));
+            ));
             return false;
         }
-        
+
         if (windowBottomRight.X > mainViewportBottomRight.X || windowBottomRight.Y > mainViewportBottomRight.Y) {
             ImGui.SetWindowPos(new Vector2(
-                MathF.Min(mainViewportBottomRight.X,  windowBottomRight.X) - ImGui.GetWindowSize().X,
+                MathF.Min(mainViewportBottomRight.X, windowBottomRight.X) - ImGui.GetWindowSize().X,
                 MathF.Min(mainViewportBottomRight.Y, windowBottomRight.Y) - ImGui.GetWindowSize().Y
-                ));
+            ));
 
             return false;
         }
 
         return true;
     }
-    
+
     public override void Draw() {
         using var disableAll = ImRaii.Disabled(!ConstrainWindow());
-        
+
         ImGui.GetBackgroundDrawList().AddRectFilled(ImGui.GetMainViewport().Pos, ImGui.GetMainViewport().Pos + ImGui.GetMainViewport().Size, 0xB0000000);
         if (imageProvider == null || ScaledStyle == null) return;
 
@@ -127,7 +125,7 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
         }
 
         if (wrap == null) {
-            textureWrapTask ??= TextureProvider.CreateFromImGuiViewportAsync(new ImGuiViewportTextureArgs() { AutoUpdate = true, KeepTransparency = false, TakeBeforeImGuiRender = true, ViewportId = ImGui.GetMainViewport().ID});
+            textureWrapTask ??= TextureProvider.CreateFromImGuiViewportAsync(new ImGuiViewportTextureArgs { AutoUpdate = true, KeepTransparency = false, TakeBeforeImGuiRender = true, ViewportId = ImGui.GetMainViewport().ID });
             if (textureWrapTask.IsCompletedSuccessfully) {
                 wrap = textureWrapTask.Result;
                 textureWrapTask = null;
@@ -136,11 +134,11 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
 
         using (ImRaii.Group()) {
             Polaroid.DrawDummy(ScaledStyle);
-            var imageDetail = new ImageDetail() { UvMin = (ImGui.GetItemRectMin() + ScaledStyle.FramePadding) / ImGui.GetMainViewport().Size, UvMax = (ImGui.GetItemRectMin() + ScaledStyle.FramePadding + ScaledStyle.ImageSize) / ImGui.GetMainViewport().Size };
+            var imageDetail = new ImageDetail { UvMin = (ImGui.GetItemRectMin() + ScaledStyle.FramePadding) / ImGui.GetMainViewport().Size, UvMax = (ImGui.GetItemRectMin() + ScaledStyle.FramePadding + ScaledStyle.ImageSize) / ImGui.GetMainViewport().Size };
             Polaroid.DrawPolaroid(() => wrap, imageDetail, "Screenshot", ScaledStyle);
             if (PluginConfig.ScreenshotGridlineStyle != GridlineStyle.None) {
                 var tl = ImGui.GetItemRectMin() + ScaledStyle.FramePadding;
-                var br =  ImGui.GetItemRectMin() + ScaledStyle.ImageSize + ScaledStyle.FramePadding;
+                var br = ImGui.GetItemRectMin() + ScaledStyle.ImageSize + ScaledStyle.FramePadding;
                 var sz = br - tl;
                 var tr = tl + sz * Vector2.UnitX;
                 var bl = tl + sz * Vector2.UnitY;
@@ -153,9 +151,9 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                 switch (PluginConfig.ScreenshotGridlineStyle) {
                     case GridlineStyle.Thirds:
                         dl.AddLine(tl + third * Vector2.UnitX, bl + third * Vector2.UnitX, color, lineThickness);
-                        dl.AddLine(tr - third * Vector2.UnitX, br - third * Vector2.UnitX , color, lineThickness);
+                        dl.AddLine(tr - third * Vector2.UnitX, br - third * Vector2.UnitX, color, lineThickness);
                         dl.AddLine(tl + third * Vector2.UnitY, tr + third * Vector2.UnitY, color, lineThickness);
-                        dl.AddLine(bl - third * Vector2.UnitY, br - third * Vector2.UnitY , color, lineThickness);
+                        dl.AddLine(bl - third * Vector2.UnitY, br - third * Vector2.UnitY, color, lineThickness);
                         break;
                     case GridlineStyle.Diagonals:
                         dl.AddLine(tl, br, color, lineThickness);
@@ -171,20 +169,20 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                         if (ScaledStyle.ImageSize.Y > ScaledStyle.ImageSize.X * 1.5f) {
                             dl.AddLine(tl, tr + third * Vector2.UnitY, color, lineThickness);
                             dl.AddLine(tr, tl + third * Vector2.UnitY, color, lineThickness);
-                            dl.AddLine(bl, br - third *  Vector2.UnitY, color, lineThickness);
+                            dl.AddLine(bl, br - third * Vector2.UnitY, color, lineThickness);
                             dl.AddLine(br, bl - third * Vector2.UnitY, color, lineThickness);
                         } else if (ScaledStyle.ImageSize.X > ScaledStyle.ImageSize.Y * 1.5f) {
                             dl.AddLine(tl, bl + third * Vector2.UnitX, color, lineThickness);
                             dl.AddLine(tr, br - third * Vector2.UnitX, color, lineThickness);
-                            dl.AddLine(bl, tl + third *  Vector2.UnitX, color, lineThickness);
+                            dl.AddLine(bl, tl + third * Vector2.UnitX, color, lineThickness);
                             dl.AddLine(br, tr - third * Vector2.UnitX, color, lineThickness);
                         }
-                        
+
                         color = ImGui.ColorConvertFloat4ToU32(ScaledStyle.FrameColour.Float4 with { W = ScaledStyle.FrameColour.Float4.W / 8f });
                         dl.AddLine(tl + third * Vector2.UnitX, bl + third * Vector2.UnitX, color, lineThickness);
-                        dl.AddLine(tr - third * Vector2.UnitX, br - third * Vector2.UnitX , color, lineThickness);
+                        dl.AddLine(tr - third * Vector2.UnitX, br - third * Vector2.UnitX, color, lineThickness);
                         dl.AddLine(tl + third * Vector2.UnitY, tr + third * Vector2.UnitY, color, lineThickness);
-                        dl.AddLine(bl - third * Vector2.UnitY, br - third * Vector2.UnitY , color, lineThickness);
+                        dl.AddLine(bl - third * Vector2.UnitY, br - third * Vector2.UnitY, color, lineThickness);
                         break;
                     case GridlineStyle.None:
                     default:
@@ -206,7 +204,7 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                         Framework.RunOnTick(() => {
 
                             var sw = Stopwatch.StartNew();
-                            TextureProvider.CreateFromExistingTextureAsync(wrap, new TextureModificationArgs() { NewHeight = (int)(polaroidStyle!.ImageSize.Y * 2), NewWidth = (int)(polaroidStyle!.ImageSize.X * 2), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax }, true).ContinueWith((t) => {
+                            TextureProvider.CreateFromExistingTextureAsync(wrap, new TextureModificationArgs { NewHeight = (int)(polaroidStyle!.ImageSize.Y * 2), NewWidth = (int)(polaroidStyle!.ImageSize.X * 2), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax }, true).ContinueWith((t) => {
                                 if (t.IsCompletedSuccessfully) {
                                     imageProvider.ImageDetail.UvMin = Vector2.Zero;
                                     imageProvider.ImageDetail.UvMax = Vector2.One;
@@ -231,10 +229,10 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
                     imageProvider.ImageDetail.UvMin = Vector2.Zero;
                     imageProvider.ImageDetail.UvMax = Vector2.One;
                     imageProvider.LoadImage(animatedScreenshot);
-                    
+
                     animatedScreenshot = new AnimatedScreenshotRecording();
                     IsOpen = false;
-                    
+
                 } else {
                     animatedScreenshot.UpdateRecording(imageDetail, polaroidStyle);
                 }
@@ -290,13 +288,12 @@ public class ScreenshotWindow() : Window("Photo | Simple Glamour Switcher", ImGu
     }
 }
 
-
 public class AnimatedScreenshotRecording : IDisposable {
     public record FrameDetail(IDalamudTextureWrap TextureWrap, float TimeSinceLastFrame);
     private IDalamudTextureWrap? wrap;
     private readonly List<FrameDetail> frames = [];
     public IReadOnlyList<FrameDetail> Frames => frames;
-    
+
     private ImageDetail? imageDetail;
     private PolaroidStyle? polaroidStyle;
     public Vector2 Size => frames.Count == 0 ? new Vector2(0) : frames[0].TextureWrap.Size;
@@ -305,7 +302,7 @@ public class AnimatedScreenshotRecording : IDisposable {
     private bool originalUiVisibility;
 
     private bool stopRequested;
-    
+
     public void StopRecording() {
         stopRequested = true;
     }
@@ -316,10 +313,10 @@ public class AnimatedScreenshotRecording : IDisposable {
             originalUiVisibility = !RaptureAtkUnitManager.Instance()->Flags.HasFlag(AtkUnitManagerFlags.UiHidden);
             if (originalUiVisibility) RaptureAtkModule.Instance()->SetUiVisibility(false);
         }
-        
+
         wrap?.Dispose();
         wrap = textureWrap.CreateWrapSharingLowLevelResource();
-        
+
         imageDetail = initialImageDetail;
         polaroidStyle = initialPolaroidStyle;
         IsRecording = true;
@@ -343,7 +340,7 @@ public class AnimatedScreenshotRecording : IDisposable {
             if (originalUiVisibility) RaptureAtkModule.Instance()->SetUiVisibility(true);
         }
     }
-    
+
     private async void CreateFrame(float d = 0) {
         try {
             if (imageDetail == null) {
@@ -356,12 +353,12 @@ public class AnimatedScreenshotRecording : IDisposable {
                 return;
             }
 
-            if (delta < (1000f / Math.Clamp(PluginConfig.AnimatedImageConfiguration.MaxFrameRate, 1, 1000))) return;
+            if (delta < 1000f / Math.Clamp(PluginConfig.AnimatedImageConfiguration.MaxFrameRate, 1, 1000)) return;
             var cancellationToken = new CancellationTokenSource();
             creatingFrame = TextureProvider.CreateFromExistingTextureAsync(
                 wrap,
-                new TextureModificationArgs()
-                    { NewHeight = (int)(polaroidStyle!.ImageSize.Y), NewWidth = (int)(polaroidStyle!.ImageSize.X), Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax },
+                new TextureModificationArgs
+                    { NewHeight = (int)polaroidStyle!.ImageSize.Y, NewWidth = (int)polaroidStyle!.ImageSize.X, Uv0 = imageDetail.UvMin, Uv1 = imageDetail.UvMax },
                 true,
                 cancellationToken: cancellationToken.Token);
             await Task.WhenAny(creatingFrame, Task.Delay(50, cancellationToken.Token));
@@ -382,7 +379,7 @@ public class AnimatedScreenshotRecording : IDisposable {
             PluginLog.Error(ex, "Error while creating frame. Aborting Recording.");
         }
     }
-    
+
     private void OnFrameworkUpdate(IFramework framework) {
         CreateFrame((float)framework.UpdateDelta.TotalMilliseconds);
     }

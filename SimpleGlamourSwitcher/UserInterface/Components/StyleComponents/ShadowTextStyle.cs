@@ -2,8 +2,7 @@
 
 namespace SimpleGlamourSwitcher.UserInterface.Components.StyleComponents;
 
-public record ShadowTextStyle : StyleProvider<ShadowTextStyle>
-{
+public record ShadowTextStyle : StyleProvider<ShadowTextStyle> {
     public Colour TextColour = 0xFFFFFFFF;
     public Colour ShadowColour = 0x80000000;
     public float Size = 1;

@@ -7,12 +7,12 @@ namespace SimpleGlamourSwitcher.Service;
 
 public static class ModManager {
     private const string SourceName = "Simple Glamour Switcher";
-    private readonly static Dictionary<int, List<OutfitModConfig>> AppliedMods = new();
+    private static readonly Dictionary<int, List<OutfitModConfig>> AppliedMods = new();
     private const int KeyBase = 0x_53_47_53_0;
 
     private static Dictionary<string, int> IdentifierToKey => PluginConfig.ModSlotIdentifier;
     private static Dictionary<int, string>? _keyToIdentifier;
-    
+
     private static Dictionary<int, string> ReverseIdentifierDict() {
         var dict = new Dictionary<int, string>();
         foreach (var (identifier, key) in IdentifierToKey.ToArray()) {
@@ -22,15 +22,15 @@ public static class ModManager {
 
         return dict;
     }
-    
+
     private static int GetIdentifier(string identifier) {
         _keyToIdentifier ??= ReverseIdentifierDict();
-        
+
         if (IdentifierToKey.TryGetValue(identifier, out var key)) return -(KeyBase + key);
 
         var k = IdentifierToKey.Count;
         while (_keyToIdentifier.ContainsKey(k) && k < 100000) k++; // If this somehow hits 100,000 we have a problem...
-        
+
         if (IdentifierToKey.TryAdd(identifier, k)) {
             _keyToIdentifier.Remove(k);
             _keyToIdentifier.Add(k, identifier);
@@ -51,7 +51,7 @@ public static class ModManager {
     public static void RemoveAllMods() {
         foreach (var slot in AppliedMods.Keys.ToArray()) RemoveMods(slot);
     }
-    
+
     private static void RemoveMods(int key) {
         PluginLog.Debug($"Removing mods for Key: {key}");
 
@@ -71,10 +71,10 @@ public static class ModManager {
         foreach (var (_, mods) in AppliedMods) {
             c += mods.Count(mod => mod.ModDirectory.Equals(modDirectory));
         }
-        
+
         return c;
     }
-    
+
     private static void RemoveMods(int key, List<OutfitModConfig> outfitModConfigs) {
         outfitModConfigs.RemoveAll((m) => {
             if (CountModUsage(m.ModDirectory) <= 1) {
@@ -83,12 +83,12 @@ public static class ModManager {
             return true;
         });
     }
-    
+
     public static void ApplyMods(HumanSlot slot, IEnumerable<OutfitModConfig> outfitModConfigs) {
         PluginLog.Debug($"Applying mods for {slot}");
         ApplyMods(slot.TempIdentificationKey(), outfitModConfigs);
-    }    
-    
+    }
+
     public static void ApplyMods(EquipSlot slot, IEnumerable<OutfitModConfig> outfitModConfigs) {
         PluginLog.Debug($"Applying mods for {slot}");
         ApplyMods(slot.TempIdentificationKey(), outfitModConfigs);
@@ -103,7 +103,7 @@ public static class ModManager {
         PluginLog.Debug($"Applying mods for companion - {companion.Singular.ExtractText()}");
         ApplyMods(companion.TempIdentificationKey(), outfitModConfigs);
     }
-    
+
     public static void ApplyMods(EmoteIdentifier emote, List<OutfitModConfig> outfitModConfigs) {
         PluginLog.Debug($"Applying mods for emote - {emote.Name}");
         ApplyMods(emote.TempIdentificationKey(), outfitModConfigs);
@@ -115,7 +115,7 @@ public static class ModManager {
     }
 
     private static void ApplyMods(int key, IEnumerable<OutfitModConfig> outfitModConfigs) {
-        
+
         RemoveMods(key);
         AppliedMods[key] = [];
         foreach (var modConfig in outfitModConfigs) {
@@ -128,12 +128,12 @@ public static class ModManager {
             } else {
                 source += $"UnknownIdentifier{key}";
             }
-            
+
             PenumbraIpc.SetTemporaryModSettingsPlayer.Invoke(0, modConfig.ModDirectory, false, modConfig.Enabled, modConfig.Priority, modConfig.ReadOnlySettings, source, key);
             #else
             PenumbraIpc.SetTemporaryModSettingsPlayer.Invoke(0, modConfig.ModDirectory, false, modConfig.Enabled, modConfig.Priority, modConfig.ReadOnlySettings, SourceName, key);
             #endif
-            
+
             AppliedMods[key].Add(modConfig);
 
             if (modConfig.ProteusModConfig != null && ProteusIpc.IsProteusMod(modConfig.ModDirectory)) {

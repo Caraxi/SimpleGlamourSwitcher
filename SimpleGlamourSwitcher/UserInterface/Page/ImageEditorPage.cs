@@ -12,7 +12,7 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher.UserInterface.Page;
 
 public class ImageEditorPage(IImageProvider imageProvider, PolaroidStyle style) : Page {
-    ImageDetail newDetail = new() { UvMin = imageProvider.ImageDetail.UvMin, UvMax = imageProvider.ImageDetail.UvMax };
+    private ImageDetail newDetail = new() { UvMin = imageProvider.ImageDetail.UvMin, UvMax = imageProvider.ImageDetail.UvMax };
 
     private Vector2? mouseClickStart;
 

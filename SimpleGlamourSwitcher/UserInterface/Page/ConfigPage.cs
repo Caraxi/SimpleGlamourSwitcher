@@ -18,9 +18,9 @@ public class ConfigPage : Page {
         controlFlags |= WindowControlFlags.PreventClose;
 
         var maxW = Plugin.ConfigWindow.SizeConstraints?.MaximumSize.X ?? 640;
-        
+
         if (ImGui.GetContentRegionAvail().X > maxW * ImGuiHelpers.GlobalScale) {
-            
+
             ImGui.Dummy(new Vector2((ImGui.GetContentRegionAvail().X - maxW * ImGuiHelpers.GlobalScale) / 2f));
             ImGui.SameLine();
         }
@@ -28,7 +28,7 @@ public class ConfigPage : Page {
         if (ImGui.BeginChild("config", new Vector2(MathF.Min(maxW * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().X), ImGui.GetContentRegionAvail().Y))) {
             Plugin.ConfigWindow.Draw();
         }
-        
+
         ImGui.EndChild();
     }
 }

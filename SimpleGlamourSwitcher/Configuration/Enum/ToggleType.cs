@@ -17,7 +17,7 @@ public static class ToggleTypeExtensions {
             ToggleType.VisorToggle => MetaFlag.VisorState,
             ToggleType.WeaponVisible => MetaFlag.WeaponState,
             ToggleType.VieraEarsVisible => MetaFlag.EarState,
-            _ => 0
+            _ => 0,
         };
     }
 }

@@ -32,9 +32,9 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                     var fullPath = ActiveCharacter.ParseFolderPath(kvp.Value.Folder) + " / " + kvp.Value.Name;
                     return (kvp.Key, kvp.Value, fullPath);
                 });
-                
+
                 foreach (var (guid, outfit, fullPathName) in outfitEntries.OrderBy(outfitEntry => outfitEntry.fullPath)) {
-                    entries.TryAdd(guid, outfit);    
+                    entries.TryAdd(guid, outfit);
                 }
             });
         }
@@ -50,7 +50,7 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                         ImGui.TableNextColumn();
                         ImGui.Text($"{ActiveCharacter?.ParseFolderPath(entry.Folder)} / {entry.Name}");
                         ImGui.TableNextColumn();
-                        
+
                         if (entry is OutfitConfigFile outfit) {
                             if (ImGui.SmallButton("Copy Appearance JSON")) {
                                 var a = GlamourerIpc.GetCustomizationJObject(outfit.Appearance, outfit.Equipment, outfit.Weapons);
@@ -62,9 +62,9 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                             }
                         }
                     }
-                
+
                 }
-                
+
                 ImGui.EndTable();
             }
         }
@@ -96,7 +96,7 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                 outfit.Save(true);
             }
         }
-        
+
         if (ImGui.CollapsingHeader("Emotes")) {
             var activeEmote = EmoteIdentifier.Get(Objects.LocalPlayer);
             foreach (var e in EmoteIdentifier.List) {
@@ -105,11 +105,11 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                 }
             }
         }
-        
+
         if (ImGui.CollapsingHeader("Customize+")) {
 
             if (CustomizePlus.IsReady()) {
-                
+
                 ImGui.Text("Ready");
 
                 var chr = Objects.LocalPlayer;
@@ -122,13 +122,13 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                         ImGui.SameLine();
                         ImGui.TextDisabled($"{data.UniqueId}");
                     }
-                    
+
                     var profiles = CustomizePlus.GetProfileList();
 
                     foreach (var p in profiles) {
                         using (ImRaii.PushId(p.UniqueId.ToString())) {
                             var hasActiveCharacter = p.Characters.Any(c => c is { CharacterType: 1, CharacterSubType: 0 } && c.Name == chr.Name.TextValue && (c.WorldId == chr.HomeWorld.RowId || c.WorldId == ushort.MaxValue));
-                            
+
                             if (hasActiveCharacter) {
                                 using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed)) {
                                     if (ImGui.Button("Remove Self", new Vector2(100, ImGui.GetTextLineHeightWithSpacing()))) {
@@ -136,17 +136,17 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                                         CustomizePlus.TryRemovePlayerCharacterFromProfile(p.UniqueId, chr.Name.TextValue, ushort.MaxValue);
                                     }
                                 }
-                                
+
                             } else {
                                 using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.ParsedGreen)) {
                                     if (ImGui.Button("Add Self", new Vector2(100, ImGui.GetTextLineHeightWithSpacing()))) {
                                         CustomizePlus.TryAddPlayerCharacterToProfile(p.UniqueId, chr.Name.TextValue, chr.HomeWorld.RowId);
                                     }
                                 }
-                                
+
                             }
                             ImGui.SameLine();
-                            ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(p.IsEnabled ? ImGui.GetColorU32(ImGuiCol.Text) :  ImGui.GetColorU32(ImGuiCol.TextDisabled)), p.Name);
+                            ImGui.TextColored(ImGui.ColorConvertU32ToFloat4(p.IsEnabled ? ImGui.GetColorU32(ImGuiCol.Text) : ImGui.GetColorU32(ImGuiCol.TextDisabled)), p.Name);
 
                         }
                     }
@@ -189,18 +189,18 @@ public unsafe class DebugWindow() : Window("Simple Glamour Switcher Debug") {
                         ImGui.SameLine();
                         ImGui.ColorButton($"##Diffuse.{row}{suffix}", subRow.Diffuse.AsVector4(), ImGuiColorEditFlags.NoAlpha);
                     }
-                    
+
                     void ShowColourTable(ProteusModOptionDescriptor modOption) {
                         var colourTable = modOption.ColorTable;
                         if (colourTable == null) return;
                         using (ImRaii.PushIndent()) {
                             foreach (var r in colourTable.Rows) {
-                               ShowColourSubRow(r.Row, 'A', r.SubRowA);
-                               ShowColourSubRow(r.Row, 'B', r.SubRowB);
+                                ShowColourSubRow(r.Row, 'A', r.SubRowA);
+                                ShowColourSubRow(r.Row, 'B', r.SubRowB);
                             }
                         }
                     }
-                    
+
                     if (overlay.Options == null) {
                         ShowColourTable(overlay);
                     } else {

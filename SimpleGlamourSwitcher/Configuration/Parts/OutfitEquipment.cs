@@ -27,7 +27,7 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
     public ApplicableToggle VisorToggle = new();
     public ApplicableToggle WeaponVisible = new();
     public ApplicableToggle VieraEarsVisible = new();
-    
+
     public ApplicableItem<HumanSlot> this[HumanSlot slot] {
         get {
             switch (slot) {
@@ -61,12 +61,12 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
             }
         }
     }
-    
-    
-    
+
+
+
     public override void ApplyToCharacter(ref bool requestRedraw) {
         if (!Apply) return;
-        
+
         PluginLog.Verbose("ApplyToCharacter");
         foreach (var slot in Common.GetGearSlots()) {
             PluginLog.Verbose($"ApplyToCharacter {slot}");
@@ -77,7 +77,7 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
             PluginLog.Verbose($"ApplyToCharacter: {toggle}");
             this[toggle].ApplyToCharacter(toggle, ref requestRedraw);
         }
-        
+
     }
 
     public static OutfitEquipment FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, GlamourerState glamourerState, Guid effectiveCollectionId) {
@@ -86,17 +86,17 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
             RevertToGame = defaultOptionsProvider.DefaultRevertEquip,
             Apply = defaultOptionsProvider.DefaultDisabledEquipmentSlots.Count < 11,
             Head = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Head, glamourerEquipment.Head, glamourerState.Materials, effectiveCollectionId),
-            Body = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Body, glamourerEquipment.Body, glamourerState.Materials,effectiveCollectionId),
-            Hands = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Hands, glamourerEquipment.Hands, glamourerState.Materials,effectiveCollectionId),
-            Legs = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Legs, glamourerEquipment.Legs, glamourerState.Materials,effectiveCollectionId),
-            Feet = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Feet, glamourerEquipment.Feet, glamourerState.Materials,effectiveCollectionId),
-            Ears = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Ears, glamourerEquipment.Ears, glamourerState.Materials,effectiveCollectionId),
-            Neck = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Neck, glamourerEquipment.Neck, glamourerState.Materials,effectiveCollectionId),
-            Wrists = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Wrists, glamourerEquipment.Wrists, glamourerState.Materials,effectiveCollectionId),
-            RFinger = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.RFinger, glamourerEquipment.RFinger, glamourerState.Materials,effectiveCollectionId),
-            LFinger = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.LFinger, glamourerEquipment.LFinger, glamourerState.Materials,effectiveCollectionId),
+            Body = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Body, glamourerEquipment.Body, glamourerState.Materials, effectiveCollectionId),
+            Hands = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Hands, glamourerEquipment.Hands, glamourerState.Materials, effectiveCollectionId),
+            Legs = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Legs, glamourerEquipment.Legs, glamourerState.Materials, effectiveCollectionId),
+            Feet = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Feet, glamourerEquipment.Feet, glamourerState.Materials, effectiveCollectionId),
+            Ears = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Ears, glamourerEquipment.Ears, glamourerState.Materials, effectiveCollectionId),
+            Neck = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Neck, glamourerEquipment.Neck, glamourerState.Materials, effectiveCollectionId),
+            Wrists = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.Wrists, glamourerEquipment.Wrists, glamourerState.Materials, effectiveCollectionId),
+            RFinger = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.RFinger, glamourerEquipment.RFinger, glamourerState.Materials, effectiveCollectionId),
+            LFinger = ApplicableEquipment.FromExistingState(defaultOptionsProvider, HumanSlot.LFinger, glamourerEquipment.LFinger, glamourerState.Materials, effectiveCollectionId),
             Face = ApplicableBonus.FromExistingState(defaultOptionsProvider, HumanSlot.Face, glamourerState.Bonus, glamourerState.Materials, effectiveCollectionId),
-            
+
             HatVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.HatVisible, glamourerEquipment.Hat.Apply, glamourerEquipment.Hat.Show),
             VisorToggle = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.VisorToggle, glamourerEquipment.Visor.Apply, glamourerEquipment.Visor.IsToggled),
             WeaponVisible = ApplicableToggle.FromExistingState(defaultOptionsProvider, ToggleType.WeaponVisible, glamourerEquipment.Weapon.Apply, glamourerEquipment.Weapon.Show),
@@ -122,7 +122,5 @@ public record OutfitEquipment : Applicable, IEnumerable<(string SlotName, Applic
         yield return ("Ears Visible Toggle", VieraEarsVisible);
     }
 
-    IEnumerator IEnumerable.GetEnumerator() {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

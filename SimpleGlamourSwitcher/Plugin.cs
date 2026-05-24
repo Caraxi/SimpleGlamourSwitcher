@@ -12,14 +12,14 @@ using SimpleGlamourSwitcher.Utility;
 namespace SimpleGlamourSwitcher;
 
 public class Plugin : IDalamudPlugin {
-    private readonly static WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
-    public readonly static MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
-    public readonly static ActiveGearWindow ActiveWindow = new ActiveGearWindow().Enroll(WindowSystem);
-    public readonly static ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
-    public readonly static DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
-    public readonly static ScreenshotWindow ScreenshotWindow = new ScreenshotWindow() { IsOpen = true}.Enroll(WindowSystem);
-    
-    
+    private static readonly WindowSystem WindowSystem = new(nameof(SimpleGlamourSwitcher));
+    public static readonly MainWindow MainWindow = new MainWindow().Enroll(WindowSystem);
+    public static readonly ActiveGearWindow ActiveWindow = new ActiveGearWindow().Enroll(WindowSystem);
+    public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
+    public static readonly DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
+    public static readonly ScreenshotWindow ScreenshotWindow = new ScreenshotWindow { IsOpen = true }.Enroll(WindowSystem);
+
+
     public Plugin(IDalamudPluginInterface pluginInterface) {
         (pluginInterface.Create<PluginService>() ?? throw new Exception("Failed to initialize PluginService")).Initialize();
 #if DEBUG
@@ -89,14 +89,14 @@ public class Plugin : IDalamudPlugin {
                 DebugWindow.IsOpen = true;
             }
 #endif
-            
+
             if (PluginConfig.EquippedWindowConfig.WindowOpen) {
                 ActiveWindow.IsOpen = true;
             }
-            
+
         }, delayTicks: 3);
-        
-        
+
+
         PenumbraIpc.EnableEvents();
     }
 
@@ -110,7 +110,7 @@ public class Plugin : IDalamudPlugin {
             Chat.PrintError("No Character Active", "SimpleGlamourSwitcher");
             return;
         }
-        
+
         if (!Guid.TryParse(args[0], out var guid)) {
             Chat.PrintError($"[{args[0]}] is not a valid GUID", "SimpleGlamourSwitcher");
             return;
@@ -151,18 +151,17 @@ public class Plugin : IDalamudPlugin {
             Chat.PrintError($"[{args[0]}] is not a valid GUID", "SimpleGlamourSwitcher");
             return;
         }
-        
+
         var entries = await ActiveCharacter.GetEntries();
         var sharedEntries = SharedCharacter == null ? [] : await SharedCharacter.GetEntries();
 
         if (entries.TryGetValue(guid, out var entry) || sharedEntries.TryGetValue(guid, out entry)) {
             await entry.Apply();
-        }
-        else {
+        } else {
             Chat.PrintError($"[{args[0]}] was not found.", "SimpleGlamourSwitcher");
         }
     }
-    
+
     #if DEBUG
     private void OpenOnStartup() {
         ClientState.Login -= OpenOnStartup;
@@ -185,8 +184,8 @@ public class Plugin : IDalamudPlugin {
     }
     #endif
 
-    
-    
+
+
     public static bool IsDisposing { get; private set; }
     public void Dispose() {
         IsDisposing = true;

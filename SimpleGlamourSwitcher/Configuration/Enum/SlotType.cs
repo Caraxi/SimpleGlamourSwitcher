@@ -34,7 +34,7 @@ public static class SlotTypeExtensions {
             SlotType.LeftRingEquip => EquipSlot.LFinger,
             SlotType.MainHandEquip => EquipSlot.MainHand,
             SlotType.OffHandEquip => EquipSlot.OffHand,
-            _ => null
+            _ => null,
         };
     }
 }

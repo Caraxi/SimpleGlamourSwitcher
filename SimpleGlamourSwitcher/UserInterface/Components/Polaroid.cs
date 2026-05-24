@@ -8,14 +8,12 @@ namespace SimpleGlamourSwitcher.UserInterface.Components;
 
 public static class Polaroid {
 
-    public static Vector2 GetActualSize(PolaroidStyle style) {
-        return style.ImageSize + style.FramePadding * 2 + style.FramePadding * Vector2.UnitY + new Vector2(0, ImGui.GetTextLineHeightWithSpacing());
-    }
+    public static Vector2 GetActualSize(PolaroidStyle style) => style.ImageSize + style.FramePadding * 2 + style.FramePadding * Vector2.UnitY + new Vector2(0, ImGui.GetTextLineHeightWithSpacing());
 
     public static bool Button(Func<IDalamudTextureWrap?>? getImage, ImageDetail imageDetail, string text, Guid guid, PolaroidStyle? style = null) {
         style ??= PolaroidStyle.Default;
         var totalSize = GetActualSize(style);
-        
+
         ImGui.Dummy(totalSize);
         if (!ImGui.IsItemVisible()) return false;
         var clicked = ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left);
@@ -28,9 +26,9 @@ public static class Polaroid {
         } else if (hovered) {
             style = style with { FrameColour = style.FrameHoveredColour };
         }
-        
+
         DrawPolaroid(getImage, imageDetail, text, style);
-        
+
         return clicked;
     }
 
@@ -52,31 +50,31 @@ public static class Polaroid {
         var drawList = ImGui.GetWindowDrawList();
         var wTl = ImGui.GetWindowPos();
         var wBr = wTl + ImGui.GetWindowSize();
-        
+
         drawList.PushClipRect(new Vector2(MathF.Max(tl.X, wTl.X), MathF.Max(tl.Y, wTl.Y)), new Vector2(MathF.Min(br.X, wBr.X), MathF.Min(br.Y, wBr.Y)));
         drawList.AddRectFilled(tl, br, style.FrameColour, style.FrameRounding);
         drawList.AddRectFilled(tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, style.BlankImageColour, style.FrameRounding, ImDrawFlags.RoundCornersTop);
         var image = getImage?.Invoke();
         if (image != null) {
             drawList.AddImageRounded(image.Handle, tl + style.FramePadding, tl + style.FramePadding + style.ImageSize, imageDetail.UvMin, imageDetail.UvMax, uint.MaxValue, style.FrameRounding, ImDrawFlags.RoundCornersTop);
-            
+
         }
-        
+
         var textSize = ImGui.CalcTextSize(text);
         var labelPosition = tl + style.FramePadding + style.ImageSize * Vector2.UnitY + style.FramePadding * Vector2.UnitY + style.ImageSize * new Vector2(0.5f, 0f) - textSize * new Vector2(0.5f, 0f);
         var labelDrawList = drawList;
-        
+
         if (textSize.X > br.X - tl.X && ImGui.IsItemHovered()) {
             labelDrawList = ImGui.GetForegroundDrawList();
             labelDrawList.AddRectFilled(labelPosition - style.FramePadding, labelPosition + textSize + style.FramePadding, style.FrameColour, style.FrameRounding, ImDrawFlags.RoundCornersAll);
-        } 
-        
+        }
+
         for (var sx = -style.LabelShadowSize; sx < style.LabelShadowSize; sx++) {
             for (var sy = -style.LabelShadowSize; sy < style.LabelShadowSize; sy++) {
                 labelDrawList.AddText(labelPosition + new Vector2(sx, sy) + style.LabelShadowOffset, style.LabelShadowColour, text);
             }
         }
-        labelDrawList.AddText(labelPosition , style.LabelColour, text);
+        labelDrawList.AddText(labelPosition, style.LabelColour, text);
         drawList.PopClipRect();
     }
 }

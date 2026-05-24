@@ -12,27 +12,25 @@ public abstract record ApplicableParameter : Applicable {
         throw new Exception("Cannot be applied directly.");
     }
 
-    public virtual JObject ToJObject() {
-        return new JObject() {
-            {"Apply", Apply },
-        };
-    }
+    public virtual JObject ToJObject() => new() {
+        { "Apply", Apply },
+    };
 
     public abstract bool ShowEditor(string s, AppearanceParameterKind kind);
 }
 
 public record ApplicableParameterColorAlpha : ApplicableParameterColor {
     public float Alpha;
-    
+
     public override JObject ToJObject() {
         var obj = base.ToJObject();
         obj.Add("Alpha", Alpha);
         return obj;
     }
-    
+
     public static ApplicableParameterColorAlpha FromExistingStateAlpha(IDefaultOutfitOptionsProvider defaultOptionsProvider, AppearanceParameterKind kind, GlamourerParameterColor? parameter) {
         if (parameter == null) return new ApplicableParameterColorAlpha();
-        
+
         return new ApplicableParameterColorAlpha {
             Apply = parameter.Apply && defaultOptionsProvider.DefaultEnabledParameterKinds.Contains(kind),
             Red = parameter.Red ?? 0,
@@ -49,11 +47,11 @@ public record ApplicableParameterColorAlpha : ApplicableParameterColor {
             (Red, Green, Blue, Alpha) = (color.X, color.Y, color.Z, color.W);
             return true;
         }
-        
+
 
         return false;
     }
-    
+
     public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
         if (newValues is not ApplicableParameterColorAlpha n) return false;
         Alpha = n.Alpha;
@@ -65,7 +63,7 @@ public record ApplicableParameterColor : ApplicableParameter {
     public float Red;
     public float Green;
     public float Blue;
-    
+
     public override JObject ToJObject() {
         var obj = base.ToJObject();
         obj.Add("Red", Red);
@@ -73,10 +71,10 @@ public record ApplicableParameterColor : ApplicableParameter {
         obj.Add("Blue", Blue);
         return obj;
     }
-    
+
     public static ApplicableParameterColor FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, AppearanceParameterKind kind, GlamourerParameterColor? parameter) {
         if (parameter == null) return new ApplicableParameterColor();
-        
+
         return new ApplicableParameterColor {
             Apply = parameter.Apply && defaultOptionsProvider.DefaultEnabledParameterKinds.Contains(kind),
             Red = parameter.Red ?? 0,
@@ -93,10 +91,10 @@ public record ApplicableParameterColor : ApplicableParameter {
             (Red, Green, Blue) = (color.X, color.Y, color.Z);
             return true;
         }
-        
+
         return false;
     }
-    
+
     public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
         if (newValues is not ApplicableParameterColor n) return false;
         Red = n.Red;
@@ -108,16 +106,16 @@ public record ApplicableParameterColor : ApplicableParameter {
 
 public record ApplicableParameterPercent : ApplicableParameter {
     public float Percentage;
-    
+
     public override JObject ToJObject() {
         var obj = base.ToJObject();
         obj.Add("Percentage", Percentage);
         return obj;
     }
-    
+
     public static ApplicableParameterPercent FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, AppearanceParameterKind kind, GlamourerParameterPercentage? parameter) {
         if (parameter == null) return new ApplicableParameterPercent();
-        
+
         return new ApplicableParameterPercent {
             Apply = parameter.Apply && defaultOptionsProvider.DefaultEnabledParameterKinds.Contains(kind),
             Percentage = parameter.Percentage ?? 0,
@@ -126,7 +124,7 @@ public record ApplicableParameterPercent : ApplicableParameter {
 
     private float maxValue = 100;
     private float minValue = 0;
-    
+
     public override bool ShowEditor(string s, AppearanceParameterKind kind) {
         var value = Percentage * 100;
         if (value > maxValue) maxValue = value;
@@ -138,7 +136,7 @@ public record ApplicableParameterPercent : ApplicableParameter {
         Percentage = value / 100f;
         return true;
     }
-    
+
     public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
         if (newValues is not ApplicableParameterPercent n) return false;
         Percentage = n.Percentage;
@@ -148,7 +146,7 @@ public record ApplicableParameterPercent : ApplicableParameter {
 
 public record ApplicableParameterFloat : ApplicableParameter {
     public float Value;
-    
+
     public override JObject ToJObject() {
         var obj = base.ToJObject();
         obj.Add("Value", Value);
@@ -157,17 +155,15 @@ public record ApplicableParameterFloat : ApplicableParameter {
 
     public static ApplicableParameterFloat FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, AppearanceParameterKind kind, GlamourerParameterFloat? parameter) {
         if (parameter == null) return new ApplicableParameterFloat();
-        
+
         return new ApplicableParameterFloat {
             Apply = parameter.Apply && defaultOptionsProvider.DefaultEnabledParameterKinds.Contains(kind),
             Value = parameter.Value ?? 0,
         };
     }
-    
-    public override bool ShowEditor(string s, AppearanceParameterKind kind) {
-        return ImGui.DragFloat(s, ref Value, 0.01f);
-    }
-    
+
+    public override bool ShowEditor(string s, AppearanceParameterKind kind) => ImGui.DragFloat(s, ref Value, 0.01f);
+
     public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
         if (newValues is not ApplicableParameterFloat n) return false;
         Value = n.Value;

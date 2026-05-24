@@ -6,7 +6,7 @@ namespace SimpleGlamourSwitcher.IPC;
 
 public static class Heliosphere {
     private static Dictionary<string, string>? heliosphereToPenumbra;
-    private readonly static Dictionary<string, string> penumbraToHeliosphere = new();
+    private static readonly Dictionary<string, string> penumbraToHeliosphere = new();
 
     public static IReadOnlyDictionary<string, string> HeliosphereMods {
         get {
@@ -19,7 +19,7 @@ public static class Heliosphere {
         PluginLog.Debug("Searching for Heliosphere mods...");
         var rootDir = PenumbraIpc.GetModDirectory.Invoke();
         var mods = new Dictionary<string, string>();
-        
+
         var c = 0;
         foreach (var mod in PenumbraIpc.GetModList.Invoke()) {
             var isHeliosphere = File.Exists(Path.Join(rootDir, mod.Key, "heliosphere.json"));
@@ -32,11 +32,11 @@ public static class Heliosphere {
 
         return mods;
     }
-    
+
     public static void UpdateModList() {
         heliosphereToPenumbra = null;
     }
-    
+
     public static string? GetId(string modDirectory) {
         try {
             if (penumbraToHeliosphere.TryGetValue(modDirectory, out var id)) return id;
@@ -56,7 +56,5 @@ public static class Heliosphere {
         }
     }
 
-    public static bool TryGetMod(string heliosphereId, [NotNullWhen(true)] out string? modDir) {
-        return HeliosphereMods.TryGetValue(heliosphereId, out modDir) && !string.IsNullOrWhiteSpace(modDir);
-    }
+    public static bool TryGetMod(string heliosphereId, [NotNullWhen(true)] out string? modDir) => HeliosphereMods.TryGetValue(heliosphereId, out modDir) && !string.IsNullOrWhiteSpace(modDir);
 }

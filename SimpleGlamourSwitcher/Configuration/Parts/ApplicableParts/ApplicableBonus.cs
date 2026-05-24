@@ -11,13 +11,13 @@ namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
 public record ApplicableBonus : ApplicableItem<HumanSlot> {
     public ulong BonusItemId;
-    
+
     public override void ApplyToCharacter(HumanSlot slot, ref bool requestRedraw) {
         if (!Apply) return;
         var equipItem = GetEquipItem(slot);
-        
+
         PluginLog.Debug($"Apply to {slot}: {equipItem.Name} / {equipItem.ItemId}");
-        
+
         ModManager.ApplyMods(slot, ModConfigs);
         switch (slot) {
             case HumanSlot.Face:
@@ -44,7 +44,7 @@ public record ApplicableBonus : ApplicableItem<HumanSlot> {
                 };
             }
             default: {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
     }
@@ -55,21 +55,17 @@ public record ApplicableBonus : ApplicableItem<HumanSlot> {
             case BonusItemFlag.Unknown:
             case BonusItemFlag.UnkSlot:
                 throw new NotImplementedException();
-        default:
+            default:
                 return PluginService.ItemManager.Resolve(bonusSlot, BonusItemId);
         }
     }
-    public override EquipItem GetEquipItem(EquipSlot slot) {
-        throw new NotImplementedException();
-    }
+    public override EquipItem GetEquipItem(EquipSlot slot) => throw new NotImplementedException();
 
-    public static ApplicableBonus FromNothing() {
-        return new ApplicableBonus() {
-            Apply = true,
-            BonusItemId = 0
-        };
-    }
-    
+    public static ApplicableBonus FromNothing() => new() {
+        Apply = true,
+        BonusItemId = 0,
+    };
+
     public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
         if (newValues is not ApplicableBonus n) return false;
         BonusItemId = n.BonusItemId;

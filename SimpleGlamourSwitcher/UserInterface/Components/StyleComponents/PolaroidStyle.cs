@@ -14,11 +14,11 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
     public Colour FrameHoveredColour = ImGui.GetColorU32(ImGuiCol.ButtonHovered);
     public Colour FrameActiveColour = ImGui.GetColorU32(ImGuiCol.ButtonActive);
 
-    
+
     public Colour LabelColour = ImGuiColors.DalamudWhite;
     public Colour LabelShadowColour = new Vector4(0, 0, 0, 0.75f);
-    
-    
+
+
     public float FrameRounding = 0f;
     public Vector2 ImageSize = new(240, 240);
     public Vector2 FramePadding = ImGui.GetStyle().FramePadding;
@@ -43,31 +43,31 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
         TextColour = 1U << 3,
         FrameColour = 1U << 4,
         ActiveFrameColours = 1U << 5,
-        ShowPreview  = 1U << 31,
-        All = uint.MaxValue
+        ShowPreview = 1U << 31,
+        All = uint.MaxValue,
     }
-    
-    
+
+
     public static bool DrawEditor(string header, PolaroidStyle style, PolaroidStyleEditorFlags flags = PolaroidStyleEditorFlags.All) {
         var edited = false;
 
         if (flags.HasFlag(PolaroidStyleEditorFlags.ImageSize)) {
             ImGui.TextDisabled("Note: Adjusting the image size will cause existing images to stretch to fit the new size.");
         }
-        
+
         using (ImRaii.PushIndent()) {
             var group = false;
-            
+
             if (flags.HasFlag(PolaroidStyleEditorFlags.ShowPreview)) {
                 if (flags.HasFlag(PolaroidStyleEditorFlags.ActiveFrameColours)) {
                     ImGui.Dummy(Polaroid.GetActualSize(style));
                     Polaroid.DrawPolaroid(null, ImageDetail.Default, $"{header} Preview", style with {
-                        FrameColour = ImGui.IsItemHovered() ? ImGui.IsMouseDown(ImGuiMouseButton.Left) ? style.FrameActiveColour : style.FrameHoveredColour : style.FrameColour
+                        FrameColour = ImGui.IsItemHovered() ? ImGui.IsMouseDown(ImGuiMouseButton.Left) ? style.FrameActiveColour : style.FrameHoveredColour : style.FrameColour,
                     });
                 } else {
                     Polaroid.DrawPolaroid(null, ImageDetail.Default, $"{header} Preview", style);
                 }
-                
+
                 ImGui.SameLine();
 
                 if (ImGui.GetContentRegionAvail().X > 300 * ImGuiHelpers.GlobalScale) {
@@ -77,17 +77,17 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
                     ImGui.NewLine();
                 }
             }
-            
+
             if (flags.HasFlag(PolaroidStyleEditorFlags.ImageSize)) {
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
                 edited |= ImGui.DragFloat2($"Image Size##{header}", ref style.ImageSize, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
             }
-            
+
             if (flags.HasFlag(PolaroidStyleEditorFlags.FramePadding)) {
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
                 edited |= ImGui.DragFloat2($"Frame Padding##{header}", ref style.FramePadding, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
             }
-           
+
             if (flags.HasFlag(PolaroidStyleEditorFlags.FrameRounding)) {
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * 0.7f);
                 edited |= ImGui.DragFloat($"Frame Rounding##{header}", ref style.FrameRounding, 1, 0, float.MaxValue, "%.0f", ImGuiSliderFlags.AlwaysClamp);
@@ -103,7 +103,7 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
                     edited |= ImGui.SliderInt($"Shadow Size##{header}", ref style.LabelShadowSize, 0, 5, "%.0f", ImGuiSliderFlags.AlwaysClamp);
                 }
             }
-            
+
             if (flags.HasFlag(PolaroidStyleEditorFlags.FrameColour)) {
                 edited |= ColourEdit4($"Frame Colour##{header}", ref style.FrameColour);
                 edited |= ColourEdit4($"Image Area Colour##{header}", ref style.BlankImageColour);
@@ -122,15 +122,15 @@ public record PolaroidStyle : StyleProvider<PolaroidStyle> {
 
     private static bool ColourEdit4(string name, ref Colour colour) {
         var c = colour.Float4;
-        
+
         if (ImGui.ColorEdit4(name, ref c, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop | ImGuiColorEditFlags.NoTooltip)) {
-            colour.Float4 =  c;
+            colour.Float4 = c;
             return true;
         }
 
         return false;
     }
-    
-    
-    
+
+
+
 }

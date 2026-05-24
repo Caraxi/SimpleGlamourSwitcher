@@ -26,23 +26,19 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
 
     public ProteusModConfig? ProteusModConfig { get; set; }
     [UsedImplicitly] public bool ShouldSerializeProteusConfig() => ProteusModConfig != null;
-    
-    public static implicit operator OutfitModConfig((string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings) a) {
-        return new OutfitModConfig(a.ModDirectory, a.Enabled, a.Priority, a.Settings, Heliosphere.GetId(a.ModDirectory)) {
-            ProteusModConfig = GetProteusModConfig(a.ModDirectory),
-        };
-    }
 
-    public static implicit operator (string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings)(OutfitModConfig a) {
-        return (a.ModDirectory, a.Enabled, a.Priority, a.Settings);
-    }
+    public static implicit operator OutfitModConfig((string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings) a) => new(a.ModDirectory, a.Enabled, a.Priority, a.Settings, Heliosphere.GetId(a.ModDirectory)) {
+        ProteusModConfig = GetProteusModConfig(a.ModDirectory),
+    };
+
+    public static implicit operator (string ModDirectory, bool Enabled, int Priority, Dictionary<string, List<string>> Settings)(OutfitModConfig a) => (a.ModDirectory, a.Enabled, a.Priority, a.Settings);
 
     public static List<OutfitModConfig> GetModListFromEquipment(HumanSlot slot, EquipItem equipItem, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
         if (PluginConfig.DisableAutoModsEquip.Contains(slot)) return list;
 
         var mods = PenumbraIpc.CheckCurrentChangedItem(equipItem.Name);
-        
+
         foreach (var mod in mods) {
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
@@ -51,38 +47,38 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                 ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
             });
         }
-        
+
         return list;
     }
-    
+
     public static List<OutfitModConfig> GetModListFromWeapon(EquipSlot slot, EquipItem equipItem, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
         if (slot is not (EquipSlot.MainHand or EquipSlot.OffHand)) return list;
         if (PluginConfig.DisableAutoModsWeapons.Contains(slot)) return list;
 
         var mods = PenumbraIpc.CheckCurrentChangedItem(equipItem.Name);
-        
+
         foreach (var mod in mods) {
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)) {
                 ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
             });
         }
-        
+
         return list;
     }
-    
-    
+
+
     public static List<OutfitModConfig> GetModListFromCustomize(CustomizeIndex slot, GlamourerCustomize customize, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
         if (PluginConfig.DisableAutoModsCustomize.Contains(slot)) return list;
-        
+
         List<(string ModDirectory, string ModName)> mods = [];
-        
+
         var modelRaceName = customize.Race.Value == 1 ? customize.Clan.Value == 2 ? ModelRace.Highlander.ToName() : ModelRace.Midlander.ToName() : ((Race)customize.Race.Value).ToName();
-        
+
         var gender = customize.Gender.Value switch {
             0 => Gender.Male.ToName(),
             1 => Gender.Female.ToName(),
@@ -91,7 +87,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
 
         var clan = (SubRace)customize.Clan.Value;
         var clanName = clan.ToName();
-        
+
         switch (slot) {
             case CustomizeIndex.Hairstyle:
                 mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: {modelRaceName} {gender} Hair {customize.Hairstyle.Value}"));
@@ -111,9 +107,9 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                 if (clan is SubRace.Duskwight or SubRace.Dunesfolk or SubRace.KeeperOfTheMoon or SubRace.Hellsguard or SubRace.Xaela or SubRace.Lost or SubRace.Veena) {
                     faceIndex += 100;
                 }
-                
+
                 mods.AddRange(PenumbraIpc.CheckCurrentChangedItem($"Customization: {modelRaceName} {gender} Face {faceIndex}"));
-                
+
                 break;
             case CustomizeIndex.FacePaint:
                 if (customize.FacePaint == null) break;
@@ -127,43 +123,43 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                 Chat.PrintError($"Invalid Customize Index for GetModListFromCustomize: {slot}");
                 break;
         }
-        
-        
+
+
         foreach (var mod in mods) {
             if (list.Any(x => x.ModDirectory == mod.ModDirectory)) continue;
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)) {
                 ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
             });
         }
-        
-        
-        
-        
+
+
+
+
 
         return list;
     }
-    
+
     public static List<OutfitModConfig> GetModListFromMinion(uint minionId, Guid penumbraCollection) {
-        
+
         var list = new List<OutfitModConfig>();
         if (minionId == 0) return list;
         var name = SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, minionId);
         if (string.IsNullOrWhiteSpace(name)) return list;
 
         var mods = PenumbraIpc.CheckCurrentChangedItem($"{name} (Companion)");
-        
+
         foreach (var mod in mods) {
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)) {
                 ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
             });
         }
-        
+
         return list;
     }
 
@@ -180,32 +176,32 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var modDir = p.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], 2);
             mods.Add(modDir[0]);
         }
-                
+
         foreach (var mod in mods) {
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)){
+            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)) {
                 ProteusModConfig = GetProteusModConfig(mod),
             });
         }
     }
-    
+
     public static List<OutfitModConfig> GetModListFromEmote(EmoteIdentifier emoteIdentifier, Guid penumbraCollection) {
         var list = new List<OutfitModConfig>();
-        
+
         if (emoteIdentifier is { EmoteModeId: 0, EmoteId: 0 }) {
             // Idle
             var pathList = new List<string>();
             foreach (var a in System.Enum.GetValues<GenderRace>()) {
                 if (emoteIdentifier.CPoseState == 0) {
                     pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/resident/idle.pap");
-                } else if ( DataManager.GetExcelSheet<Emote>().TryGetRow(90, out var emote)) {
+                } else if (DataManager.GetExcelSheet<Emote>().TryGetRow(90, out var emote)) {
                     pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/pose{emoteIdentifier.CPoseState:00}_start.pap");
                     pathList.Add($"chara/human/c{(ushort)a:0000}/animation/a0001/bt_common/emote/pose{emoteIdentifier.CPoseState:00}_loop.pap");
                 }
             }
-            
+
             ResolvePathList(list, penumbraCollection, pathList);
         } else if (emoteIdentifier is { EmoteModeId: 1 or 2 or 3 }) {
             // Sitting or Sleeping
@@ -237,7 +233,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                         break;
                 }
             }
-            
+
             ResolvePathList(list, penumbraCollection, pathList);
         } else {
             var emoteId = emoteIdentifier.EmoteId;
@@ -257,7 +253,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
                             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod.ModDirectory);
                             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
                             var modSettings = getModSettings.Item2.Value;
-                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)){
+                            list.Add(new OutfitModConfig(mod.ModDirectory, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod.ModDirectory)) {
                                 ProteusModConfig = GetProteusModConfig(mod.ModDirectory),
                             });
                         }
@@ -268,7 +264,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
 
         return list;
     }
-    
+
 
     [JsonIgnore]
     public IReadOnlyDictionary<string, IReadOnlyList<string>> ReadOnlySettings {
@@ -278,18 +274,18 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             return d;
         }
     }
-    
+
     public static ProteusModConfig? GetProteusModConfig(string modDirectory) {
-        
+
         var proteusModEnabled = ProteusIpc.ActiveOverlays.Value.TryGetValue(modDirectory.ToLowerInvariant(), out var proteusMod);
         if (!proteusModEnabled) {
             proteusMod = ProteusIpc.AllOverlays.Value.GetValueOrDefault(modDirectory.ToLowerInvariant());
         }
-        
+
         if (proteusMod == null) return null;
-        
+
         var optionConfigs = new List<ProteusModOptionConfig>();
-        
+
         if (proteusMod.Options == null) {
             var colourTable = proteusMod.ColorTable;
             if (colourTable != null) {
@@ -298,7 +294,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
         } else {
             foreach (var o in proteusMod.Options) {
                 var colourTable = o.ColorTable;
-                if (colourTable != null) 
+                if (colourTable != null)
                     optionConfigs.Add(new ProteusModOptionConfig(o, colourTable));
             }
         }
@@ -317,7 +313,7 @@ public record OutfitModConfig(string ModDirectory, bool Enabled, int Priority, D
             var getModSettings = PenumbraIpc.GetCurrentModSettingsWithTemp.Invoke(penumbraCollection, mod);
             if (getModSettings.Item1 != PenumbraApiEc.Success || getModSettings.Item2 == null) continue;
             var modSettings = getModSettings.Item2.Value;
-            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)){
+            list.Add(new OutfitModConfig(mod, modSettings.Item1, modSettings.Item2, modSettings.Item3, Heliosphere.GetId(mod)) {
                 ProteusModConfig = GetProteusModConfig(mod),
             });
         }

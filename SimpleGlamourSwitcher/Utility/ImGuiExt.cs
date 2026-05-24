@@ -15,18 +15,18 @@ public static class ImGuiExt {
     public static void CenterText(string text, Vector2? size = null, bool centerVertically = false, bool centerHorizontally = true, bool shadowed = false, Style? colours = null) {
         size ??= ImGui.GetContentRegionAvail();
         colours ??= Style.Default;
-        var textSize  = ImGui.CalcTextSize(text);
+        var textSize = ImGui.CalcTextSize(text);
         var centerPos = ImGui.GetCursorPos() + size.Value * new Vector2(centerHorizontally ? 0.5f : 0f, centerVertically ? 0.5f : 0f) - textSize * new Vector2(centerHorizontally ? 0.5F : 0f, centerVertically ? 0.5f : 0f);
         ImGui.SetCursorPos(centerPos);
         if (shadowed) {
             ShadowText(text, colours);
         } else {
             using (ImRaii.PushColor(ImGuiCol.Text, colours.Text.U32)) {
-                ImGui.TextUnformatted(text); 
+                ImGui.TextUnformatted(text);
             }
         }
     }
-    
+
     public static void ShadowText(string text, Style? colours = null) {
         colours ??= Style.Default;
         var textSize = ImGui.CalcTextSize(text);
@@ -40,7 +40,7 @@ public static class ImGuiExt {
     public static void AddShadowedText(this ImDrawListPtr drawList, Vector2 position, string text, ShadowTextStyle? style = null) {
         style ??= Style.Default.ShadowText;
 
-        
+
         for (var sx = -style.Size; sx < style.Size; sx++) {
             for (var sy = -style.Size; sy < style.Size; sy++) {
                 drawList.AddText(position + new Vector2(sx, sy) + style.Offset, style.ShadowColour, text);
@@ -49,16 +49,16 @@ public static class ImGuiExt {
         drawList.AddText(position, style.TextColour, text);
         drawList.AddText(position, style.TextColour, text);
     }
-    
+
     public static bool CheckboxTriState(string label, ref bool? value, bool allowSwitchToPartial = false) {
         var v = value ?? false;
-        
+
         try {
             if (ImGui.Checkbox(label, ref v)) {
                 value = value switch {
                     null => true,
                     true => false,
-                    _ => allowSwitchToPartial ? null : true
+                    _ => allowSwitchToPartial ? null : true,
                 };
                 return true;
             }
@@ -81,16 +81,16 @@ public static class ImGuiExt {
                     ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize, ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * new Vector2(0, 0.5f) - textSize * new Vector2(-0.5f, 0.5f), ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
                 }
             }
-            
+
         }
     }
-    
+
     public static bool SelectableWithNote(string label, string note, bool isSelected = false, IFontHandle? noteFont = null) {
         using (ImRaii.Group()) {
             if (ImGui.Selectable(label, isSelected)) {
                 return true;
             }
-            
+
             ImGui.SameLine();
             using ((noteFont ?? PluginInterface.UiBuilder.DefaultFontHandle).Push()) {
                 var idSize = ImGui.CalcTextSize(note);
@@ -117,7 +117,7 @@ public static class ImGuiExt {
             _defaultIconButtonSize = ImGui.GetItemRectSize();
             return false;
         } finally {
-            using (PluginService.PluginUi.IconFontHandle.Push()) {
+            using (PluginUi.IconFontHandle.Push()) {
                 ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, UiBuilder.IconFont.FontSize, ImGui.GetItemRectMin() + ImGui.GetItemRectSize() / 2 - ImGui.CalcTextSize(icon.ToIconString()) / 2, ImGui.GetColorU32(ImGuiCol.Text), icon.ToIconString());
             }
         }
@@ -127,7 +127,7 @@ public static class ImGuiExt {
         ImGui.SameLine();
         ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() with { X = ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemInnerSpacing.X });
     }
-    
+
     public static void SameLineNoSpace() {
         ImGui.SameLine();
         ImGui.SetCursorScreenPos(ImGui.GetCursorScreenPos() with { X = ImGui.GetItemRectMax().X });

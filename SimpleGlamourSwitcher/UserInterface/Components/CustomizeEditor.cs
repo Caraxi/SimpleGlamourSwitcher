@@ -14,7 +14,6 @@ using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.Utility;
-
 using EnumRace = Penumbra.GameData.Enums.Race;
 using Race = Lumina.Excel.Sheets.Race;
 
@@ -23,11 +22,11 @@ namespace SimpleGlamourSwitcher.UserInterface.Components;
 public static class CustomizeEditor {
     private const float EditorInputScale = 0.7f;
     private static Vector2 checkboxSize = Vector2.Zero;
-    
+
     public static IEnumerable<(CustomizeIndex, string)> GetCustomizeTypes(byte gender = 0, byte clan = 0, bool forceShowAll = false) {
         var race = GetRaceId(clan);
-        var subRace = (SubRace) clan;
-        
+        var subRace = (SubRace)clan;
+
         yield return (CustomizeIndex.Clan, "Body Type");
         yield return (CustomizeIndex.Height, "Height");
         if (forceShowAll || gender == 1) yield return (CustomizeIndex.BustSize, "Bust Size");
@@ -35,7 +34,7 @@ public static class CustomizeEditor {
         if (forceShowAll || race is EnumRace.Hyur or EnumRace.Roegadyn) yield return (CustomizeIndex.MuscleMass, "Muscle Mass");
         if (forceShowAll || race is EnumRace.Elezen or EnumRace.Lalafell or EnumRace.Viera) yield return (CustomizeIndex.MuscleMass, "Ear Size");
 
-        
+
         yield return (CustomizeIndex.Face, "Face");
         yield return (CustomizeIndex.FacialFeature1, "Facial Features");
         yield return (CustomizeIndex.Hairstyle, CustomizeIndex.Hairstyle.PrettyName());
@@ -43,7 +42,7 @@ public static class CustomizeEditor {
             yield return (CustomizeIndex.TailShape, CustomizeIndex.TailShape.PrettyName());
             yield return (CustomizeIndex.MuscleMass, "Tail Length");
         }
-        
+
         yield return (CustomizeIndex.SkinColor, CustomizeIndex.SkinColor.PrettyName());
         yield return (CustomizeIndex.EyeColorRight, CustomizeIndex.EyeColorRight.PrettyName());
         yield return (CustomizeIndex.EyeColorLeft, CustomizeIndex.EyeColorLeft.PrettyName());
@@ -58,7 +57,7 @@ public static class CustomizeEditor {
         } else {
             yield return (CustomizeIndex.TattooColor, CustomizeIndex.TattooColor.PrettyName());
         }
-        
+
         yield return (CustomizeIndex.LipColor, CustomizeIndex.LipColor.PrettyName());
         yield return (CustomizeIndex.Eyebrows, CustomizeIndex.Eyebrows.PrettyName());
         yield return (CustomizeIndex.EyeShape, CustomizeIndex.EyeShape.PrettyName());
@@ -70,8 +69,8 @@ public static class CustomizeEditor {
         yield return (CustomizeIndex.SmallIris, CustomizeIndex.SmallIris.PrettyName());
         yield return (CustomizeIndex.Lipstick, CustomizeIndex.Lipstick.PrettyName());
     }
-    
-    
+
+
     public static bool Show(OutfitAppearance outfitAppearance) {
         var edited = false;
 
@@ -79,8 +78,8 @@ public static class CustomizeEditor {
             edited |= v switch {
                 CustomizeIndex.Clan => ShowGenderRaceClan(outfitAppearance),
                 CustomizeIndex.Height => ShowSlider(label, outfitAppearance, outfitAppearance.Height, 0, 100),
-                CustomizeIndex.BustSize => ShowSlider(label, outfitAppearance,  outfitAppearance.BustSize, 0, 100),
-                CustomizeIndex.MuscleMass => ShowSlider(label, outfitAppearance,  outfitAppearance.MuscleMass, 0, 100),
+                CustomizeIndex.BustSize => ShowSlider(label, outfitAppearance, outfitAppearance.BustSize, 0, 100),
+                CustomizeIndex.MuscleMass => ShowSlider(label, outfitAppearance, outfitAppearance.MuscleMass, 0, 100),
                 // CustomizeIndex.Face => ShowFacePicker(label, outfitAppearance),
                 CustomizeIndex.Hairstyle => ShowHairPicker(label, outfitAppearance),
                 CustomizeIndex.FacialFeature1 => ShowFacialFeaturePicker(label, outfitAppearance, outfitAppearance.Gender.Value, outfitAppearance.Clan.Value, outfitAppearance.Face.Value),
@@ -88,14 +87,14 @@ public static class CustomizeEditor {
                 CustomizeIndex.TailShape or CustomizeIndex.FacePaint or CustomizeIndex.Face => ShowCustomizeSetPicker(label, v, outfitAppearance),
                 CustomizeIndex.SmallIris or CustomizeIndex.Lipstick => ShowBooleanCustomizeEditor(label, v, outfitAppearance),
                 CustomizeIndex.FacePaintReversed => ShowBooleanCustomizeEditor(label, v, outfitAppearance, 128),
-                
+
                 CustomizeIndex.Eyebrows or CustomizeIndex.EyeShape or CustomizeIndex.Nose or CustomizeIndex.Mouth or CustomizeIndex.Jaw => ShowSimpleCustomizeSetPicker(label, v, outfitAppearance),
-                
-                
-                
-                _ => ShowCustomize(outfitAppearance, outfitAppearance[v], v, label)
+
+
+
+                _ => ShowCustomize(outfitAppearance, outfitAppearance[v], v, label),
             };
-            
+
             if (outfitAppearance[v] is IHasModConfigs modable) {
                 ImGui.Dummy(checkboxSize);
                 ImGui.SameLine();
@@ -110,7 +109,7 @@ public static class CustomizeEditor {
                 }
             }
         }
-        
+
 
         return edited;
     }
@@ -119,16 +118,16 @@ public static class CustomizeEditor {
         var edited = false;
         edited |= ShowApplyEnableCheckbox(label, ref appearance[idx].Apply, ref appearance.Apply);
         using (ImRaii.PushId($"colorPicker_{label}")) {
-            edited |= ColorPicker(appearance, idx, ImGui.GetItemRectSize() with { X =  ImGui.GetContentRegionAvail().X * EditorInputScale });
+            edited |= ColorPicker(appearance, idx, ImGui.GetItemRectSize() with { X = ImGui.GetContentRegionAvail().X * EditorInputScale });
         }
-       
+
         ImGuiExt.SameLineInner();
         ImGui.Text(label.RemoveImGuiId());
         return edited;
     }
 
     private static readonly CustomizeIndex[] FacialFeatures = [CustomizeIndex.FacialFeature1, CustomizeIndex.FacialFeature2, CustomizeIndex.FacialFeature3, CustomizeIndex.FacialFeature4, CustomizeIndex.FacialFeature5, CustomizeIndex.FacialFeature6, CustomizeIndex.FacialFeature7, CustomizeIndex.LegacyTattoo];
-    
+
     private static bool ShowFacialFeaturePicker(string label, OutfitAppearance appearance, byte genderValue, byte clanValue, byte faceValue) {
         var edited = false;
         var charaMakeType = DataManager.GetExcelSheet<CharaMakeType>().FirstOrDefault(c => c.Gender == genderValue && c.Tribe.RowId == clanValue);
@@ -141,18 +140,18 @@ public static class CustomizeEditor {
             }
             edited = true;
         }
-        
+
         ImGui.SameLine();
         var faceDetails = charaMakeType.FacialFeatureOption[faceValue == 0 ? 0 : faceValue - 1];
         if (charaMakeType.Tribe.RowId != clanValue || charaMakeType.Gender != genderValue || faceValue == 0 || faceDetails.Option1 == 0) {
             edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature1], CustomizeIndex.FacialFeature1, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature2], CustomizeIndex.FacialFeature2, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature3], CustomizeIndex.FacialFeature3, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature4], CustomizeIndex.FacialFeature4, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature5], CustomizeIndex.FacialFeature5, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature6], CustomizeIndex.FacialFeature6, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature7], CustomizeIndex.FacialFeature7, label);
-            edited |=  ShowCustomize(appearance, appearance[CustomizeIndex.LegacyTattoo], CustomizeIndex.LegacyTattoo, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature2], CustomizeIndex.FacialFeature2, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature3], CustomizeIndex.FacialFeature3, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature4], CustomizeIndex.FacialFeature4, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature5], CustomizeIndex.FacialFeature5, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature6], CustomizeIndex.FacialFeature6, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature7], CustomizeIndex.FacialFeature7, label);
+            edited |= ShowCustomize(appearance, appearance[CustomizeIndex.LegacyTattoo], CustomizeIndex.LegacyTattoo, label);
             return edited;
         }
 
@@ -165,7 +164,7 @@ public static class CustomizeEditor {
                     edited |= ShowApplyEnableCheckbox(index.PrettyName(), ref aCustomize.Apply, ref appearance.Apply);
                     var icon = TextureProvider.GetFromGameIcon(iconId).GetWrapOrEmpty();
                     if (ImGui.ImageButton(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y) * ImGuiHelpers.GlobalScale, Vector2.Zero, Vector2.One, 1, ImGui.GetColorU32(ImGuiCol.Button).ToVector4(), aCustomize.Value != 0 ? Vector4.One : ImGuiColors.DalamudRed)) {
-                        aCustomize.Value = aCustomize.Value != 0 ? (byte) 0 : enableValue;
+                        aCustomize.Value = aCustomize.Value != 0 ? (byte)0 : enableValue;
                         edited = true;
                     }
                 }
@@ -174,7 +173,7 @@ public static class CustomizeEditor {
 
             if (aCustomize.Value > 0) totalValue += enableValue;
         }
-        
+
         using (ImRaii.Group()) {
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One)) {
                 ShowOption(CustomizeIndex.FacialFeature1, faceDetails.Option1, 1);
@@ -201,7 +200,7 @@ public static class CustomizeEditor {
             if (ImGui.InputInt($"##inputInt_{label}", ref totalValue)) {
                 if (totalValue < byte.MinValue) totalValue = byte.MaxValue;
                 if (totalValue > byte.MaxValue) totalValue = byte.MinValue;
-                byte FacialFlag(byte enableValue) => (byte) ((totalValue & enableValue) == enableValue ? enableValue : 0);
+                byte FacialFlag(byte enableValue) => (byte)((totalValue & enableValue) == enableValue ? enableValue : 0);
                 appearance.FacialFeature1.Value = FacialFlag(1);
                 appearance.FacialFeature2.Value = FacialFlag(2);
                 appearance.FacialFeature3.Value = FacialFlag(4);
@@ -213,7 +212,7 @@ public static class CustomizeEditor {
                 edited = true;
             }
         }
-        
+
         return edited;
     }
 
@@ -225,7 +224,7 @@ public static class CustomizeEditor {
         }
 
         checkboxSize = ImGui.GetItemRectSize();
-        
+
         if (ImGui.IsItemHovered()) {
             using (ImRaii.Tooltip()) {
                 ImGui.Text($"Apply '");
@@ -238,11 +237,11 @@ public static class CustomizeEditor {
                 }
             }
         }
-        
+
         ImGui.SameLine();
         return edited;
     }
-    
+
     private static bool ShowBooleanCustomizeEditor(string label, CustomizeIndex index, OutfitAppearance appearance, byte enableValue = 1) {
         var edited = false;
 
@@ -261,8 +260,8 @@ public static class CustomizeEditor {
 
             edited = true;
         }
-        
-        
+
+
         #if DEBUG
         ImGui.SameLine();
         ImGui.TextDisabled($"{appearance[index].Value}");
@@ -272,16 +271,16 @@ public static class CustomizeEditor {
     }
 
     private static bool ShowSimpleCustomizeSetPicker(string label, CustomizeIndex index, OutfitAppearance appearance, CustomizeSet? set = null) {
-        set ??= PluginService.CustomizeManager.GetSet((SubRace) appearance.Clan.Value, appearance.Gender.Value == 0 ? Gender.Male : Gender.Female);
+        set ??= PluginService.CustomizeManager.GetSet((SubRace)appearance.Clan.Value, appearance.Gender.Value == 0 ? Gender.Male : Gender.Female);
         var edited = false;
-        
+
         var count = index switch {
             CustomizeIndex.Eyebrows => set.NumEyebrows,
             CustomizeIndex.EyeShape => set.NumEyeShapes,
             CustomizeIndex.Nose => set.NumNoseShapes,
             CustomizeIndex.Mouth => set.NumMouthShapes,
             CustomizeIndex.Jaw => set.NumJawShapes,
-            _ => 0
+            _ => 0,
         };
 
         if (count == 0) {
@@ -297,59 +296,59 @@ public static class CustomizeEditor {
                     appearance[index].Value = i;
                 }
             }
-            
+
             ImGui.EndCombo();
         }
-        
+
         return edited;
     }
 
     private static bool ShowCustomizeSetPicker(string label, CustomizeIndex index, OutfitAppearance appearance) {
         var edited = false;
-        var customizeSet = PluginService.CustomizeManager.GetSet((SubRace) appearance.Clan.Value, appearance.Gender.Value == 0 ? Gender.Male : Gender.Female);
+        var customizeSet = PluginService.CustomizeManager.GetSet((SubRace)appearance.Clan.Value, appearance.Gender.Value == 0 ? Gender.Male : Gender.Female);
         var list = index switch {
             CustomizeIndex.TailShape => customizeSet.TailEarShapes,
             CustomizeIndex.FacePaint => customizeSet.FacePaints,
             CustomizeIndex.Face => customizeSet.Faces,
-            _ => null
+            _ => null,
         };
 
         if (list == null) return ShowSimpleCustomizeSetPicker(label, index, appearance, customizeSet);
-        
+
         edited |= ShowApplyEnableCheckbox(label, ref appearance[index].Apply, ref appearance.Apply);
-        
+
         using (ImRaii.Group()) {
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * EditorInputScale);
-            
+
             if (ImGui.BeginChildFrame(ImGui.GetID($"{index}CustomizePreview"), new Vector2(ImGui.GetContentRegionAvail().X * EditorInputScale, 48 * ImGuiHelpers.GlobalScale))) {
                 CustomizeData? active = appearance[index].Value == 0 || appearance[index].Value >= list.Count ? null : list[appearance[index].Value - 1];
-                
+
                 if (active != null) {
                     var icon = TextureProvider.GetFromGameIcon(active.Value.IconId).GetWrapOrEmpty();
                     ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
                 }
-                
+
                 ImGui.Text($"{label} #{appearance[index].Value}");
             }
             ImGui.EndChildFrame();
             if (ImGui.IsItemClicked()) {
                 ImGui.OpenPopup($"{index}CustomizePicker");
             }
-            
+
             ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * Vector2.UnitY);
             var w = ImGui.GetItemRectSize().X;
             if (ImGui.BeginPopup($"{index}CustomizePicker", ImGuiWindowFlags.AlwaysAutoResize)) {
-                
-                
+
+
                 for (var i = 0; i < list.Count; i++) {
                     var v = list[i];
                     var icon = TextureProvider.GetFromGameIcon(v.IconId).GetWrapOrEmpty();
 
                     var buttonHeight = 48 * ImGuiHelpers.GlobalScale;
 
-                    using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2((buttonHeight * 1.125f) / w, 0.5f))) {
+                    using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2(buttonHeight * 1.125f / w, 0.5f))) {
                         using (ImRaii.PushColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.TextDisabled), appearance.Face.Value == i + 1)) {
                             if (ImGui.Button($"{index} #{i + 1}", new Vector2(w, buttonHeight))) {
                                 edited = true;
@@ -372,7 +371,7 @@ public static class CustomizeEditor {
 
         return edited;
     }
-    
+
     private static bool ColorPicker(OutfitAppearance appearance, CustomizeIndex idx, Vector2? size = null) {
         var edited = false;
         var set = PluginService.CustomizeManager.GetSet((SubRace)appearance.Clan.Value, appearance.Gender.Value == 1 ? Gender.Female : Gender.Male);
@@ -385,13 +384,13 @@ public static class CustomizeEditor {
             CustomizeIndex.LipColor => Common.ConcatList(set.LipColorsDark, set.LipColorsLight),
             CustomizeIndex.FacePaintColor => Common.ConcatList(set.FacePaintColorsLight, set.FacePaintColorsLight),
             CustomizeIndex.TattooColor => set.TattooColors,
-            _ => throw new ArgumentOutOfRangeException(nameof(idx), idx, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(idx), idx, null),
         };
-        
-        
+
+
 
         var selected = colorSet.FirstOrDefault(c => c.Value.Value == appearance[idx].Value, colorSet[0]);
-        
+
         if (size != null) {
             if (ImGui.ColorButton($"{idx}#{selected.Value.Value}", ImGui.ColorConvertU32ToFloat4(selected.Color.Color), ImGuiColorEditFlags.None, size.Value)) {
                 ImGui.OpenPopup($"ColorPicker_{idx}");
@@ -403,7 +402,7 @@ public static class CustomizeEditor {
             }
 
         }
-  
+
         ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * Vector2.UnitY);
 
         if (ImGui.BeginPopup($"ColorPicker_{idx}")) {
@@ -423,32 +422,32 @@ public static class CustomizeEditor {
                     }
                 }
             }
-                
+
             ImGui.EndPopup();
         }
 
         return edited;
     }
-    
+
     private static bool ShowHairPicker(string label, OutfitAppearance appearance) {
         var edited = false;
         edited |= ShowApplyEnableCheckbox(label, ref appearance.Hairstyle.Apply, ref appearance.Apply);
         var cbSize = ImGui.GetItemRectSize();
-        
+
         var hairstyles = DataCache.GetHairstyles(appearance.Clan.Value, appearance.Gender.Value);
-        
+
         var activeHairstyle = hairstyles.FirstOrNull(c => c.FeatureID == appearance.Hairstyle.Value);
 
         using var _g = ImRaii.Group();
         using (ImRaii.Group()) {
-            if (ImGui.BeginChildFrame(ImGui.GetID("hairPickerPreview"), new Vector2((ImGui.GetContentRegionAvail().X * EditorInputScale) - (cbSize.X * 3 + ImGui.GetStyle().ItemInnerSpacing.X * 3), 48 * ImGuiHelpers.GlobalScale))) {
+            if (ImGui.BeginChildFrame(ImGui.GetID("hairPickerPreview"), new Vector2(ImGui.GetContentRegionAvail().X * EditorInputScale - (cbSize.X * 3 + ImGui.GetStyle().ItemInnerSpacing.X * 3), 48 * ImGuiHelpers.GlobalScale))) {
                 if (activeHairstyle.HasValue) {
                     var icon = TextureProvider.GetFromGameIcon(activeHairstyle.Value.Icon).GetWrapOrEmpty();
                     ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
                 } else {
                     ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
                 }
-               
+
                 ImGui.SameLine();
                 ImGui.SetCursorPosY(ImGui.GetContentRegionMax().Y / 2 - ImGui.GetTextLineHeight() / 2);
                 var name = $"Hairstyle#{appearance.Hairstyle.Value}";
@@ -460,19 +459,19 @@ public static class CustomizeEditor {
             ImGui.EndChildFrame();
 
             var s = ImGui.GetItemRectSize();
-            
+
             if (ImGui.IsItemClicked()) {
                 ImGui.OpenPopup("hairPicker");
             }
-            
+
             ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * Vector2.UnitY);
             ImGui.SetNextWindowSize(new Vector2(ImGui.GetItemRectSize().X, 500 * ImGuiHelpers.GlobalScale));
-            
+
             if (ImGui.BeginPopup("hairPicker")) {
                 var dl = ImGui.GetWindowDrawList();
-                
+
                 foreach (var cmc in hairstyles) {
-                    
+
                     IDalamudTextureWrap icon;
                     try {
                         icon = TextureProvider.GetFromGameIcon(cmc.Icon).GetWrapOrEmpty();
@@ -485,40 +484,40 @@ public static class CustomizeEditor {
                     if (ImGui.IsWindowAppearing() && active) {
                         ImGui.SetScrollHereY();
                     }
-                    
+
                     if (ImGui.BeginChildFrame(ImGui.GetID($"hairstyle_{cmc.FeatureID}"), new Vector2(ImGui.GetContentRegionAvail().X, 48 * ImGuiHelpers.GlobalScale), ImGuiWindowFlags.NoBackground)) {
                         try {
                             ImGui.Image(icon.Handle, new Vector2(ImGui.GetContentRegionAvail().Y));
                         } catch {
                             ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().Y));
                         }
-                        
+
                         ImGui.SameLine();
                         var name = $"Hairstyle#{cmc.FeatureID}";
                         if (cmc.HintItem.RowId != 0) {
                             name += $"\n{cmc.HintItem.Value.Name.ExtractText().Split('-', 2, StringSplitOptions.TrimEntries)[1]}";
                         }
-                        
+
 
                         ImGui.SetCursorPosY(ImGui.GetContentRegionAvail().Y / 2 - ImGui.CalcTextSize(name).Y / 2);
                         ImGui.Text(name);
-                        
+
                     }
                     ImGui.EndChildFrame();
-                    
-                    
+
+
                     dl.AddRectFilled(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), ImGui.GetColorU32(ImGui.IsItemHovered() ? ImGuiCol.FrameBgHovered : active ? ImGuiCol.FrameBgActive : ImGuiCol.FrameBg), ImGui.GetStyle().FrameRounding);
-                    
+
                     if (ImGui.IsItemClicked()) {
                         edited = true;
                         appearance.Hairstyle.Value = cmc.FeatureID;
                         ImGui.CloseCurrentPopup();
                     }
                 }
-                
+
                 ImGui.EndCombo();
             }
-            
+
             ImGuiExt.SameLineInner();
 
             using (ImRaii.Group()) {
@@ -527,38 +526,38 @@ public static class CustomizeEditor {
                 edited |= ShowApplyEnableCheckbox(CustomizeIndex.Highlights.PrettyName(), ref appearance.Highlights.Apply, ref appearance.Apply);
                 ImGuiExt.SameLineInner();
                 edited |= ShowApplyEnableCheckbox(CustomizeIndex.HighlightsColor.PrettyName(), ref appearance.HighlightsColor.Apply, ref appearance.Apply);
-                
+
                 ImGui.NewLine();
                 edited |= ColorPicker(appearance, CustomizeIndex.HairColor);
                 ImGuiExt.SameLineInner();
 
                 var highlightsEnable = appearance.Highlights.Value > 0;
                 if (ImGui.Checkbox("##enableHighlights", ref highlightsEnable)) {
-                    appearance.Highlights.Value = (byte) (highlightsEnable ? 128 : 0);
+                    appearance.Highlights.Value = (byte)(highlightsEnable ? 128 : 0);
                     edited = true;
                 }
 
                 if (ImGui.IsItemHovered()) {
                     ImGui.SetTooltip("Enable Highlights");
                 }
-                
+
                 ImGuiExt.SameLineInner();
                 edited |= ColorPicker(appearance, CustomizeIndex.HighlightsColor);
             }
         }
-        
+
         ImGuiExt.SameLineInner();
         using (ImRaii.Group()) {
             ImGui.Text(label.RemoveImGuiId());
             ImGui.Text("& Colours");
         }
-        
+
         return edited;
     }
 
     private static bool ShowSlider(string label, OutfitAppearance appearance, ApplicableCustomize customize, byte min, byte max) {
         var edited = false;
-        
+
         edited |= ShowApplyEnableCheckbox(label, ref customize.Apply, ref appearance.Apply);
 
         var v = (int)customize.Value;
@@ -612,23 +611,23 @@ public static class CustomizeEditor {
                 appearance.Gender.Apply = enabled;
                 edited = true;
             }
-            
+
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * EditorInputScale);
             if (ImGui.BeginCombo("Body Type", GetGenderRaceClanName(gender, clan))) {
 
                 foreach (var tribe in DataManager.GetExcelSheet<Tribe>()) {
                     if (tribe.RowId == 0) continue;
-                    using (PluginService.PluginUi.MonoFontHandle.Push()) {
+                    using (PluginUi.MonoFontHandle.Push()) {
                         if (ImGui.Selectable(GetGenderRaceClanName(0, tribe, true), gender == 0 && clan == tribe.RowId)) {
-                            appearance.Clan.Value = (byte) tribe.RowId;
-                            appearance.Race.Value = (byte) GetRaceId(tribe.RowId);
+                            appearance.Clan.Value = (byte)tribe.RowId;
+                            appearance.Race.Value = (byte)GetRaceId(tribe.RowId);
                             appearance.Gender.Value = 0;
                             edited = true;
                         }
 
                         if (ImGui.Selectable(GetGenderRaceClanName(1, tribe, true), gender == 1 && clan == tribe.RowId)) {
-                            appearance.Clan.Value = (byte) tribe.RowId;
-                            appearance.Race.Value = (byte) GetRaceId(tribe.RowId);
+                            appearance.Clan.Value = (byte)tribe.RowId;
+                            appearance.Race.Value = (byte)GetRaceId(tribe.RowId);
                             appearance.Gender.Value = 1;
                             edited = true;
                         }
@@ -675,9 +674,9 @@ public static class CustomizeEditor {
                     ImGui.InputText(label, ref v, 32, ImGuiInputTextFlags.ReadOnly);
                     return false;
                 }
-                
+
                 goto default;
-                
+
             case CustomizeIndex.BodyType:
             case CustomizeIndex.Height:
             case CustomizeIndex.Clan:
@@ -718,7 +717,7 @@ public static class CustomizeEditor {
                     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X * EditorInputScale);
                     ImGui.InputText(label, ref v, 4, ImGuiInputTextFlags.ReadOnly);
                     ImGui.SameLine(-48 * ImGuiHelpers.GlobalScale);
-                    using (PluginService.PluginUi.IconFontHandle.Push()) 
+                    using (PluginUi.IconFontHandle.Push())
                     using (ImRaii.PushColor(ImGuiCol.TextDisabled, ImGui.GetColorU32(ImGuiCol.TextDisabled, 0.25f))) {
                         ImGui.TextDisabled(FontAwesomeIcon.InfoCircle.ToIconString());
                     }
@@ -734,7 +733,7 @@ public static class CustomizeEditor {
                         return true;
                     }
                 }
-                
+
                 return false;
         }
     }
@@ -745,7 +744,7 @@ public static class CustomizeEditor {
         if (customize is ApplicableCustomizeModable modable) {
             ModListDisplay.Show(modable, $"{index.PrettyName()}");
         }
-        
+
         return r;
     }
 }

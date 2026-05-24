@@ -33,22 +33,22 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private bool applyOnLogin = character?.ApplyOnLogin ?? true;
     private bool applyOnPluginReload = character?.ApplyOnPluginReload ?? false;
-    
+
     private (string Name, uint World) honorificIdentity = character?.HonorificIdentity ?? (Objects.LocalPlayer?.Name.TextValue ?? string.Empty, Objects.LocalPlayer?.HomeWorld.RowId ?? 0);
     private (string Name, uint World) heelsIdentity = character?.HeelsIdentity ?? (Objects.LocalPlayer?.Name.TextValue ?? string.Empty, Objects.LocalPlayer?.HomeWorld.RowId ?? 0);
 
     private Guid? customizePlusProfile = character == null ? CustomizePlus.TryGetActiveProfileOnCharacter(0, out var activeProfile) ? activeProfile.UniqueId : null : character.CustomizePlusProfile;
 
     private Guid? penumbraCollection = character == null ? PenumbraIpc.GetCollectionForObject.Invoke(0).EffectiveCollection.Id : character.PenumbraCollection;
-    
+
     private readonly HashSet<CustomizeIndex> defaultEnabledCustomizeIndexes = character?.DefaultEnabledCustomizeIndexes.Clone() ?? [];
     private readonly HashSet<HumanSlot> defaultDisableEquipSlots = character?.DefaultDisabledEquipmentSlots.Clone() ?? [];
     private readonly HashSet<EquipSlot> defaultDisableWeaponSlots = character?.DefaultDisabledWeaponSlots.Clone() ?? [];
     private readonly HashSet<AppearanceParameterKind> defaultEnabledParameterKinds = character?.DefaultEnabledParameterKinds.Clone() ?? [];
     private readonly HashSet<ToggleType> defaultEnabledToggles = character?.DefaultEnabledToggles.Clone() ?? [];
-    
+
     private readonly Dictionary<Guid, string> penumbraCollections = PenumbraIpc.GetCollections.Invoke();
-    
+
     private PolaroidStyle? outfitStyle = character?.OutfitPolaroidStyle.Clone();
     private PolaroidStyle? folderStyle = character?.FolderPolaroidStyle.Clone();
 
@@ -58,18 +58,18 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
 
     private List<AutoCommandEntry> autoCommandBeforeOutfit = character?.AutoCommandBeforeOutfit.Clone() ?? [];
     private List<AutoCommandEntry> autoCommandAfterOutfit = character?.AutoCommandAfterOutfit.Clone() ?? [];
-    
+
     private List<AutoCommandEntry> autoCommandOnCharacterLoad = character?.AutoCommandOnCharacterLoad.Clone() ?? [];
     private List<AutoCommandEntry> autoCommandOnCharacterUnload = character?.AutoCommandOnCharacterUnload.Clone() ?? [];
 
     private OutfitLinksEditor? OutfitLinksEditor;
-    
+
     private bool defaultRevertEquip = character?.DefaultRevertEquip ?? false;
-    private bool defaultRevertCustomize =  character?.DefaultRevertCustomize ?? false;
+    private bool defaultRevertCustomize = character?.DefaultRevertCustomize ?? false;
 
     private FolderSortStrategy folderSortStrategy = character?.FolderSortStrategy ?? FolderSortStrategy.Inherit;
-    
-    
+
+
     public override void DrawTop(ref WindowControlFlags controlFlags) {
         base.DrawTop(ref controlFlags);
 
@@ -79,21 +79,21 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             ImGuiExt.CenterText(IsNewCharacter ? "Creating" : "Editing Character", shadowed: true);
             ImGuiExt.CenterText(IsNewCharacter ? "New Character" : Character.Name, shadowed: true);
         }
-        
-        
+
+
     }
 
     public override void DrawCenter(ref WindowControlFlags controlFlags) {
         var isShared = Character.Guid == CharacterConfigFile.SharedDataGuid;
-        
+
         if (dirty) {
             controlFlags |= WindowControlFlags.PreventClose;
         }
-        
+
         var maxW = 640;
-        
+
         if (ImGui.GetContentRegionAvail().X > maxW * ImGuiHelpers.GlobalScale) {
-            
+
             ImGui.Dummy(new Vector2((ImGui.GetContentRegionAvail().X - maxW * ImGuiHelpers.GlobalScale) / 2f));
             ImGui.SameLine();
         }
@@ -129,7 +129,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (honorificReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
                         dirty |= CustomInput.InputText("Honorific Identity:", ref honorificIdentity.Name, 100);
                         ImGui.SameLine();
-                        var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(honorificIdentity.World);
+                        var selectedWorld = DataManager.GetExcelSheet<World>().GetRowOrDefault(honorificIdentity.World);
                         dirty |= CustomInput.Combo("##HonorificIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{honorificIdentity.World}", () => {
                             var m = false;
                             var appearing = ImGui.IsWindowAppearing();
@@ -173,7 +173,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     using (ImRaii.ItemWidth(ImGui.CalcItemWidth() / 2 - ImGui.GetStyle().ItemSpacing.X / 2 - (heelsReady ? 0 : ImGui.GetTextLineHeightWithSpacing()))) {
                         dirty |= CustomInput.InputText("Simple Heels Identity:", ref heelsIdentity.Name, 100);
                         ImGui.SameLine();
-                        var selectedWorld = DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>().GetRowOrDefault(heelsIdentity.World);
+                        var selectedWorld = DataManager.GetExcelSheet<World>().GetRowOrDefault(heelsIdentity.World);
                         dirty |= CustomInput.Combo("##heelsIdentityWorld", selectedWorld?.Name.ExtractText() ?? $"World#{heelsIdentity.World}", () => {
                             var m = false;
                             var appearing = ImGui.IsWindowAppearing();
@@ -382,7 +382,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
             }
             var useCustomOutfitPolaroid = outfitStyle != null;
             var useCustomFolderPolaroid = folderStyle != null;
-            
+
             if (ImGui.Checkbox(useCustomOutfitPolaroid ? "##useCustomOutfitPolaroid" : "Use custom outfit style", ref useCustomOutfitPolaroid)) {
                 if (useCustomOutfitPolaroid) {
                     outfitStyle = (PluginConfig.CustomStyle?.OutfitList.Polaroid ?? Style.Default.OutfitList.Polaroid).Clone();
@@ -419,13 +419,13 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                     }
                 }
             }
-            
+
             if (!isShared) {
-                
-                ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string>() {
-                    { FolderSortStrategy.Inherit, $"Inherit ({PluginConfig.FolderSortStrategy})" }
+
+                ImGuiEx.EnumCombo("Folder Display Order", ref folderSortStrategy, new Dictionary<FolderSortStrategy, string> {
+                    { FolderSortStrategy.Inherit, $"Inherit ({PluginConfig.FolderSortStrategy})" },
                 });
-                
+
                 if (PluginConfig.EnableOutfitCommands && ImGui.CollapsingHeader("Commands")) {
                     ImGui.TextColoredWrapped(ImGui.GetColorU32(ImGuiCol.TextDisabled), "Execute commands automatically when changing outfits. Commands set here will be executed when any outfit is applied with this character.");
                     ImGui.Spacing();
@@ -435,11 +435,11 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                             dirty |= CommandEditor.Show(autoCommandBeforeOutfit, down: autoCommandAfterOutfit);
                         }
                     }
-                    
+
                     ImGui.TextDisabled("After Outfit Commands:");
                     using (ImRaii.PushIndent()) {
                         using (ImRaii.PushId("autoCommandAfterOutfit")) {
-                            dirty |= CommandEditor.Show(autoCommandAfterOutfit, up: autoCommandBeforeOutfit);
+                            dirty |= CommandEditor.Show(autoCommandAfterOutfit, autoCommandBeforeOutfit);
                         }
                     }
 
@@ -457,16 +457,16 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                         }
                     }
                 }
-                
+
                 if (ImGui.CollapsingHeader("Image")) {
                     var style = (PluginConfig.CustomStyle ?? Style.Default).CharacterPolaroid;
                     ImageEditor.Draw(Character, style, characterName, ref controlFlags);
                 }
-            
+
             }
-            
+
             controlFlags |= a;
-            
+
             using (ImRaii.Disabled(!(dirty || IsNewCharacter))) {
                 if (ImGuiExt.ButtonWithIcon(IsNewCharacter ? "Create Character" : "Save Character", FontAwesomeIcon.Save, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                     controlFlags |= WindowControlFlags.PreventClose;
@@ -490,7 +490,7 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                         Character.DefaultLinkBefore = linkBefore;
                         Character.DefaultLinkAfter = linkAfter;
                         Character.DefaultRevertCustomize = defaultRevertCustomize;
-                        Character.DefaultRevertEquip =  defaultRevertEquip;
+                        Character.DefaultRevertEquip = defaultRevertEquip;
                         Character.FolderSortStrategy = folderSortStrategy;
                         autoCommandBeforeOutfit.Cleanup();
                         Character.AutoCommandBeforeOutfit = autoCommandBeforeOutfit;
@@ -503,12 +503,12 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                         Character.ApplyOnLogin = applyOnLogin;
                         Character.ApplyOnPluginReload = applyOnPluginReload;
                     }
-                    
+
                     Character.Dirty = true;
                     Character.Save(true);
-                    
+
                     if (IsNewCharacter) {
-                        
+
 
                         var defaultOutfit = OutfitConfigFile.CreateFromLocalPlayer(Character, Guid.Empty, Character.GetOptionsProvider(Guid.Empty));
 
@@ -520,30 +520,30 @@ public class EditCharacterPage(CharacterConfigFile? character) : Page {
                             defaultOutfit.SetImage(path);
                             defaultOutfit.SetImageDetail(Character.ImageDetail);
                         }
-                        
+
                         defaultOutfit.Save(true);
 
                         Character.Automation.Login = defaultOutfit.Guid;
-                        
+
                         Character.Dirty = true;
                         Character.Save(true);
-                        
+
                         Config.SwitchCharacter(Character.Guid);
 
                         MainWindow.OpenPage(new GlamourListPage(), true);
                     } else {
-                        
+
                         Character.Dirty = true;
                         Character.Save(true);
                         MainWindow.PopPage();
                     }
-                    
 
-                    
+
+
                 }
             }
         }
-        
+
         ImGui.EndChild();
     }
 

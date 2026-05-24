@@ -35,12 +35,12 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
     };
 
     public string TypeName => "Item";
-    
+
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public Guid Folder { get; set; } = Guid.Empty;
     public string? SortName { get; set; }
-    
+
     public List<AutoCommandEntry> AutoCommands { get; set; } = new();
 
     public ImageDetail ImageDetail { get; set; } = new();
@@ -50,15 +50,15 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         get => Item.ModConfigs;
         set => Item.ModConfigs = value;
     }
-    
+
     public HumanSlot Slot { get; set; } = HumanSlot.Body;
-    
+
     public ApplicableEquipment? Equipment { get; set; } = new();
     public bool ShouldSerializeEquipment() => Slot != HumanSlot.Face;
-    
+
     public ApplicableBonus? Bonus { get; set; } = new();
     public bool ShouldSerializeBonus() => Slot == HumanSlot.Face;
-    
+
     [JsonIgnore]
     public ApplicableItem<HumanSlot> Item {
         get => Slot == HumanSlot.Face ? Bonus ?? ApplicableBonus.FromNothing() : Equipment ?? ApplicableEquipment.FromNothing(Slot);
@@ -78,22 +78,20 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         instance.Folder = folderGuid;
 
         instance.Item = ApplicableEquipment.FromNothing(HumanSlot.Body);
-        
+
         return instance;
     }
 
-    public static ItemConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider? defaultOptionsProvider = null) {
-        return Create(character, folderGuid);
-    }
+    public static ItemConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, IDefaultOutfitOptionsProvider? defaultOptionsProvider = null) => Create(character, folderGuid);
 
     public static ItemConfigFile CreateFromLocalPlayer(CharacterConfigFile character, Guid folderGuid, HumanSlot slot, IDefaultOutfitOptionsProvider? defaultOutfitOptionsProvider = null) {
         var item = Create(character, folderGuid);
         item.Slot = slot;
-        
+
         var glamourerState = GlamourerIpc.GetState(0);
         if (glamourerState == null) return item;
         var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
-        
+
         if (slot is HumanSlot.Face) {
             item.Item = ApplicableBonus.FromExistingState(defaultOutfitOptionsProvider ?? character.GetOptionsProvider(folderGuid), slot, glamourerState.Bonus, glamourerState.Materials, penumbraCollection.EffectiveCollection.Id);
         } else {
@@ -116,9 +114,9 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
             await Framework.RunOnTick(async () => {
                 var redraw = false;
                 Item.ApplyToCharacter(Slot, ref redraw);
-                
+
                 EnqueueAutoCommands();
-                
+
                 if (redraw) {
                     await Framework.RunOnTick(() => {
                         PenumbraIpc.RedrawObject.Invoke(0);
@@ -131,9 +129,9 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
     public void EnqueueAutoCommands() {
         if (!PluginConfig.EnableOutfitCommands) return;
         var parent = GetParent() ?? throw new Exception("Invalid ItemConfigFile");
-        
+
         List<string> commands = [];
-        
+
         if (parent.Folders.TryGetValue(Folder, out var folder)) {
             if (folder.AutoCommandsSkipCharacter) {
                 commands.AddRange(folder.AutoCommandBeforeOutfit.Where(c => c.Enabled).Select(c => c.Command));
@@ -160,14 +158,10 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
             }
         }
     }
-    
-    public Task<bool> ApplyMods() {
-        return Task.FromResult(false);
-    }
 
-    public static string GetFileName(Guid? guid) {
-        return $"{CharacterDirectory.Items}/{guid}.json";
-    }
+    public Task<bool> ApplyMods() => Task.FromResult(false);
+
+    public static string GetFileName(Guid? guid) => $"{CharacterDirectory.Items}/{guid}.json";
 
 
     public FileInfo? GetImageFile() {
@@ -178,13 +172,13 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         }
         return file;
     }
-    
+
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap) {
         if (TempImagePath.TryGetValue(Guid, out var value) && value.Sw.ElapsedMilliseconds < 10000) {
             wrap = CustomTextureProvider.GetFromFileAbsolute(value.path).GetWrapOrDefault();
             return wrap != null;
         }
-        
+
         var filePath = Path.Join(GetParent()?.ImagesDirectory.FullName ?? throw new Exception("Outfit Config requires a parent."), $"{Guid}");
         var file = Common.GetImageFile(filePath);
         if (file is not { Exists: true }) {
@@ -194,19 +188,19 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
         wrap = CustomTextureProvider.GetFromFile(file).GetWrapOrDefault();
         return wrap is not null;
     }
-    
-    
+
+
     [JsonIgnore] public CharacterConfigFile? ConfigFile => GetParent();
 
-    
-    private readonly static Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
-    
+
+    private static readonly Dictionary<Guid, (string path, Stopwatch Sw)> TempImagePath = new();
+
     public void SetImage(FileInfo fileInfo) {
         if (ConfigFile == null || Guid == Guid.Empty) return;
-        
+
         var dir = ConfigFile.ImagesDirectory;
         var fileName = Path.Join(dir.FullName, $"{Guid}");
-        
+
         foreach (var type in IImageProvider.SupportedImageFileTypes) {
             if (File.Exists($"{fileName}.{type}")) {
                 File.Delete($"{fileName}.{type}");
@@ -224,18 +218,18 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
     }
 
     protected override void Validate(List<string> errors) {
-        
+
     }
 
     public async Task<ItemConfigFile> CreateClone() {
         return await Task.Run(() => {
             var guid = Guid.NewGuid();
-            var parent = this.GetParent();
+            var parent = GetParent();
             SaveAs(guid, true);
             return Load(guid, parent);
         }) ?? throw new Exception("Failed to clone outfit.");
     }
-    
+
 
     public void Delete() {
         PluginLog.Warning($"Deleting Item: {Name}");
@@ -245,10 +239,9 @@ public class ItemConfigFile : ConfigFile<ItemConfigFile, CharacterConfigFile>, I
     }
 
     public IListEntry? CloneTo(CharacterConfigFile characterConfigFile) => SaveTo(characterConfigFile);
-    
+
     public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo) {
         fileInfo = GetImageFile();
         return fileInfo is { Exists: true };
     }
 }
-

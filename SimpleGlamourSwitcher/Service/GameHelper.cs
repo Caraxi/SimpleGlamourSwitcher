@@ -16,13 +16,11 @@ public static unsafe class GameHelper {
         foreach (var e in RaptureGearsetModule.Instance()->Entries.PointerEnumerator()) {
             if (e->Id == id) return (e->Id, e->NameString);
         }
-        
+
         return null;
     }
 
-    public static (byte Id, string Name)? GetActiveGearset() {
-        return GetGearsetByIndex(RaptureGearsetModule.Instance()->CurrentGearsetIndex);
-    }
+    public static (byte Id, string Name)? GetActiveGearset() => GetGearsetByIndex(RaptureGearsetModule.Instance()->CurrentGearsetIndex);
 
     public static string PlayerNameString => PlayerState.Instance()->CharacterNameString;
 }

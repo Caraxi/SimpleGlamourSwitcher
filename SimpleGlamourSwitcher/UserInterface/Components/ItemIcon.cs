@@ -7,7 +7,7 @@ using Penumbra.GameData.Structs;
 namespace SimpleGlamourSwitcher.UserInterface.Components;
 
 public static class ItemIcon {
-    private readonly static Dictionary<HumanSlot, (string TexturePath, Vector2 uvMin, Vector2 uvMax)> EmptyIcons = new() {
+    private static readonly Dictionary<HumanSlot, (string TexturePath, Vector2 uvMin, Vector2 uvMax)> EmptyIcons = new() {
         { HumanSlot.Head, ("ui/uld/Character_hr1.tex", new Vector2(0.2500f, 0.3273f), new Vector2(0.3750f, 0.4727f)) },
         { HumanSlot.Body, ("ui/uld/Character_hr1.tex", new Vector2(0.3750f, 0.3273f), new Vector2(0.5000f, 0.4727f)) },
         { HumanSlot.Hands, ("ui/uld/Character_hr1.tex", new Vector2(0.5000f, 0.3273f), new Vector2(0.6250f, 0.4727f)) },
@@ -20,8 +20,8 @@ public static class ItemIcon {
         { HumanSlot.LFinger, ("ui/uld/Character_hr1.tex", new Vector2(0.5000f, 0.4727f), new Vector2(0.6250f, 0.6182f)) },
         { HumanSlot.Face, ("ui/uld/Character_hr1.tex", new Vector2(0.0000f, 0.8545f), new Vector2(0.1250f, 1.0000f)) },
     };
-    
-    private readonly static Dictionary<EquipSlot, (string TexturePath, Vector2 uvMin, Vector2 uvMax)> EmptyEquipSlotIcons = new() {
+
+    private static readonly Dictionary<EquipSlot, (string TexturePath, Vector2 uvMin, Vector2 uvMax)> EmptyEquipSlotIcons = new() {
         { EquipSlot.Head, ("ui/uld/Character_hr1.tex", new Vector2(0.2500f, 0.3273f), new Vector2(0.3750f, 0.4727f)) },
         { EquipSlot.Body, ("ui/uld/Character_hr1.tex", new Vector2(0.3750f, 0.3273f), new Vector2(0.5000f, 0.4727f)) },
         { EquipSlot.Hands, ("ui/uld/Character_hr1.tex", new Vector2(0.5000f, 0.3273f), new Vector2(0.6250f, 0.4727f)) },
@@ -53,7 +53,7 @@ public static class ItemIcon {
                         dl.AddImage(tex.Handle, ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), emptySlotTexture.Value.uvMin, emptySlotTexture.Value.uvMax);
                     }
                 }
-                
+
 
             }
 #if DEBUG
@@ -63,11 +63,11 @@ public static class ItemIcon {
 #endif
         }
     }
-    
+
     public static void Draw(HumanSlot slot, EquipItem equipItem) {
         Draw(equipItem, EmptyIcons.GetValueOrDefault(slot));
     }
-    
+
     public static void Draw(EquipSlot slot, EquipItem equipItem) {
         Draw(equipItem, EmptyEquipSlotIcons.GetValueOrDefault(slot));
     }

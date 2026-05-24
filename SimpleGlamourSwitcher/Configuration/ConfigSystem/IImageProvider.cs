@@ -11,26 +11,24 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace SimpleGlamourSwitcher.Configuration.ConfigSystem;
 
 public interface IImageProvider {
-    
+
     public static string[] SupportedImageFileTypes = ["png", "jpg", "jpeg", "webp"];
-    
+
     public bool IsUsingDefaultImage() => false;
-    
+
     public ImageDetail ImageDetail { get; }
-    
+
     public bool TryGetImage([NotNullWhen(true)] out IDalamudTextureWrap? wrap);
 
     public IDalamudTextureWrap? GetImageOrNull() => GetImage();
 
-    public IDalamudTextureWrap? GetImage(IDalamudTextureWrap? defaultWrap = null) {
-        return TryGetImage(out var wrap) ? wrap : defaultWrap;
-    }
+    public IDalamudTextureWrap? GetImage(IDalamudTextureWrap? defaultWrap = null) => TryGetImage(out var wrap) ? wrap : defaultWrap;
 
     public void SetImage(FileInfo fileInfo);
 
     public void SetImageDetail(ImageDetail imageDetail);
 
-    
+
     public void LoadFile(bool fileSelectOk, List<string> filePaths) {
         Plugin.MainWindow.AllowAutoClose = true;
         if (!fileSelectOk || filePaths.Count < 1) return;
@@ -42,7 +40,7 @@ public interface IImageProvider {
                 PluginConfig.ImageFilePickerLastPath = fileInfo.Directory.FullName;
                 PluginConfig.Dirty = true;
             }
-            
+
             SetImage(fileInfo);
         } else {
             PluginLog.Error("File does not exist");
@@ -54,7 +52,7 @@ public interface IImageProvider {
         var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");
         if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
         var tempImagePath = Path.Join(tempDir, $"Image_{new Random().Next()}.png");
-        
+
         clipImage.Save(tempImagePath, ImageFormat.Png);
         LoadFile(true, [tempImagePath]);
         Task.Run(async () => {
@@ -65,7 +63,7 @@ public interface IImageProvider {
     */
 
     public bool TryGetImageFileInfo([NotNullWhen(true)] out FileInfo? fileInfo);
-    
+
     public void LoadImage(IDalamudTextureWrap clipImage) {
         var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");
         if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
@@ -81,7 +79,7 @@ public interface IImageProvider {
     public void LoadImage(AnimatedScreenshotRecording animatedScreenshot) {
         Task.Run(async () => {
             animatedScreenshot.StopRecording();
-            var activeNotification = NotificationManager.AddNotification(new Notification() {
+            var activeNotification = NotificationManager.AddNotification(new Notification {
                 Content = "Waiting for completion...",
                 Title = "Simple Glamour Switcher - Screenshot",
                 Progress = 0f,
@@ -96,17 +94,17 @@ public interface IImageProvider {
                 activeNotification.Icon = INotificationIcon.From(FontAwesomeIcon.Exclamation);
                 return;
             }
-            
+
             activeNotification.Content = $"Saving...";
             activeNotification.HardExpiry = DateTime.Now + TimeSpan.FromSeconds(30);
-            
+
             var tempDir = Path.Join(PluginInterface.GetPluginConfigDirectory(), "temp");
             if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
             var tempImagePath = Path.Join(tempDir, $"Image_{new Random().Next()}.webp");
             var size = animatedScreenshot.Size;
-            var image = new Image<Rgba32>((int) size.X, (int) size.Y);
+            var image = new Image<Rgba32>((int)size.X, (int)size.Y);
             for (var i = 0; i < animatedScreenshot.Frames.Count; i++) {
-                var f =  animatedScreenshot.Frames[i];
+                var f = animatedScreenshot.Frames[i];
                 var nextFrame = i >= animatedScreenshot.Frames.Count - 1 ? animatedScreenshot.Frames[0] : animatedScreenshot.Frames[i + 1];
                 using var stream = new MemoryStream();
                 await TextureReadbackProvider.SaveToStreamAsync(f.TextureWrap, TextureReadbackProvider.GetSupportedImageEncoderInfos().First().ContainerGuid, stream, null, false, true);
@@ -114,17 +112,16 @@ public interface IImageProvider {
                 var frameImage = await Image.LoadAsync(stream);
                 var frame = image.Frames.AddFrame(frameImage.Frames[0]);
                 frame.Metadata.GetWebpMetadata().FrameDelay = (uint)nextFrame.TimeSinceLastFrame;
-                activeNotification.Content = $"Generating... [{i+1} /  {animatedScreenshot.Frames.Count}]";
+                activeNotification.Content = $"Generating... [{i + 1} /  {animatedScreenshot.Frames.Count}]";
                 activeNotification.HardExpiry = DateTime.Now + TimeSpan.FromSeconds(5);
                 activeNotification.Progress = i / (float)animatedScreenshot.Frames.Count;
             }
-            
+
             image.Frames.RemoveFrame(0);
             animatedScreenshot.Dispose();
             activeNotification.Content = $"Saving...";
             activeNotification.HardExpiry = DateTime.Now + TimeSpan.FromSeconds(30);
-            await image.SaveAsWebpAsync(tempImagePath, new WebpEncoder()
-            {
+            await image.SaveAsWebpAsync(tempImagePath, new WebpEncoder {
                 FileFormat = PluginConfig.AnimatedImageConfiguration.UseLosslessCompression ? WebpFileFormatType.Lossless : WebpFileFormatType.Lossy,
                 Quality = PluginConfig.AnimatedImageConfiguration.CompressionQuality,
                 Method = PluginConfig.AnimatedImageConfiguration.EncodingMethod,

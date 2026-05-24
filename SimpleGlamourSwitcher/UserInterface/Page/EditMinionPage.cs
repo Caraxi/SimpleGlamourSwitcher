@@ -25,7 +25,7 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
         Entry.MinionId = minionId ?? Entry.MinionId;
         Entry.Resummon = resummon;
     }
-    
+
     private void DrawMinion() {
         var minionData = DataManager.GetExcelSheet<Companion>().GetRowOrDefault(minionId ?? 0);
         var minionDataName = minionId is null or 0 ? "Not Selected" : SeStringEvaluator.EvaluateObjStr(ObjectKind.Companion, minionId.Value);
@@ -39,9 +39,9 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
             Dirty |= CustomInput.Combo("Minion Selection", minionDataName, DrawMinionSearch, style: Style.Default.Combo with { PadTop = false });
             Dirty |= ModListDisplay.Show(Entry, $"{minionDataName}");
         }
-        
+
         ImGui.Checkbox("Resummon Minion", ref resummon);
-        
+
         ImGui.SameLine();
         ImGuiComponents.HelpMarker("If enabled, the minion will be resummoned if it was already summoned.\nHolding SHIFT when selecting this minion will also force a resummon.");
     }
@@ -56,7 +56,7 @@ public class EditMinionPage(CharacterConfigFile character, Guid folderGuid, Mini
                 return true;
             }
         }
-        
+
         return false;
     }
 }

@@ -23,7 +23,7 @@ public static class GameIcon {
                         }
                     }
                 }
-                
+
             } else {
                 ImGui.Dummy(size);
                 var dl = ImGui.GetWindowDrawList();

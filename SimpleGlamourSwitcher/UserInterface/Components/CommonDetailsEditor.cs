@@ -20,11 +20,12 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
     public Guid FolderGuid { get; private set; } = entry?.Folder ?? Guid.Empty;
 
     public string FolderPath { get; private set; } = character.ParseFolderPath(entry?.Folder ?? Guid.Empty);
+    public bool SaveAsShared { get; private set; } = false;
 
     private List<AutoCommandEntry> autoCommands = entry is IAutoCommandProvider acp ? acp.AutoCommands : [];
 
 
-    public bool ShowNameAndFolderEditors(float width = 0) {
+    public bool ShowNameAndFolderEditors(float width = 0, bool allowSharedFolders = false) {
         var dirty = false;
 
         ImGui.Spacing();
@@ -43,14 +44,21 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
             CustomInput.Combo("Path", FolderPath, s => {
                 var folders = character.Folders.Select(f => {
                     var path = character.ParseFolderPath(f.Key);
-                    return (Guid: f.Key, Path: path, CompactPath: character.ParseFolderPath(f.Key, compact: true));
+                    return (Owner: character, Guid: f.Key, Path: path, CompactPath: character.ParseFolderPath(f.Key, compact: true));
                 });
 
+                if (allowSharedFolders && SharedCharacter != null && character.Guid != CharacterConfigFile.SharedDataGuid) {
+                    folders = folders.Concat(SharedCharacter.Folders.Select((f) => {
+                        var path = SharedCharacter.ParseFolderPath(f.Key);
+                        return (Owner: SharedCharacter, Guid: f.Key, Path: path, CompactPath: character.ParseFolderPath(f.Key, compact: true));
+                    }));
+                }
+                
                 if (entry is CharacterFolder || character.Guid != CharacterConfigFile.SharedDataGuid) {
-                    folders = folders.Prepend(new ValueTuple<Guid, string, string>(Guid.Empty, character.Name, character.Name));
+                    folders = folders.Prepend(new ValueTuple<CharacterConfigFile, Guid, string, string>(character, Guid.Empty, character.Name, character.Name));
                 }
 
-                foreach (var (guid, path, compactPath) in folders.OrderBy(f => f.CompactPath, StringComparer.InvariantCultureIgnoreCase)) {
+                foreach (var (folderOwner, guid, path, compactPath) in folders.OrderBy(f => f.Owner.Guid == CharacterConfigFile.SharedDataGuid ? 1 : 0).ThenBy(f => f.CompactPath, StringComparer.InvariantCultureIgnoreCase)) {
                     if (!string.IsNullOrWhiteSpace(s)) {
                         if (!(path.Contains(s, StringComparison.CurrentCultureIgnoreCase) || compactPath.Contains(s, StringComparison.CurrentCultureIgnoreCase))) continue;
                     }
@@ -58,7 +66,8 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
                     if (ImGui.Selectable($"{path}", guid == FolderGuid)) {
                         dirty |= FolderGuid != guid;
                         FolderGuid = guid;
-                        FolderPath = character.ParseFolderPath(guid);
+                        FolderPath = folderOwner.ParseFolderPath(guid);
+                        SaveAsShared = character.Guid != CharacterConfigFile.SharedDataGuid && folderOwner.Guid == CharacterConfigFile.SharedDataGuid;
                     }
                 }
 

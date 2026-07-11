@@ -26,7 +26,7 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
 
     protected virtual float SubWindowWidth => 600;
 
-    public bool IsNew { get; protected set; } = entry == null;
+    public bool IsNew { get; set; } = entry == null;
 
     public abstract string TypeName { get; }
 
@@ -70,7 +70,7 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
 
         var pad = (ImGui.GetContentRegionAvail().X - SubWindowWidth * ImGuiHelpers.GlobalScale) / 2f;
 
-        Dirty |= CommonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth);
+        Dirty |= CommonDetailsEditor.ShowNameAndFolderEditors(SubWindowWidth, IsNew && character != SharedCharacter);
 
         ImGui.Dummy(new Vector2(pad, 1f));
         ImGui.SameLine();
@@ -92,7 +92,13 @@ public abstract class EntryEditorPage<T>(CharacterConfigFile character, Guid fol
             if (ImGuiExt.ButtonWithIcon($"Save {TypeName}", FontAwesomeIcon.Save, new Vector2(SubWindowWidth * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeightWithSpacing() * 2))) {
                 CommonDetailsEditor.ApplyTo(Entry);
                 SaveEntry();
-                Entry.Save(true);
+
+                if (IsNew && CommonDetailsEditor.SaveAsShared && SharedCharacter != null) {
+                    Entry.CloneTo(SharedCharacter);
+                } else {
+                    Entry.Save(true);
+                }
+                
                 MainWindow.PopPage();
             }
         }

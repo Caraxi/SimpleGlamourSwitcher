@@ -142,7 +142,7 @@ public static class CustomizeEditor {
         }
 
         ImGui.SameLine();
-        var faceDetails = charaMakeType.FacialFeatureOption[faceValue == 0 ? 0 : faceValue - 1];
+        var faceDetails = charaMakeType.FacialFeatureOption[faceValue == 0 || faceValue >= charaMakeType.FacialFeatureOption.Count ? 0 : faceValue - 1];
         if (charaMakeType.Tribe.RowId != clanValue || charaMakeType.Gender != genderValue || faceValue == 0 || faceDetails.Option1 == 0) {
             edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature1], CustomizeIndex.FacialFeature1, label);
             edited |= ShowCustomize(appearance, appearance[CustomizeIndex.FacialFeature2], CustomizeIndex.FacialFeature2, label);

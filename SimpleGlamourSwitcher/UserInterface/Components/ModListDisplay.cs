@@ -28,7 +28,7 @@ public static class ModListDisplay {
         return true;
     }
 
-    public static void ShowModLinkButton(IHasModConfigs modable) {
+    public static void ShowModLinkButton(IHasModConfigs modable, bool tooltip = false) {
 
         if (modable.ModConfigs.Count == 1) {
             ImGui.SameLine();
@@ -36,7 +36,13 @@ public static class ModListDisplay {
                 if (ImGui.Button("##modLink", new Vector2(ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2))) {
                     ShowPenumbraWindow(TabType.Mods, modable.ModConfigs[0].ModDirectory);
                 }
+               
                 ImGui.GetWindowDrawList().AddText(UiBuilder.IconFont, ImGui.GetFontSize(), ImGui.GetItemRectMin() + ImGui.GetStyle().FramePadding, ImGui.GetColorU32(ImGuiCol.Text), FontAwesomeIcon.Link.ToIconString());
+            }
+            if (tooltip && ImGui.IsItemHovered()) {
+                if (TryParseModName(modable.ModConfigs[0].ModDirectory, out var name)) {
+                    ImGui.SetTooltip($"{name}");
+                }
             }
         } else if (modable.ModConfigs.Count > 1) {
             ImGui.SameLine();
@@ -44,7 +50,19 @@ public static class ModListDisplay {
             using (ImRaii.PushColor(ImGuiCol.Text, Vector4.Zero)) {
                 comboOpen = ImGui.BeginCombo("##multiModLink", "", ImGuiComboFlags.NoPreview);
             }
-
+            
+            if (tooltip && ImGui.IsItemHovered()) {
+                using (ImRaii.Tooltip()) {
+                    foreach (var config in modable.ModConfigs) {
+                        if (TryParseModName(config.ModDirectory, out var name)) {
+                            ImGui.Text($"{name}");
+                        } else {
+                            ImGui.Text($"{config.ModDirectory}");
+                        }
+                    }
+                }
+            }
+            
             if (comboOpen) {
                 foreach (var config in modable.ModConfigs) {
                     if (!ImGui.Selectable(config.ModDirectory + $"##{config.ModDirectory}")) continue;
@@ -60,7 +78,7 @@ public static class ModListDisplay {
 
     }
 
-    public static bool Show(IHasModConfigs modable, string slotName, float width = -1, bool displayOnly = false, bool includeCustomizePlus = true) {
+    public static bool Show(IHasModConfigs modable, string slotName, float width = -1, bool displayOnly = false, bool includeCustomizePlus = true, bool showLinkButton = true) {
         var edited = false;
         var p = ImGui.GetItemRectMax();
         if (width <= 0) width = p.X - ImGui.GetCursorScreenPos().X;
@@ -122,7 +140,7 @@ public static class ModListDisplay {
                 }
 
 
-            ShowModLinkButton(modable);
+            if (showLinkButton) ShowModLinkButton(modable);
 
 
         } else {

@@ -30,5 +30,7 @@ public class DefaultOptions : IDefaultOutfitOptionsProvider {
     public static DefaultOptions Equipment { get; } = new() {
         DefaultEnabledToggles = [ToggleType.WeaponVisible, ToggleType.HatVisible, ToggleType.VisorToggle, ToggleType.VieraEarsVisible],
     };
+    
+    public static DefaultOptions Empty { get; } = new() { };
 
 }

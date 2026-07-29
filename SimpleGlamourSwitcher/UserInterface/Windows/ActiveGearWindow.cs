@@ -1,9 +1,14 @@
+using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Penumbra.Api.Enums;
+using SimpleGlamourSwitcher.Configuration.ConfigSystem;
 using SimpleGlamourSwitcher.Configuration.Enum;
 using SimpleGlamourSwitcher.Configuration.Files;
 using SimpleGlamourSwitcher.Configuration.Interface;
@@ -18,8 +23,11 @@ namespace SimpleGlamourSwitcher.UserInterface.Windows;
 public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", ImGuiWindowFlags.AlwaysAutoResize) {
 
     private OutfitConfigFile? OutfitCache { get; set; }
-    private OutfitConfigFile? updatedCache;
-    private bool updatingOutfit;
+    private OutfitConfigFile? updatedOutfitCache;
+    private EmoteConfigFile? EmoteCache;
+    private Stopwatch updateEmoteCacheStopwatch = Stopwatch.StartNew();
+    
+    private bool updatingCache;
     private bool dirty;
     private bool applyingOutfit;
     private bool compact;
@@ -83,13 +91,16 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         UpdateButtons();
 
         dirty = false;
-        updatingOutfit = false;
+        updatingCache = false;
 
         AllowClickthrough = false;
         AllowPinning = false;
         RespectCloseHotkey = false;
         UpdateOutfit();
+        UpdateEmote();
 
+        GlamourerIpc.StateChanged.Event -= OnGlamourerStateChanged;
+        PenumbraIpc.ModSettingChanged.Event -= OnPenumbraSettingChanged;
         GlamourerIpc.StateChanged.Event += OnGlamourerStateChanged;
         PenumbraIpc.ModSettingChanged.Event += OnPenumbraSettingChanged;
     }
@@ -135,58 +146,83 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
         ImGui.PopStyleColor(3);
     }
 
-    private void UpdateOutfit() {
-        if (updatingOutfit || dirty) return;
-        updatingOutfit = true;
-        Task.Run(() => {
-
-            var outfit = OutfitCache;
+    private async void UpdateEmote() {
+        try {
+            
             var chr = ActiveCharacter;
-            if (chr == null) {
-                outfit = null;
-            } else if (outfit == null) {
-                outfit = OutfitConfigFile.CreateFromLocalPlayer(chr, Guid.Empty, DefaultOptions.Equipment);
-            } else {
-                var glamourerState = GlamourerIpc.GetState(0);
-                var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
-                if (glamourerState != null) {
-                    var newAppearance = OutfitEquipment.FromExistingState(DefaultOptions.Equipment, glamourerState, penumbraCollection.EffectiveCollection.Id);
-                    foreach (var a in Common.GetGearSlots()) {
-                        try {
-                            outfit.Equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
-                        } catch {
-                            //
-                        }
-                    }
+            if (chr == null) return;
 
-                    foreach (var a in Enum.GetValues<ToggleType>()) {
-                        try {
-                            outfit.Equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
-                        } catch {
-                            //
+            await Framework.RunOnFrameworkThread(() => {
+                EmoteCache = EmoteConfigFile.CreateFromLocalPlayer(chr, Guid.Empty, DefaultOptions.Empty);
+            });
+            
+        } catch (Exception e) {
+            PluginLog.Error(e, "Error updating Emote");
+            //
+        }
+    }
+    
+    private void UpdateOutfit() {
+        if (updatingCache || dirty) return;
+        updatingCache = true;
+        PluginLog.Warning("Updating Active Window Cache");
+        Task.Run(() => {
+            try {
+                var outfit = OutfitCache;
+                var chr = ActiveCharacter;
+                if (chr == null) {
+                    outfit = null;
+                } else if (outfit == null) {
+                    outfit = OutfitConfigFile.CreateFromLocalPlayer(chr, Guid.Empty, DefaultOptions.Equipment);
+                } else {
+                    var glamourerState = GlamourerIpc.GetState(0);
+                    var penumbraCollection = PenumbraIpc.GetCollectionForObject.Invoke(0);
+                    if (glamourerState != null) {
+                        var newAppearance = OutfitEquipment.FromExistingState(DefaultOptions.Equipment, glamourerState, penumbraCollection.EffectiveCollection.Id);
+                        foreach (var a in Common.GetGearSlots()) {
+                            try {
+                                outfit.Equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                            } catch {
+                                //
+                            }
+                        }
+
+                        foreach (var a in Enum.GetValues<ToggleType>()) {
+                            try {
+                                outfit.Equipment[a].TryUpdate(newAppearance[a], UpdateApplicableFlags.SkipApply);
+                            } catch {
+                                //
+                            }
                         }
                     }
                 }
-            }
 
-            updatedCache = outfit;
-            updatingOutfit = false;
+                updatedOutfitCache = outfit;
+                updatingCache = false;
+                return Task.CompletedTask;
+            } catch (Exception exception) {
+                return Task.FromException(exception);
+            }
         });
     }
 
 
+    private int quickSwitchFrameCounter;
+    
+    private static LazyAsync<OrderedDictionary<Guid, EmoteConfigFile>> emoteList = new(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, EmoteConfigFile>()) : ActiveCharacter.GetEntries<EmoteConfigFile>());
+    private static LazyAsync<OrderedDictionary<Guid, EmoteConfigFile>> sharedEmoteList = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, EmoteConfigFile>()) : SharedCharacter.GetEntries<EmoteConfigFile>());
 
     public override void Draw() {
         var outfit = OutfitCache;
-        if (!dirty && updatedCache != null && !applyingOutfit) {
-            OutfitCache = updatedCache;
+        if (!dirty && !applyingOutfit && updatedOutfitCache != null) {
+            OutfitCache = updatedOutfitCache;
             outfit = OutfitCache;
-            updatedCache = null;
+            updatedOutfitCache = null;
         } else if (dirty && !applyingOutfit && outfit != null) {
             applyingOutfit = true;
             outfit.Apply().ContinueWith(_ => {
                 dirty = false;
-                updatedCache = null;
+                updatedOutfitCache = null;
                 applyingOutfit = false;
             });
         }
@@ -201,13 +237,153 @@ public class ActiveGearWindow() : Window("SGS###SimpleGlamourSwitcherEquipped", 
                 ImGui.SetCursorScreenPos(ImGui.GetItemRectMax() - s with { X = -1 });
                 if (ImGuiComponents.IconButton(FontAwesomeIcon.Save, s)) {
                     Plugin.MainWindow.IsOpen = true;
-                    Plugin.MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, outfit));
+                    Plugin.MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, outfit) { IsNew = true });
+                }
+                if (ImGui.IsItemHovered()) {
+                    ImGui.SetTooltip("Save Outfit");
                 }
             } else {
-                ImGui.SetCursorScreenPos(ImGui.GetItemRectMax() - new Vector2(-ImGui.GetStyle().ItemSpacing.X, ImGui.GetTextLineHeightWithSpacing()));
-                if (ImGui.Button("Save Outfit", ImGui.GetContentRegionAvail())) {
+                ImGui.SetCursorScreenPos(ImGui.GetItemRectMax() - new Vector2(-ImGui.GetStyle().ItemSpacing.X, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2));
+                if (ImGui.Button("Save Outfit", ImGui.GetContentRegionAvail() with { Y = ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2})) {
                     Plugin.MainWindow.IsOpen = true;
-                    Plugin.MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, outfit));
+                    Plugin.MainWindow.OpenPage(new EditOutfitPage(ActiveCharacter, Guid.Empty, outfit) { IsNew = true });
+                }
+            }
+        }
+
+        if (PluginConfig.EquippedWindowConfig.ShowEmote) {
+            var emote = EmoteCache ?? EmoteConfigFile.Create(ActiveCharacter);
+            if (updateEmoteCacheStopwatch.ElapsedMilliseconds > 1000) {
+                updateEmoteCacheStopwatch.Restart();
+                UpdateEmote();
+            }
+            
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.One)) {
+                GameIcon.Draw(emote.EmoteIdentifier?.Icon ?? 0);
+                
+                if (ImGui.IsPopupOpen($"EmotePicker")) {
+                    var dl = ImGui.GetWindowDrawList();
+                    dl.AddRectFilled(
+                        ImGui.GetItemRectMin() - Vector2.One,
+                        ImGui.GetItemRectMax() + new Vector2(8 * ImGuiHelpers.GlobalScale, 1),
+                        ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudViolet));
+                }
+                
+                if (ImGui.IsItemHovered()) {
+                    var dl = ImGui.GetWindowDrawList();
+                    dl.AddRect(ImGui.GetItemRectMin() - Vector2.One, ImGui.GetItemRectMax() + Vector2.One, ImGui.GetColorU32(ImGuiCol.ButtonHovered));
+                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                }
+
+                if (ImGui.IsItemClicked()) {
+                    ImGui.OpenPopup($"EmotePicker");
+                    ImGui.SetNextWindowPos(ImGui.GetItemRectMin() + ImGui.GetItemRectSize() with { Y = -1 } + new Vector2(5 * ImGuiHelpers.GlobalScale, 0));
+                }
+                
+                var activeEmoteName = emote.EmoteIdentifier?.Name ?? "No Emote Active";
+                
+                using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 2))
+                using (ImRaii.PushColor(ImGuiCol.Border, ImGuiColors.DalamudViolet))
+                using (var popup = ImRaii.Popup($"EmotePicker")) {
+                    if (popup.Success) {
+                        var s = new Vector2(300 * ImGuiHelpers.GlobalScale, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
+
+                        if (compact) {
+                            ImGui.SetNextItemWidth(s.X);
+                            ImGui.InputText("##emoteName", ref activeEmoteName, 128, ImGuiInputTextFlags.ReadOnly);
+                            dirty |= ModListDisplay.Show(emote, activeEmoteName, displayOnly: true, includeCustomizePlus: false);
+                        }
+                        
+                        using (var child = ImRaii.Child($"EmotePicker_scroll", (s * 1.35f) with { Y = s.Y * 10 }, false, ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysHorizontalScrollbar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
+                            if (child.Success) {
+                                if (ImGui.IsWindowAppearing()) {
+                                    quickSwitchFrameCounter = 0;
+                                    emoteList = new(() => ActiveCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, EmoteConfigFile>()) : ActiveCharacter.GetEntries<EmoteConfigFile>());
+                                    sharedEmoteList = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, EmoteConfigFile>()) : SharedCharacter.GetEntries<EmoteConfigFile>());
+                                }
+                                quickSwitchFrameCounter++;
+                                if (ImGui.IsWindowHovered()) {
+                                    ImGui.SetScrollX(ImGui.GetScrollX() - ImGui.GetIO().MouseWheel * 50 * ImGuiHelpers.GlobalScale);
+                                }
+
+                                emoteList.CreateValueIfNotCreated();
+                                sharedEmoteList.CreateValueIfNotCreated();
+                                
+                                if (!emoteList.IsValueCreated || !sharedEmoteList.IsValueCreated) {
+                                    ImGui.TextDisabled("Loading Emotes...");
+                                } else {
+                                    var any = false;
+                                    var row = 0;
+                                    var rowCount = Math.Clamp(PluginConfig.EquippedWindowConfig.QuickSwitchEmoteRowCount, 1, EquippedWindowConfig.QuickSwitchMaxRows);
+
+                                    var contentRegionSize = ImGui.GetWindowContentRegionMax() - ImGui.GetWindowContentRegionMin();
+                                    var rowHeight = contentRegionSize.Y / rowCount;
+
+                                    var group = ImRaii.Group();
+                                    try {
+
+                                        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero)) {
+                                            foreach (var entry in emoteList.Value.Values.Concat(sharedEmoteList.Value.Values).Where(e => e.EmoteIdentifier?.EmoteModeId == emote.EmoteIdentifier?.EmoteModeId).OrderBy(i => i.SortName).ThenBy(i => i.Name, StringComparer.InvariantCultureIgnoreCase)) {
+
+                                                if (any) {
+                                                    if (row >= rowCount) {
+                                                        group.Dispose();
+                                                        ImGui.SameLine();
+                                                        group = ImRaii.Group();
+                                                        row = 0;
+                                                    }
+                                                }
+
+                                                any = true;
+                                                row++;
+                                                var folder = entry.ConfigFile?.Folders.GetValueOrDefault(entry.Folder);
+                                                var style = folder?.OutfitPolaroidStyle ??
+                                                            entry.ConfigFile?.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+
+                                                if (Polaroid.Button(
+                                                        (entry as IImageProvider).GetImageOrNull,
+                                                        entry.ImageDetail,
+                                                        entry.Name,
+                                                        entry.Guid,
+                                                        style.FitTo(contentRegionSize with { Y = rowHeight })) && quickSwitchFrameCounter > 3) {
+                                                    entry.Apply().ConfigureAwait(false);
+                                                }
+                                            }
+                                        }
+
+                                    } finally {
+                                        group.Dispose();
+                                    }
+
+                                    if (!any) {
+                                        ImGui.TextDisabled($"No custom emotes saved.");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (ActiveCharacter != null && ImGui.BeginPopupContextItem("contextActiveEmote")) {
+                    ImGui.Text("Emote");
+                    ImGui.Separator();
+                    if (ImGui.MenuItem("Save Emote")) {
+                        Plugin.MainWindow.IsOpen = true;
+                        Plugin.MainWindow.OpenPage(new EditEmotePage(ActiveCharacter, Guid.Empty, emote) { IsNew = true });
+                    }
+                    
+                    ImGui.EndPopup();
+                }
+                
+                ImGui.SameLine();
+                using (ImRaii.Group()) {
+                    if (compact) {
+                        ModListDisplay.ShowModLinkButton(emote, true);
+                    } else {
+                        ImGui.SetNextItemWidth(300 * ImGuiHelpers.GlobalScale);
+                        ImGui.InputText("##emoteName", ref activeEmoteName, 128, ImGuiInputTextFlags.ReadOnly);
+                        dirty |= ModListDisplay.Show(emote, activeEmoteName, displayOnly: true, includeCustomizePlus: false);
+                    }
                 }
             }
         }

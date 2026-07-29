@@ -145,6 +145,7 @@ public class ConfigWindow : Window {
         if (!ImGui.CollapsingHeader("Equipped Window Settings")) return;
 
         PluginConfig.Dirty |= ImGui.Checkbox("Show 'Save Outfit' Button", ref PluginConfig.EquippedWindowConfig.ShowSaveButton);
+        PluginConfig.Dirty |= ImGui.Checkbox("Show Active Emote", ref PluginConfig.EquippedWindowConfig.ShowEmote);
 
         ImGui.Text("Quick Switch Row Count:");
         using (ImRaii.PushIndent()) {
@@ -154,6 +155,11 @@ public class ConfigWindow : Window {
                     PluginConfig.EquippedWindowConfig.QuickSwitchRowCount[slot] = Math.Clamp(c, 1, EquippedWindowConfig.QuickSwitchMaxRows);
                     PluginConfig.Dirty = true;
                 }
+            }
+            
+            if (ImGui.SliderInt($"Emote##rowCount", ref PluginConfig.EquippedWindowConfig.QuickSwitchEmoteRowCount, 1, EquippedWindowConfig.QuickSwitchMaxRows)) {
+                PluginConfig.EquippedWindowConfig.QuickSwitchEmoteRowCount = Math.Clamp(PluginConfig.EquippedWindowConfig.QuickSwitchEmoteRowCount, 1, EquippedWindowConfig.QuickSwitchMaxRows);
+                PluginConfig.Dirty = true;
             }
         }
     }

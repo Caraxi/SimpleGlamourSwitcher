@@ -89,14 +89,6 @@ public class MainWindow : Window {
 
         }
 
-
-
-
-
-
-
-
-
         base.PreDraw();
     }
 

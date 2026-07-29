@@ -7,8 +7,10 @@ public class EquippedWindowConfig {
 
     public bool ShowSaveButton = true;
     public Dictionary<HumanSlot, int> QuickSwitchRowCount = new();
+    public int QuickSwitchEmoteRowCount = 1;
     public bool UseCompactWindow;
     public bool LockWindow;
 
     public bool WindowOpen = false;
+    public bool ShowEmote = true;
 }

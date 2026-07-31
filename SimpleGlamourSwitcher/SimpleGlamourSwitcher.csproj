@@ -18,6 +18,7 @@
         <ProjectReference Include="..\Penumbra.Api\Penumbra.Api.csproj"/>
         <ProjectReference Include="..\Penumbra.GameData\Penumbra.GameData.csproj"/>
         <PackageReference Include="ECommons" Version="3.2.0.19" />
+        <ProjectReference Include="..\SimpleGlamourSwitcher.API\SimpleGlamourSwitcher.API.csproj" />
     </ItemGroup>
     <ItemGroup>
         <Compile Remove="PenumbraPathResolve.cs"/>

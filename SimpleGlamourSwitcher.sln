@@ -1,6 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleGlamourSwitcher", "SimpleGlamourSwitcher\SimpleGlamourSwitcher.csproj", "{EDE27EE3-BBB0-45E5-97FC-D3C69F8C73AE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FEF66207-B024-470F-87B8-A78CF6EFB9C8} = {FEF66207-B024-470F-87B8-A78CF6EFB9C8}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Penumbra.GameData", "Penumbra.GameData\Penumbra.GameData.csproj", "{1195E6E1-D4F7-4BAB-9677-094FA8410D58}"
 EndProject
@@ -17,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luna", "Luna\Luna\Luna.csproj", "{7AE37D25-5E83-40C8-B5B4-17EE75945ED8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luna.Generators", "Luna\Luna.Generators\Luna.Generators.csproj", "{F1819576-3E54-4AB6-BFF1-3C463A808FBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleGlamourSwitcher.API", "SimpleGlamourSwitcher.API\SimpleGlamourSwitcher.API.csproj", "{FEF66207-B024-470F-87B8-A78CF6EFB9C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +61,10 @@ Global
 		{F1819576-3E54-4AB6-BFF1-3C463A808FBC}.Debug|Any CPU.Build.0 = Debug|x64
 		{F1819576-3E54-4AB6-BFF1-3C463A808FBC}.Release|Any CPU.ActiveCfg = Release|x64
 		{F1819576-3E54-4AB6-BFF1-3C463A808FBC}.Release|Any CPU.Build.0 = Release|x64
+		{FEF66207-B024-470F-87B8-A78CF6EFB9C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEF66207-B024-470F-87B8-A78CF6EFB9C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEF66207-B024-470F-87B8-A78CF6EFB9C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEF66207-B024-470F-87B8-A78CF6EFB9C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5E76CA49-4172-4658-AA85-DECF6E9A07D4} = {A08ED19F-0E71-4DAD-817B-81B976842CB2}

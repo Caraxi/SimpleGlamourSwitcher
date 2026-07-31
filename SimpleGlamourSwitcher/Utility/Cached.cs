@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.Utility;
 
@@ -19,7 +20,33 @@ public class Cached<T>(TimeSpan maxAge, Func<T> getValue) {
     public void Clear() {
         clear = true;
     }
+}
 
+public class RevokeableCached<T>(Func<T> getValue) : IDisposable {
+    private bool clear;
+    private bool disposed;
+    
+    public T Value {
+        get {
+            
+            if (!clear && field != null) return field;
+            clear = false;
+            PluginState.InvalidateEntryCache -= Clear;
+            if (!disposed) PluginState.InvalidateEntryCache += Clear;
+            field = getValue();
+            return field;
+        }
+    } = getValue();
+
+    public void Clear() {
+        PluginState.InvalidateEntryCache -= Clear;
+        clear = true;
+    }
+    
+    public void Dispose() {
+        disposed = true;
+        PluginState.InvalidateEntryCache -= Clear;
+    }
 }
 
 public class NullableCached<T>(TimeSpan maxAge, Func<T?> getValue) where T : class {

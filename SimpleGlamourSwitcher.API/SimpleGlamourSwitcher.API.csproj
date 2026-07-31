@@ -1,0 +1,11 @@
+﻿<Project Sdk="Dalamud.Net.SDK/15.0.0">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Use_DalamudPackager>false</Use_DalamudPackager>
+        <Use_Dalamud_ImGui>false</Use_Dalamud_ImGui>
+    </PropertyGroup>
+
+</Project>

@@ -9,21 +9,21 @@ using SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 using SimpleGlamourSwitcher.IPC.Glamourer;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.Utility;
-using API = Glamourer.Api.IpcSubscribers;
+using GlamourerAPI = Glamourer.Api.IpcSubscribers;
 
 namespace SimpleGlamourSwitcher.IPC;
 
 public static class GlamourerIpc {
-    public static readonly API.GetDesignList GetDesignList = new(PluginInterface);
-    public static readonly API.GetStateBase64 GetStateBase64 = new(PluginInterface);
-    public static readonly API.ApplyState ApplyState = new(PluginInterface);
-    public static readonly API.ApplyDesign ApplyDesign = new(PluginInterface);
-    public static readonly API.GetState GetStateJson = new(PluginInterface);
-    public static readonly API.SetItem SetItem = new(PluginInterface);
-    public static readonly API.SetBonusItem SetBonusItem = new(PluginInterface);
-    public static readonly API.SetMetaState SetMetaState = new(PluginInterface);
-    public static readonly API.RevertStateName RevertStateName = new(PluginInterface);
-    public static readonly EventSubscriber<nint> StateChanged = API.StateChanged.Subscriber(PluginInterface);
+    public static readonly GlamourerAPI.GetDesignList GetDesignList = new(PluginInterface);
+    public static readonly GlamourerAPI.GetStateBase64 GetStateBase64 = new(PluginInterface);
+    public static readonly GlamourerAPI.ApplyState ApplyState = new(PluginInterface);
+    public static readonly GlamourerAPI.ApplyDesign ApplyDesign = new(PluginInterface);
+    public static readonly GlamourerAPI.GetState GetStateJson = new(PluginInterface);
+    public static readonly GlamourerAPI.SetItem SetItem = new(PluginInterface);
+    public static readonly GlamourerAPI.SetBonusItem SetBonusItem = new(PluginInterface);
+    public static readonly GlamourerAPI.SetMetaState SetMetaState = new(PluginInterface);
+    public static readonly GlamourerAPI.RevertStateName RevertStateName = new(PluginInterface);
+    public static readonly EventSubscriber<nint> StateChanged = GlamourerAPI.StateChanged.Subscriber(PluginInterface);
 
     public static JObject? GetCustomizationJObject(OutfitAppearance appearance, OutfitEquipment outfitEquipment, OutfitWeapons outfitWeapons) {
 

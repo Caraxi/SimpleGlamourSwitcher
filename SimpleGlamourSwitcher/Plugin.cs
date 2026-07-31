@@ -18,6 +18,7 @@ public class Plugin : IDalamudPlugin {
     public static readonly ConfigWindow ConfigWindow = new ConfigWindow().Enroll(WindowSystem);
     public static readonly DebugWindow DebugWindow = new DebugWindow().Enroll(WindowSystem);
     public static readonly ScreenshotWindow ScreenshotWindow = new ScreenshotWindow { IsOpen = true }.Enroll(WindowSystem);
+    public static readonly IpcProvider IpcProvider = new();
 
 
     public Plugin(IDalamudPluginInterface pluginInterface) {
@@ -189,6 +190,7 @@ public class Plugin : IDalamudPlugin {
     public static bool IsDisposing { get; private set; }
     public void Dispose() {
         IsDisposing = true;
+        IpcProvider.Dispose();
         Commands.RemoveHandler("/sgs");
         MainWindow.IsOpen = false;
         ActiveWindow.IsOpen = false;

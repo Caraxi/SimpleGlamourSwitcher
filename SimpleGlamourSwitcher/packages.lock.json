@@ -125,6 +125,12 @@
       },
       "penumbra.string": {
         "type": "Project"
+      },
+      "simpleglamourswitcher.api": {
+        "type": "Project",
+        "dependencies": {
+          "DalamudPackager": "[15.0.0, )"
+        }
       }
     }
   }

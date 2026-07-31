@@ -1,5 +1,6 @@
 global using static SimpleGlamourSwitcher.Configuration.Config.I;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Service;
 
 namespace SimpleGlamourSwitcher.Configuration;
 
@@ -65,6 +66,8 @@ public static class Config {
                 ActionQueue.QueueCommand(c.Command);
             }
         }
+        
+        PluginState.InvalidateEntryCaches();
 
         return _activeCharacter != null;
     }

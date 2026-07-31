@@ -4,6 +4,11 @@ using static UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.4.0.0", () => {
+            Change("Added emote to active equipment window.");
+            Change("Added option to disable emote in active equipment window.");
+            Change("Added support for other plugins to list and apply outfits, as well as switching characters.");
+        });
         ChangelogFor("1.3.3.3", () => {
             Change("SGS will now notify penumbra which mods are being used by SGS Characters.");
         });

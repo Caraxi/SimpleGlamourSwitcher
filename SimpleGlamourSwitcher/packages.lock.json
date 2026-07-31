@@ -16,9 +16,9 @@
       },
       "ECommons": {
         "type": "Direct",
-        "requested": "[3.2.0.19, )",
-        "resolved": "3.2.0.19",
-        "contentHash": "yqRy0/6nuGx47c2Xaem7dyrQmV5Wv8aT5V6mQ1Rd03wPGsAFh+CbxDSFtBTGLxt2ZMW+anj4JoBlxj7KEFIMBg=="
+        "requested": "[3.2.1.16, )",
+        "resolved": "3.2.1.16",
+        "contentHash": "Ifq1cHrBXL9h+94hWhocehklrl3DamafhYTfxgwzOGc6yc/3AkDvwLjYQG2EHEv1Rrgrf5FkdxlnJzcVfiBesQ=="
       },
       "SixLabors.ImageSharp": {
         "type": "Direct",
@@ -127,10 +127,7 @@
         "type": "Project"
       },
       "simpleglamourswitcher.api": {
-        "type": "Project",
-        "dependencies": {
-          "DalamudPackager": "[15.0.0, )"
-        }
+        "type": "Project"
       }
     }
   }

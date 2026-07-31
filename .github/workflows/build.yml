@@ -38,7 +38,7 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
 
       - name: Restore NuGet Packages
-        run: nuget restore SimpleGlamourSwitcher.sln
+        run: nuget restore SimpleGlamourSwitcher.slnx
 
       - name: Download Dalamud
         run: |

@@ -253,7 +253,7 @@ public class GlamourListPage : Page {
         var folderStyle = folder?.FolderPolaroidStyle ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
         var sharedFolderStyle = (ActiveFolder == Guid.Empty ? SharedCharacter?.FolderPolaroidStyle : null) ?? character.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid;
         var outfitStyle = folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
-        var localFolders = character.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent))).ToList();
+        var localFolders = character.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (showHiddenFolders || ActiveCharacter?.Guid == null || !f.Value.HiddenForCharacter.Contains(ActiveCharacter.Guid)) && (f.Value.Parent == ActiveFolder || ActiveFolder == Guid.Empty && !character.Folders.ContainsKey(f.Value.Parent))).ToList();
 
         if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
             localFolders = localFolders.OrderBy(kvp => kvp.Value.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
@@ -273,7 +273,7 @@ public class GlamourListPage : Page {
         var sharedFolders = new List<KeyValuePair<Guid, CharacterFolder>>();
 
         if (ActiveFolder == Guid.Empty && SharedCharacter != null) {
-            sharedFolders = SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (f.Value.Parent == ActiveFolder || ActiveFolder == Guid.Empty && !SharedCharacter.Folders.ContainsKey(f.Value.Parent))).ToList();
+            sharedFolders = SharedCharacter.Folders.Where(f => (showHiddenFolders || !f.Value.Hidden) && (showHiddenFolders || ActiveCharacter?.Guid == null || !f.Value.HiddenForCharacter.Contains(ActiveCharacter.Guid)) && (f.Value.Parent == ActiveFolder || ActiveFolder == Guid.Empty && !SharedCharacter.Folders.ContainsKey(f.Value.Parent))).ToList();
 
             if (folderSortStrategy == FolderSortStrategy.Alphabetical) {
                 sharedFolders = sharedFolders.OrderBy(kvp => kvp.Value.Name, StringComparer.InvariantCultureIgnoreCase).ToList();
@@ -283,7 +283,7 @@ public class GlamourListPage : Page {
         void DrawFolders(List<KeyValuePair<Guid, CharacterFolder>> folders, ref WindowControlFlags controlFlags, bool isShared) {
             var style = isShared && ActiveFolder == Guid.Empty ? sharedFolderStyle : folderStyle;
             foreach (var (folderGuid, characterFolder) in folders) {
-                if (characterFolder.Hidden && !showHiddenFolders) continue;
+                if (!showHiddenFolders && (characterFolder.Hidden || (ActiveCharacter != null && characterFolder.HiddenForCharacter.Contains(ActiveCharacter.Guid)))) continue;
                 using (ImRaii.PushId(folderGuid.ToString())) {
                     if (ImGui.GetContentRegionAvail().X < Polaroid.GetActualSize(style).X) ImGui.NewLine();
 

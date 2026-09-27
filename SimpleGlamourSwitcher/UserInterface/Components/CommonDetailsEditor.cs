@@ -83,10 +83,11 @@ public class CommonDetailsEditor(CharacterConfigFile character, ICommonDetails e
 
     public void ShowImageEditor(ref WindowControlFlags controlFlags) {
         if (entry is IImageProvider imageProvider && ImGui.CollapsingHeader("Image")) {
-            var folder = character.Folders.GetValueOrDefault(FolderGuid);
+            var chr = SaveAsShared ? SharedCharacter ?? character : character;
+            var folder = chr.Folders.GetValueOrDefault(FolderGuid);
             var style = entry is CharacterFolder ?
                 folder?.FolderPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).FolderPolaroid :
-                folder?.OutfitPolaroidStyle ?? character.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
+                folder?.OutfitPolaroidStyle ?? chr.OutfitPolaroidStyle ?? (PluginConfig.CustomStyle ?? Style.Default).OutfitList.Polaroid;
 
             ImageEditor.Draw(imageProvider, style, name, ref controlFlags);
         }

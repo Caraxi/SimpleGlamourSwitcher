@@ -349,7 +349,9 @@ public static class EquipmentDisplay {
             if (flags.HasFlag(EquipmentDisplayFlags.ContextShowSaveSlot)) {
                 if (getApplicable != null && applicable is ApplicableBonus or ApplicableEquipment && ImGui.MenuItem($"Save {slot.ToName()} Equipment")) {
                     Plugin.MainWindow.IsOpen = true;
-                    Plugin.MainWindow.OpenPage(new EditItemPage(character, Guid.Empty, ItemConfigFile.CreateFromLocalPlayer(character, Guid.Empty, slot)));
+                    Plugin.MainWindow.OpenPage(new EditItemPage(character, Guid.Empty, ItemConfigFile.CreateFromLocalPlayer(character, Guid.Empty, slot)) {
+                        IsNew = true
+                    });
                 }
             }
 

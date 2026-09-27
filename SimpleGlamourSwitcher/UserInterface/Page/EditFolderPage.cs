@@ -37,6 +37,7 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
     private bool? defaultRevertEquip = folder?.CustomDefaultRevertEquip;
     private bool? defaultRevertCustomize = folder?.CustomDefaultRevertCustomize;
     private bool hidden = folder?.Hidden ?? false;
+    private HashSet<Guid> hiddenForCharacter = folder?.HiddenForCharacter.Clone() ?? [];
     private FolderSortStrategy folderSortStrategy = folder?.FolderSortStrategy ?? FolderSortStrategy.Inherit;
 
     private OutfitLinksEditor? outfitLinksEditor;
@@ -82,7 +83,26 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
     }
 
     private void DrawEditor() {
-        dirty |= ImGui.Checkbox("Hide Folder", ref hidden);
+        if (character.Guid == CharacterConfigFile.SharedDataGuid) {
+            dirty |= ImGui.Checkbox("Hide Folder for All Characters", ref hidden);
+
+            if (ActiveCharacter != null) {
+                var hiddenForActiveCharacter = hiddenForCharacter.Contains(ActiveCharacter.Guid);
+                if (ImGui.Checkbox($"Hide Folder for {ActiveCharacter.Name}", ref hiddenForActiveCharacter)) {
+                    dirty = true;
+                    if (hiddenForActiveCharacter) {
+                        hiddenForCharacter.Add(ActiveCharacter.Guid);
+                    } else {
+                        hiddenForCharacter.Remove(ActiveCharacter.Guid);
+                    }
+                }
+            }
+            
+            ImGui.Spacing();
+
+        } else {
+            dirty |= ImGui.Checkbox("Hide Folder", ref hidden);
+        }
 
 
         var useCustomOutfitPolaroid = outfitStyle != null;
@@ -313,6 +333,7 @@ public class EditFolderPage(CharacterConfigFile character, Guid parentFolderGuid
 
         CommonDetailsEditor.ApplyTo(Folder);
         Folder.Hidden = hidden;
+        Folder.HiddenForCharacter = Character.Guid == CharacterConfigFile.SharedDataGuid ? hiddenForCharacter : [];
         Folder.FolderPolaroidStyle = folderStyle;
         Folder.OutfitPolaroidStyle = outfitStyle;
         Folder.CustomDefaultDisabledEquipmentSlots = defaultEquipmentToggles;

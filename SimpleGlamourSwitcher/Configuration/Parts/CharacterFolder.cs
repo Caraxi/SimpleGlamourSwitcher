@@ -46,6 +46,7 @@ public class CharacterFolder : ICommonDetails, IDefaultOutfitOptionsProvider {
     }
 
     public bool Hidden;
+    public HashSet<Guid> HiddenForCharacter = [];
 
     public static IDalamudTextureWrap? GetDefaultFolderImage() => Common.GetEmbeddedTexture("resources/folder.png").GetWrapOrDefault();
 

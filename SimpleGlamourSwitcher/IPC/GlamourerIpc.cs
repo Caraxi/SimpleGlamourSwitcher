@@ -137,6 +137,10 @@ public static class GlamourerIpc {
                     ["Sheen"] = material.Sheen,
                     ["SheenTint"] = material.SheenTint,
                     ["SheenAperture"] = material.SheenAperture,
+                    ["Exposure"] = material.Exposure,
+                    ["Anisotropy"] = material.Anisotropy,
+                    ["SphereMapIndex"] = material.SphereMapIndex,
+                    ["SphereMapMask"] = material.SphereMapMask,
                     ["Enabled"] = material.Apply,
                     ["Revert"] = false,
                 };

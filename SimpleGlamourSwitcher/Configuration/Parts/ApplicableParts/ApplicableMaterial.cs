@@ -34,7 +34,43 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
     public float Sheen;
     public float SheenTint;
     public float SheenAperture;
+    public float Exposure;
+    public float Anisotropy;
+    public byte SphereMapIndex;
+    public float SphereMapMask;
 
+    private static ApplicableMaterial FromGlamourerMaterial(MaterialValueIndex mvi, GlamourerMaterial material) {
+        return new ApplicableMaterial {
+            Apply = true,
+            MaterialValueIndex = mvi,
+            Mode = material.Mode,
+            DiffuseR = material.DiffuseR,
+            DiffuseG = material.DiffuseG,
+            DiffuseB = material.DiffuseB,
+            SpecularR = material.SpecularR,
+            SpecularG = material.SpecularG,
+            SpecularB = material.SpecularB,
+            EmissiveR = material.EmissiveR,
+            EmissiveG = material.EmissiveG,
+            EmissiveB = material.EmissiveB,
+
+            // Dawntrail
+            Metalness = material.Metalness,
+            Roughness = material.Roughness,
+            Sheen = material.Sheen,
+            SheenTint = material.SheenTint,
+            SheenAperture = material.SheenAperture,
+            Exposure = material.Exposure,
+            Anisotropy = material.Anisotropy,
+            SphereMapIndex = material.SphereMapIndex,
+            SphereMapMask = material.SphereMapMask,
+
+            // Legacy
+            Gloss = material.Gloss,
+            SpecularA = material.SpecularA,
+        };
+    }
+    
     public static List<ApplicableMaterial> FilterForSlot(Dictionary<MaterialValueIndex, GlamourerMaterial> materials, HumanSlot slot) {
         var list = new List<ApplicableMaterial>();
 
@@ -42,31 +78,7 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
             if (mvi.ToHumanSlot() != slot) continue;
             if (!material.Enabled) continue;
             if (material.Revert) continue;
-            list.Add(new ApplicableMaterial {
-                Apply = true,
-                MaterialValueIndex = mvi,
-                Mode = material.Mode,
-                DiffuseR = material.DiffuseR,
-                DiffuseG = material.DiffuseG,
-                DiffuseB = material.DiffuseB,
-                SpecularR = material.SpecularR,
-                SpecularG = material.SpecularG,
-                SpecularB = material.SpecularB,
-                EmissiveR = material.EmissiveR,
-                EmissiveG = material.EmissiveG,
-                EmissiveB = material.EmissiveB,
-
-                // Dawntrail
-                Metalness = material.Metalness,
-                Roughness = material.Roughness,
-                Sheen = material.Sheen,
-                SheenTint = material.SheenTint,
-                SheenAperture = material.SheenAperture,
-
-                // Legacy
-                Gloss = material.Gloss,
-                SpecularA = material.SpecularA,
-            });
+            list.Add(FromGlamourerMaterial(mvi, material));
         }
 
         return list;
@@ -79,31 +91,7 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
             if (mvi.ToEquipSlot() != slot) continue;
             if (!material.Enabled) continue;
             if (material.Revert) continue;
-            list.Add(new ApplicableMaterial {
-                Apply = true,
-                MaterialValueIndex = mvi,
-                Mode = material.Mode,
-                DiffuseR = material.DiffuseR,
-                DiffuseG = material.DiffuseG,
-                DiffuseB = material.DiffuseB,
-                SpecularR = material.SpecularR,
-                SpecularG = material.SpecularG,
-                SpecularB = material.SpecularB,
-                EmissiveR = material.EmissiveR,
-                EmissiveG = material.EmissiveG,
-                EmissiveB = material.EmissiveB,
-
-                // Dawntrail
-                Metalness = material.Metalness,
-                Roughness = material.Roughness,
-                Sheen = material.Sheen,
-                SheenTint = material.SheenTint,
-                SheenAperture = material.SheenAperture,
-
-                // Legacy
-                Gloss = material.Gloss,
-                SpecularA = material.SpecularA,
-            });
+            list.Add(FromGlamourerMaterial(mvi, material));
         }
 
         return list;

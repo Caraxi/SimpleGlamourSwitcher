@@ -28,7 +28,7 @@ public static class AdvancedMaterialsDisplay {
                 } else {
                     using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
                     using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(3, ImGui.GetStyle().CellPadding.Y))) {
-                        if (ImGui.BeginTable("materialsTable", 7)) {
+                        if (ImGui.BeginTable("materialsTable", 10)) {
                             foreach (var material in item.Materials) {
                                 ImGui.TableNextRow();
                                 ImGui.TableNextColumn();
@@ -54,6 +54,12 @@ public static class AdvancedMaterialsDisplay {
                                     ImGui.Text($"Metalness({material.Roughness * 100}%)");
                                     ImGui.TableNextColumn();
                                     ImGui.Text($"Sheen({material.Sheen * 100}%, {material.SheenAperture}, {material.SheenTint})");
+                                    ImGui.TableNextColumn();
+                                    ImGui.Text($"Exposure({(material.Exposure is 0.0f ? "-∞" : (MathF.Log2(float.IsNaN(material.Exposure) ? 1f : material.Exposure) * 0.5f).ToString("0.0"))})");
+                                    ImGui.TableNextColumn(); 
+                                    ImGui.Text($"Anisotropy({material.Anisotropy:F1})");
+                                    ImGui.TableNextColumn();
+                                    ImGui.Text($"SphereMap(#{material.SphereMapIndex} @ {material.SphereMapMask * 100}%)");
                                 }
                             }
 

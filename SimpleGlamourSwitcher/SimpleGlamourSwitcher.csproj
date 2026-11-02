@@ -12,7 +12,7 @@
         <Version>1.4.1.0</Version>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12"/>
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.2.0" />
         <ProjectReference Include="..\Glamourer.Api\Glamourer.Api.csproj"/>
         <ProjectReference Include="..\Glamourer.GameData\Glamourer.GameData.csproj"/>
         <ProjectReference Include="..\Penumbra.Api\Penumbra.Api.csproj"/>

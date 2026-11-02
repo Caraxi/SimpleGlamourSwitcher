@@ -205,6 +205,10 @@ public static class GlamourSystem {
                     if (outfit.Appearance[e] is IHasCustomizePlusTemplateConfigs c1 && appearance[e] is IHasCustomizePlusTemplateConfigs c2) {
                         c2.CustomizePlusTemplateConfigs = c1.CustomizePlusTemplateConfigs;
                     }
+
+                    if (outfit.Appearance[e] is ApplicableCustomizeWithMaterials m1 && appearance[e] is ApplicableCustomizeWithMaterials m2) {
+                        m2.Materials = m1.Materials;
+                    }
                 }
 
                 foreach (var e in Enum.GetValues<AppearanceParameterKind>()) {

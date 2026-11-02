@@ -40,63 +40,7 @@ public static class GlamourerIpc {
         var equipment = new JObject();
         var materials = new JObject();
 
-        if (appearance.Apply) {
-            if (appearance.Clan.Apply) {
-                customize.Add("Race", new JObject {
-                    { "Apply", true }, {
-                        "Value", appearance.Clan.Value switch {
-                            1 or 2 => 1,
-                            3 or 4 => 2,
-                            5 or 6 => 3,
-                            7 or 8 => 4,
-                            9 or 10 => 5,
-                            11 or 12 => 6,
-                            13 or 14 => 7,
-                            15 or 16 => 8,
-                            _ => 1,
-                        }
-                    },
-                });
-                customize.Add("Clan", new JObject { { "Apply", true }, { "Value", appearance.Clan.Value } });
-            }
-
-            foreach (var v in Enum.GetValues<CustomizeIndex>()) {
-                if (v is CustomizeIndex.Clan or CustomizeIndex.Race) continue;
-                var c = appearance[v];
-                var jValue = new JObject { { "Apply", c.Apply }, { "Value", c.Value } };
-
-                customize.Add($"{v}", jValue);
-            }
-
-            foreach (var v in Enum.GetValues<AppearanceParameterKind>()) {
-                var p = appearance[v];
-                if (p.Apply) parameters.Add($"{v}", p.ToJObject());
-            }
-        }
-
-
-        // Required Customize Values
-        if (!customize.ContainsKey("Race") || !customize.ContainsKey("Clan")) {
-            customize["Race"] = new JObject {
-                { "Apply", true }, {
-                    "Value", state.Customize.Clan.Value switch {
-                        1 or 2 => 1,
-                        3 or 4 => 2,
-                        5 or 6 => 3,
-                        7 or 8 => 4,
-                        9 or 10 => 5,
-                        11 or 12 => 6,
-                        13 or 14 => 7,
-                        15 or 16 => 8,
-                        _ => 1,
-                    }
-                },
-            };
-
-            customize["Clan"] = new JObject { { "Apply", true }, { "Value", state.Customize.Clan.Value } };
-
-        }
-
+        
         var revertMaterial = new JObject {
             { "Revert", true },
             { "Enabled", true },
@@ -147,6 +91,72 @@ public static class GlamourerIpc {
             } else {
                 PluginLog.Error($"Invalid Material Mode: {material.Mode}");
             }
+        }
+        
+        if (appearance.Apply) {
+            if (appearance.Clan.Apply) {
+                customize.Add("Race", new JObject {
+                    { "Apply", true }, {
+                        "Value", appearance.Clan.Value switch {
+                            1 or 2 => 1,
+                            3 or 4 => 2,
+                            5 or 6 => 3,
+                            7 or 8 => 4,
+                            9 or 10 => 5,
+                            11 or 12 => 6,
+                            13 or 14 => 7,
+                            15 or 16 => 8,
+                            _ => 1,
+                        }
+                    },
+                });
+                customize.Add("Clan", new JObject { { "Apply", true }, { "Value", appearance.Clan.Value } });
+            }
+
+            foreach (var v in Enum.GetValues<CustomizeIndex>()) {
+                if (v is CustomizeIndex.Clan or CustomizeIndex.Race) continue;
+                var c = appearance[v];
+                var jValue = new JObject { { "Apply", c.Apply }, { "Value", c.Value } };
+                customize.Add($"{v}", jValue);
+
+                if (c is ApplicableCustomizeWithMaterials customizeWithMaterials) {
+                    foreach (var (mIndex, mValue) in stateMaterials.Where(k => k.Key.ToCustomizeIndex() == v)) {
+                        materials[mIndex.Key.ToString("X16")] = revertMaterial;
+                    }
+                    
+                    foreach (var material in customizeWithMaterials.Materials) {
+                        AddMaterial(material);
+                    }
+                }
+            }
+
+            foreach (var v in Enum.GetValues<AppearanceParameterKind>()) {
+                var p = appearance[v];
+                if (p.Apply) parameters.Add($"{v}", p.ToJObject());
+            }
+        }
+
+
+        // Required Customize Values
+        if (!customize.ContainsKey("Race") || !customize.ContainsKey("Clan")) {
+            customize["Race"] = new JObject {
+                { "Apply", true }, {
+                    "Value", state.Customize.Clan.Value switch {
+                        1 or 2 => 1,
+                        3 or 4 => 2,
+                        5 or 6 => 3,
+                        7 or 8 => 4,
+                        9 or 10 => 5,
+                        11 or 12 => 6,
+                        13 or 14 => 7,
+                        15 or 16 => 8,
+                        _ => 1,
+                    }
+                },
+            };
+
+            customize["Clan"] = new JObject { { "Apply", true }, { "Value", state.Customize.Clan.Value } };
+
         }
 
         if (outfitEquipment.Apply) {

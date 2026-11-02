@@ -91,6 +91,8 @@ public static class ModListDisplay {
             extraButtons++;
         }
 
+        if (modable is ApplicableCustomizeWithMaterials) extraButtons++;
+
         var modName = "No Associated Mods";
         Vector2 popupPosition;
         if (configs.Count > 0) {
@@ -373,6 +375,11 @@ public static class ModListDisplay {
             edited |= CustomizePlusTemplateEditor.ShowButton(cPlusTemplateConfig, slotName, _buttonSize, popupPosition, s.X);
         }
 
+        if (modable is ApplicableCustomizeWithMaterials customizeWithMaterials) {
+            ImGui.SameLine();
+            edited |= AdvancedMaterialsDisplay.ShowAdvancedMaterialsDisplay(customizeWithMaterials.Materials, slotName);
+        }
+        
         return edited;
     }
 

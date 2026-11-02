@@ -10,6 +10,10 @@ public static class AdvancedMaterialsDisplay {
 
 
     public static bool ShowAdvancedMaterialsDisplay<T>(ApplicableItem<T> item, string slotName) {
+        return ShowAdvancedMaterialsDisplay(item.Materials, slotName);
+    }
+
+    public static bool ShowAdvancedMaterialsDisplay(List<ApplicableMaterial> materials, string slotName) {
 
         ImGui.SameLine();
         using (ImRaii.PushFont(UiBuilder.IconFont)) {
@@ -23,13 +27,13 @@ public static class AdvancedMaterialsDisplay {
                 ImGui.Text($"{slotName} Advanced Dyes");
                 ImGui.Separator();
 
-                if (item.Materials.Count == 0) {
+                if (materials.Count == 0) {
                     ImGui.TextDisabled("No advanced dyes are configured.");
                 } else {
                     using (ImRaii.PushColor(ImGuiCol.FrameBg, Vector4.Zero))
                     using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(3, ImGui.GetStyle().CellPadding.Y))) {
                         if (ImGui.BeginTable("materialsTable", 10)) {
-                            foreach (var material in item.Materials) {
+                            foreach (var material in materials) {
                                 ImGui.TableNextRow();
                                 ImGui.TableNextColumn();
                                 var t = $"{material.MaterialValueIndex.MaterialString()} {material.MaterialValueIndex.RowString()}";

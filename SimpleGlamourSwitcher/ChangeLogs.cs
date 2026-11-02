@@ -4,6 +4,11 @@ using static UserInterface.Page.ChangeLogPage;
 
 internal static class ChangeLogs {
     internal static void Draw() {
+        ChangelogFor("1.4.1.0", () => {
+            Change("Added ability to hide shared folders on a per-character basis.");
+            Change("Added support for Exposure, Anisotropy, Sphere Map on advanced dyes.");
+            Change("Added support for advanced dyes on Hairstyle, Tail, and Face.");
+        });
         ChangelogFor("1.4.0.0", () => {
             Change("Added emote to active equipment window.");
             Change("Added option to disable emote in active equipment window.");

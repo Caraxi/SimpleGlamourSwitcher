@@ -7,6 +7,25 @@ using SimpleGlamourSwitcher.Utility;
 
 namespace SimpleGlamourSwitcher.Configuration.Parts.ApplicableParts;
 
+public record ApplicableCustomizeWithMaterials : ApplicableCustomizeModable {
+    public List<ApplicableMaterial> Materials = new();
+    
+    public static ApplicableCustomizeWithMaterials FromExistingState(IDefaultOutfitOptionsProvider defaultOptionsProvider, CustomizeIndex slot, GlamourerCustomize customize, Guid penumbraCollectionId, GlamourerState glamourerState) {
+        return new ApplicableCustomizeWithMaterials {
+            Apply = customize[slot]!.Apply && defaultOptionsProvider.DefaultEnabledCustomizeIndexes.Contains(slot),
+            Value = customize[slot]!.Value,
+            ModConfigs = OutfitModConfig.GetModListFromCustomize(slot, customize, penumbraCollectionId),
+            Materials = ApplicableMaterial.FilterForSlot(glamourerState.Materials ?? [], slot)
+        };
+    }
+
+    public override bool TryUpdate(Applicable newValues, UpdateApplicableFlags flags = UpdateApplicableFlags.None) {
+        if (newValues is not ApplicableCustomizeWithMaterials applicableCustomize) return false;
+        Materials = applicableCustomize.Materials.Clone();
+        return base.TryUpdate(newValues, flags);
+    }
+}
+
 public record ApplicableCustomizeModable : ApplicableCustomize, IHasModConfigs, IHasCustomizePlusTemplateConfigs {
     public List<OutfitModConfig> ModConfigs { get; set; } = new();
     public List<CustomizeTemplateConfig> CustomizePlusTemplateConfigs { get; set; } = new();

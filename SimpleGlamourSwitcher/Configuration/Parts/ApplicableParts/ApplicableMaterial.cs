@@ -71,6 +71,19 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
         };
     }
     
+    public static List<ApplicableMaterial> FilterForSlot(Dictionary<MaterialValueIndex, GlamourerMaterial> materials, CustomizeIndex slot) {
+        var list = new List<ApplicableMaterial>();
+
+        foreach (var (mvi, material) in materials) {
+            if (mvi.ToCustomizeIndex() != slot) continue;
+            if (!material.Enabled) continue;
+            if (material.Revert) continue;
+            list.Add(FromGlamourerMaterial(mvi, material));
+        }
+
+        return list;
+    }
+    
     public static List<ApplicableMaterial> FilterForSlot(Dictionary<MaterialValueIndex, GlamourerMaterial> materials, HumanSlot slot) {
         var list = new List<ApplicableMaterial>();
 

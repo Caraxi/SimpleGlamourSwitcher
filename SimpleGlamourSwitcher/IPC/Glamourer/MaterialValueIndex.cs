@@ -131,4 +131,13 @@ public readonly record struct MaterialValueIndex(MaterialValueIndex.DrawObjectTy
     public string RowString() => $"Row {RowIndex / 2 + 1}{(char)(RowIndex % 2 + 'A')}";
 
     public static implicit operator MaterialValueIndex(string keyString) => FromKey(uint.Parse(keyString, NumberStyles.HexNumber));
+
+    public CustomizeIndex? ToCustomizeIndex() {
+        return DrawObject switch {
+            DrawObjectType.Human when SlotIndex == 10 => CustomizeIndex.Hairstyle,
+            DrawObjectType.Human when SlotIndex == 11 => CustomizeIndex.Face,
+            DrawObjectType.Human when SlotIndex == 12 => CustomizeIndex.TailShape,
+            _ => null
+        };
+    }
 }

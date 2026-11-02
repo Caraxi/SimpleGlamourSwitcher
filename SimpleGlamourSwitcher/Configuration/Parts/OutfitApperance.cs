@@ -18,8 +18,8 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
     public ApplicableCustomize BodyType = new();
     public ApplicableCustomizeModable Height = new();
     public ApplicableCustomizeModable Clan = new();
-    public ApplicableCustomizeModable Face = new();
-    public ApplicableCustomizeModable Hairstyle = new();
+    public ApplicableCustomizeWithMaterials Face = new();
+    public ApplicableCustomizeWithMaterials Hairstyle = new();
     public ApplicableCustomize Highlights = new();
     public ApplicableCustomizeModable SkinColor = new();
     public ApplicableCustomize EyeColorRight = new();
@@ -44,7 +44,7 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
     public ApplicableCustomize Lipstick = new();
     public ApplicableCustomize LipColor = new();
     public ApplicableCustomize MuscleMass = new();
-    public ApplicableCustomizeModable TailShape = new();
+    public ApplicableCustomizeWithMaterials TailShape = new();
     public ApplicableCustomize BustSize = new();
     public ApplicableCustomizeModable FacePaint = new();
     public ApplicableCustomize FacePaintReversed = new();
@@ -155,8 +155,8 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
             BodyType = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.BodyType, customize),
             Height = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.Height, customize, penumbraCollectionId),
             Clan = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.Clan, customize, penumbraCollectionId),
-            Face = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.Face, customize, penumbraCollectionId),
-            Hairstyle = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.Hairstyle, customize, penumbraCollectionId),
+            Face = ApplicableCustomizeWithMaterials.FromExistingState(defaultOptionsProvider, CustomizeIndex.Face, customize, penumbraCollectionId, glamourerState),
+            Hairstyle = ApplicableCustomizeWithMaterials.FromExistingState(defaultOptionsProvider, CustomizeIndex.Hairstyle, customize, penumbraCollectionId, glamourerState),
             Highlights = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.Highlights, customize),
             SkinColor = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.SkinColor, customize, penumbraCollectionId),
             EyeColorRight = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.EyeColorRight, customize),
@@ -181,7 +181,7 @@ public record OutfitAppearance : Applicable, IEnumerable<(string, Applicable)> {
             Lipstick = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.Lipstick, customize),
             LipColor = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.LipColor, customize),
             MuscleMass = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.MuscleMass, customize),
-            TailShape = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.TailShape, customize, penumbraCollectionId),
+            TailShape = ApplicableCustomizeWithMaterials.FromExistingState(defaultOptionsProvider, CustomizeIndex.TailShape, customize, penumbraCollectionId, glamourerState),
             BustSize = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.BustSize, customize),
             FacePaint = ApplicableCustomizeModable.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaint, customize, penumbraCollectionId),
             FacePaintReversed = ApplicableCustomize.FromExistingState(defaultOptionsProvider, CustomizeIndex.FacePaintReversed, customize),

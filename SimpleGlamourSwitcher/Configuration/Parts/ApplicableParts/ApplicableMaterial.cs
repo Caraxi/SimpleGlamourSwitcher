@@ -34,7 +34,7 @@ public record ApplicableMaterial : Applicable<MaterialValueIndex> {
     public float Sheen;
     public float SheenTint;
     public float SheenAperture;
-    public float Exposure;
+    public float Exposure = 1;
     public float Anisotropy;
     public byte SphereMapIndex;
     public float SphereMapMask;

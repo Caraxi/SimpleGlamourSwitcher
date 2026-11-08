@@ -580,7 +580,8 @@ public class GlamourListPage : Page {
 
 
                         if (entry is OutfitConfigFile && ImGui.BeginMenu("Automation")) {
-
+                            var baseCharacter = (character.Guid == CharacterConfigFile.SharedDataGuid ? ActiveCharacter : character) ?? character;
+                            
                             bool AutomationOption(string name, ref Guid? setValue) {
                                 if (setValue == outfitGuid) {
                                     if (ImGui.MenuItem($"Remove as {name} outfit")) {
@@ -597,23 +598,23 @@ public class GlamourListPage : Page {
                                 return false;
                             }
 
-                            character.Dirty |= AutomationOption("Login", ref character.Automation.Login);
-                            character.Dirty |= AutomationOption("Character Switch", ref character.Automation.CharacterSwitch);
+                            baseCharacter.Dirty |= AutomationOption("Login", ref baseCharacter.Automation.Login);
+                            baseCharacter.Dirty |= AutomationOption("Character Switch", ref baseCharacter.Automation.CharacterSwitch);
 
                             var activeGearset = GameHelper.GetActiveGearset();
                             if (activeGearset != null) {
-                                var gearsetAutomation = character.Automation.Gearsets.GetValueOrDefault(activeGearset.Value.Id, null);
+                                var gearsetAutomation = baseCharacter.Automation.Gearsets.GetValueOrDefault(activeGearset.Value.Id, null);
                                 if (AutomationOption($"'{activeGearset.Value.Name}' Gearset", ref gearsetAutomation)) {
                                     if (gearsetAutomation == null) {
-                                        character.Automation.Gearsets.Remove(activeGearset.Value.Id);
+                                        baseCharacter.Automation.Gearsets.Remove(activeGearset.Value.Id);
                                     } else {
-                                        character.Automation.Gearsets[activeGearset.Value.Id] = gearsetAutomation;
+                                        baseCharacter.Automation.Gearsets[activeGearset.Value.Id] = gearsetAutomation;
                                     }
-                                    character.Dirty = true;
+                                    baseCharacter.Dirty = true;
                                 }
                             }
 
-                            character.Dirty |= AutomationOption("default Gearset", ref character.Automation.DefaultGearset);
+                            baseCharacter.Dirty |= AutomationOption("default Gearset", ref baseCharacter.Automation.DefaultGearset);
 
                             ImGui.EndMenu();
                         }
@@ -836,8 +837,11 @@ public class GlamourListPage : Page {
         base.DrawCenter(ref controlFlags);
     }
 
-    private Colour GetOutfitFrameColour(PolaroidStyle? polaroidStyle, CharacterConfigFile character, IListEntry outfit) {
+    private Colour GetOutfitFrameColour(PolaroidStyle? polaroidStyle, CharacterConfigFile c, IListEntry outfit) {
         var style = PluginConfig.CustomStyle ?? Style.Default;
+
+        var character = (c.Guid == CharacterConfigFile.SharedDataGuid ? ActiveCharacter : c) ?? c;
+        
         var anyAutomation = character.Automation.Login == outfit.Guid || character.Automation.CharacterSwitch == outfit.Guid || character.Automation.DefaultGearset == outfit.Guid;
 
         if (!anyAutomation) {

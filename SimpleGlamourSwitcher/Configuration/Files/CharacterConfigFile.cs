@@ -341,16 +341,15 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         return Folders.GetValueOrDefault(folderGuid) as IDefaultOutfitOptionsProvider ?? this;
     }
 
-
-
     public async Task ApplyAutomation(bool isLogin = false, bool isCharacterSwitch = false, bool isGearsetSwitch = false) {
         var outfits = await GetEntries();
+        var sharedOutfits = SharedCharacter != null ? await SharedCharacter.GetEntries() : [];
 
         var currentGearset = GameHelper.GetActiveGearset();
         if (currentGearset != null) {
             if (Automation.Gearsets.TryGetValue(currentGearset.Value.Id, out var guid)) {
                 if (guid != null) {
-                    if (outfits.TryGetValue(guid.Value, out var entry)) {
+                    if (outfits.TryGetValue(guid.Value, out var entry) || sharedOutfits.TryGetValue(guid.Value, out entry)) {
                         if (entry is OutfitConfigFile outfit) {
                             await outfit.Apply();
                         }
@@ -365,7 +364,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
 
         if (isGearsetSwitch && Automation.DefaultGearset != null) {
-            if (outfits.TryGetValue(Automation.DefaultGearset.Value, out var entry)) {
+            if (outfits.TryGetValue(Automation.DefaultGearset.Value, out var entry) || sharedOutfits.TryGetValue(Automation.DefaultGearset.Value, out entry)) {
                 if (entry is OutfitConfigFile outfit) {
                     await outfit.Apply();
                 }
@@ -377,7 +376,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
 
         if (isCharacterSwitch && Automation.CharacterSwitch != null) {
-            if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var entry)) {
+            if (outfits.TryGetValue(Automation.CharacterSwitch.Value, out var entry) || sharedOutfits.TryGetValue(Automation.CharacterSwitch.Value, out entry)) {
                 if (entry is OutfitConfigFile outfit) {
                     await outfit.Apply();
                 }
@@ -388,7 +387,7 @@ public class CharacterConfigFile : ConfigFile<CharacterConfigFile, PluginConfigF
         }
 
         if (isLogin && Automation.Login != null) {
-            if (outfits.TryGetValue(Automation.Login.Value, out var entry)) {
+            if (outfits.TryGetValue(Automation.Login.Value, out var entry) || sharedOutfits.TryGetValue(Automation.Login.Value, out entry)) {
                 if (entry is OutfitConfigFile outfit) {
                     await outfit.Apply();
                 }

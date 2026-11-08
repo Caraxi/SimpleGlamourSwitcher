@@ -6,6 +6,7 @@ using Dalamud.Interface.Utility.Raii;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using Dalamud.Bindings.ImGui;
 using SimpleGlamourSwitcher.Configuration.Files;
+using SimpleGlamourSwitcher.Configuration.Interface;
 using SimpleGlamourSwitcher.Configuration.Parts;
 using SimpleGlamourSwitcher.Service;
 using SimpleGlamourSwitcher.UserInterface.Components;
@@ -19,6 +20,7 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
     private bool dirty;
     private readonly AutomationConfig automationConfig = character.Automation.Clone();
     private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> outfits = new(character.GetEntries<OutfitConfigFile>);
+    private readonly LazyAsync<OrderedDictionary<Guid, OutfitConfigFile>> sharedOutfits = new(() => SharedCharacter == null ? Task.FromResult(new OrderedDictionary<Guid, OutfitConfigFile>()) : SharedCharacter.GetEntries<OutfitConfigFile>());
     private const float Width = 600;
     private int selectedGearset = RaptureGearsetModule.Instance()->CurrentGearsetIndex;
 
@@ -167,28 +169,45 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
                 }
             }
 
-            foreach (var (outfitGuid, outfit) in outfits.Value.OrderBy(kvp => character.ParseFolderPath(kvp.Value.Folder)).ThenBy(kvp => kvp.Value.SortName)) {
-                var fullName = character.ParseFolderPath(outfit.Folder, false) + " / " + outfit.Name;
-                var fullNameCollapse = string.Join('/', character.ParseFolderPath(outfit.Folder, false).Split('/', StringSplitOptions.TrimEntries)) + "/" + outfit.Name;
-                if (!(fullName.Contains(search, StringComparison.InvariantCultureIgnoreCase) || fullNameCollapse.Contains(search, StringComparison.InvariantCultureIgnoreCase))) continue;
 
-                if (ImGui.IsWindowAppearing() && guid == outfit.Guid) {
-                    ImGui.SetScrollHereY(0.5f);
-                }
+            void ShowOutfits(OrderedDictionary<Guid, OutfitConfigFile> outfitDict, CharacterConfigFile chr) {
+                foreach (var (outfitGuid, outfit) in outfitDict.OrderBy(kvp => chr.ParseFolderPath(kvp.Value.Folder)).ThenBy(kvp => kvp.Value.SortName)) {
+                    
+                    var isShared = chr.Guid == CharacterConfigFile.SharedDataGuid;
+                    if (isShared) {
+                        // Hide Invalid Shared Files
+                        if (outfit.Folder == Guid.Empty) continue;
+                        if (!chr.Folders.TryGetValue(outfit.Folder, out var f)) continue;
+                    }
+                    
+                    
+                    var fullName = chr.ParseFolderPath(outfit.Folder, isShared) + " / " + outfit.Name;
+                    var fullNameCollapse = string.Join('/', chr.ParseFolderPath(outfit.Folder, isShared).Split('/', StringSplitOptions.TrimEntries)) + "/" + outfit.Name;
+                    if (!(fullName.Contains(search, StringComparison.InvariantCultureIgnoreCase) || fullNameCollapse.Contains(search, StringComparison.InvariantCultureIgnoreCase))) continue;
 
-                using (ImRaii.PushId(outfit.Guid.ToString())) {
-                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get(), outfit.Folder != Guid.Empty)) {
-                        if (ImGui.Selectable(outfit.Folder == Guid.Empty ? outfit.Name : character.ParseFolderPath(outfit.Folder, false) + " /", guid == outfitGuid)) {
-                            guid = outfitGuid;
-                            modified = true;
+                    if (ImGui.IsWindowAppearing() && guid == outfit.Guid) {
+                        ImGui.SetScrollHereY(0.5f);
+                    }
+
+                    using (ImRaii.PushId(outfit.Guid.ToString())) {
+                        using (ImRaii.PushColor(ImGuiCol.Text, ImGuiCol.TextDisabled.Get(), outfit.Folder != Guid.Empty)) {
+                            if (ImGui.Selectable(outfit.Folder == Guid.Empty ? outfit.Name : chr.ParseFolderPath(outfit.Folder, isShared) + " /", guid == outfitGuid)) {
+                                guid = outfitGuid;
+                                modified = true;
+                            }
+                        }
+
+                        if (outfit.Folder != Guid.Empty) {
+                            ImGui.SameLine();
+                            ImGui.Text(outfit.Name);
                         }
                     }
-
-                    if (outfit.Folder != Guid.Empty) {
-                        ImGui.SameLine();
-                        ImGui.Text(outfit.Name);
-                    }
                 }
+            }
+
+            ShowOutfits(outfits.Value, character);
+            if (SharedCharacter != null) {
+                ShowOutfits(sharedOutfits.Value, SharedCharacter);
             }
 
             return modified;
@@ -208,7 +227,8 @@ public unsafe class AutomationPage(CharacterConfigFile character) : Page {
 
     private string GetDisplayName(Guid? guid) {
         if (guid == null) return "Do Not Apply";
-        return outfits.Value.TryGetValue(guid.Value, out var outfit) ? outfit.Name : $"{guid}";
+        return outfits.Value.TryGetValue(guid.Value, out var outfit) ? outfit.Name : 
+               sharedOutfits.Value.TryGetValue(guid.Value, out outfit) ? $"[Shared] {outfit.Name}": $"{guid}";
     }
 
     public override void DrawLeft(ref WindowControlFlags controlFlags) {
